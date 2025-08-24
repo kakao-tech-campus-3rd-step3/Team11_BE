@@ -18,7 +18,7 @@
 - 실시간 채팅(WebSocket/STOMP)
 
 ## 백엔드 기술 스택 🛠️
-- Java 17, Spring Boot 3
+- Java 21, Spring Boot 3
 - Spring Security + OAuth2
 - JPA + PostgreSQL(+PostGIS)
 - MongoDB(채팅 히스토리)
