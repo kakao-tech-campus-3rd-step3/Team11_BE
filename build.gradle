@@ -14,6 +14,14 @@ java {
     }
 }
 
+bootJar {
+    archiveBaseName.set('MoMeetServer')
+}
+
+jar {
+    archiveBaseName.set('MoMeetServer')
+}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
