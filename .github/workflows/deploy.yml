@@ -39,7 +39,7 @@ jobs:
           arguments: build
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: MoMeetServer
           path: build/libs/MoMeetServer-0.0.1-SNAPSHOT.jar
@@ -50,7 +50,7 @@ jobs:
 
     steps:
       - name: Download build artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: MoMeetServer
           path: build/libs/
