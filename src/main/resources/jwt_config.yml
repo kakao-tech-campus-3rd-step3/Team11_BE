@@ -1,0 +1,7 @@
+jwt:
+  secret: ${JWT_SECRET}
+  access_token:
+    expiration: ${ACCESS_TOKEN_EXPIRATION_SECONDS}
+  refresh_token:
+    expiration: ${REFRESH_TOKEN_EXPIRATION_SECONDS}
+  issuer: ${JWT_ISSUER}
