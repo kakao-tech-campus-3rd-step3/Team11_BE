@@ -34,8 +34,10 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MoMeetServer
-          path: build/libs/MoMeetServer-0.0.1-SNAPSHOT.jar
+          name: MoMeetServerAndScripts
+          path: |
+            build/libs/MoMeetServer-0.0.1-SNAPSHOT.jar
+            scripts/deploy.sh
 
   deploy:
     needs: build
@@ -45,7 +47,7 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: MoMeetServer
+          name: MoMeetServerAndScripts
           path: build/libs/
 
       - name: Deploy to EC2
@@ -53,6 +55,6 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/MoMeetServer-0.0.1-SNAPSHOT.jar ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/MoMeetServer.jar
-          scp -i private_key.pem -o StrictHostKeyChecking=no scripts/deploy.sh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/deploy.sh
+          scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/deploy.sh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/deploy.sh
           ssh -i private_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "chmod +x /home/${{ secrets.EC2_USERNAME }}/deploy.sh && /home/${{ secrets.EC2_USERNAME }}/deploy.sh"
           rm -f private_key.pem
