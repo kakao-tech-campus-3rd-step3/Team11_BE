@@ -1,26 +1,18 @@
-# 워크 플로우 이름
 name: Java CI with Gradle
 
-
-# 워크 플로우가 실행되는 조건
 on:
-  # main 브랜치에 푸시되거나 develop 브랜치에 푸시될 때
   push:
-    branches: [ "main", "develop" ]
-
-  # main 브랜치에 PR이 생성되거나 develop 브랜치에 PR이 생성될 때
+    branches: ['main', 'develop']
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: ['main', 'develop']
 
 permissions:
   contents: read
 
 jobs:
-  # 우분투 환경에서 빌드
   build:
     runs-on: ubuntu-latest
 
-    # 깃허브에서 제공하는 checkout 엑션 사용
     steps:
       - uses: actions/checkout@v3
 
@@ -30,42 +22,50 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v3
-        with:
-          arguments: build
+        run: ./gradlew build
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: MoMeetServer
           path: build/libs/MoMeetServer-0.0.1-SNAPSHOT.jar
+
+      - name: Upload scripts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deploy-scripts
+          path: scripts/deploy.sh
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Download build artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: MoMeetServer
           path: build/libs/
 
-      # EC2에 배포
-      # EC2 SSH 키를 private_key.pem 파일로 저장 ( 위치는 GitHub 서버 )
-      # SCP를 사용하여 JAR 파일을 EC2 서버로 복사
-      # SCP를 사용하여 배포 스크립트(deploy.sh)를 EC2 서버로 복사
-      # SSH를 사용하여 EC2 서버에서 배포 스크립트 실행
-      # 배포 후 private_key.pem 파일 삭제
+      - name: Download scripts
+        uses: actions/download-artifact@v4
+        with:
+          name: deploy-scripts
+          path: scripts/
+
       - name: Deploy to EC2
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/MoMeetServer-0.0.1-SNAPSHOT.jar ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/MoMeetServer.jar
-          scp -i private_key.pem -o StrictHostKeyChecking=no deploy.sh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/deploy.sh
+          scp -i private_key.pem -o StrictHostKeyChecking=no scripts/deploy.sh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/deploy.sh
           ssh -i private_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "chmod +x /home/${{ secrets.EC2_USERNAME }}/deploy.sh && /home/${{ secrets.EC2_USERNAME }}/deploy.sh"
           rm -f private_key.pem
