@@ -15,6 +15,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,11 +47,17 @@ public class EmailAuthService {
         refreshTokenRepository.save(token);
     }
 
+    private void updateLastLoginAt(UUID memberId) {
+        memberService.updateMemberById(memberId, m ->
+                m.setLastLoginAt(LocalDateTime.now().minusSeconds(10)));
+    }
+
     @Transactional
     public TokenPair signUp(String email, String password) {
         Member member = memberService.saveMember(email, password, List.of("ROLE_USER") );
         TokenPair tokenPair = generateTokenPair(member.getId());
 
+        updateLastLoginAt(member.getId());
         saveOrUpdateRefreshToken(member.getId(), tokenPair.refreshToken());
         return tokenPair;
     }
@@ -66,8 +73,13 @@ public class EmailAuthService {
             throw new AuthenticationException("이메일 또는 비밀번호가 올바르지 않습니다.") {
             };
         }
-        TokenPair tokenPair = generateTokenPair(member.getId());
+        if (!member.isEnabled()) {
+            throw new AuthenticationException("탈퇴한 회원입니다. 다시 가입해 주세요.") {
+            };
+        }
 
+        updateLastLoginAt(member.getId());
+        TokenPair tokenPair = generateTokenPair(member.getId());
         saveOrUpdateRefreshToken(member.getId(), tokenPair.refreshToken());
         return tokenPair;
     }
@@ -101,7 +113,11 @@ public class EmailAuthService {
             throw new AuthenticationException("유효하지 않은 리프레시 토큰입니다.") {
             };
         }
-        return generateTokenPair(memberId);
-    }
 
+        updateLastLoginAt(memberId);
+        TokenPair pair = generateTokenPair(memberId);
+        saveOrUpdateRefreshToken(memberId, pair.refreshToken());
+
+        return pair;
+    }
 }

@@ -4,6 +4,7 @@ import com.pnu.momeet.domain.member.dto.MemberInfo;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 public class CustomUserDetails implements UserDetails {
@@ -36,22 +37,11 @@ public class CustomUserDetails implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return memberInfo.accountNonExpired();
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return memberInfo.accountNonLocked();
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return memberInfo.credentialsNonExpired();
-    }
-
-    @Override
     public boolean isEnabled() {
         return memberInfo.enabled();
+    }
+
+    public LocalDateTime getLastLoginAt() {
+        return memberInfo.lastLoginAt();
     }
 }

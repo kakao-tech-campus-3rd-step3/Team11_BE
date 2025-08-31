@@ -26,9 +26,7 @@ public class EntityMapper {
                 member.getProviderId(),
                 roleNames,
                 member.isEnabled(),
-                member.isAccountNonExpired(),
-                member.isCredentialsNonExpired(),
-                member.isAccountNonLocked()
+                member.getLastLoginAt()
         );
     }
 }

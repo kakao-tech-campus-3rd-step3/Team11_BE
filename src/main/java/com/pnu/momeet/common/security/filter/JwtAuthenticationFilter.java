@@ -1,8 +1,11 @@
 package com.pnu.momeet.common.security.filter;
 
+import com.pnu.momeet.common.exception.ConcurrentLoginException;
 import com.pnu.momeet.common.exception.JwtAuthenticationException;
+import com.pnu.momeet.common.model.TokenInfo;
 import com.pnu.momeet.common.security.JwtTokenProvider;
-import io.jsonwebtoken.Claims;
+import com.pnu.momeet.common.security.details.CustomUserDetailService;
+import com.pnu.momeet.common.security.details.CustomUserDetails;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,8 +13,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,7 +24,7 @@ import java.util.regex.Pattern;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailService userDetailsService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final Pattern[] whitelistPatterns;
 
@@ -32,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     public JwtAuthenticationFilter(
             JwtTokenProvider jwtTokenProvider,
-            UserDetailsService userDetailsService,
+            CustomUserDetailService userDetailsService,
             AuthenticationEntryPoint authenticationEntryPoint,
             String[] whitelistUrls
     ) {
@@ -66,25 +67,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // token이 null 이거나 유효하지 않으면 예외 발생
             String token = Objects.requireNonNull(resolveToken(request));
             // 파싱 중 예외 발생 시 catch 블록으로 이동
-            Claims claims = jwtTokenProvider.getPayload(token);
-            String memberId = claims.getSubject();
+            TokenInfo tokenInfo = jwtTokenProvider.parseToken(token);
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(memberId);
+            // 해당 ID의 사용자가 존재하지 않으면 예외 발생
+            CustomUserDetails userDetails = userDetailsService.loadUserByUsername(tokenInfo.subject());
+
+            // 사용자의 로그인 시간이 토큰 발급 시간 이후면 예외 발생
+            if (userDetails.getLastLoginAt().isBefore(tokenInfo.issuedAt())) {
+                throw new ConcurrentLoginException("다른 기기에서 로그인하여 토큰이 만료되었습니다. 다시 로그인 해주세요.");
+            }
+
             var authenticationToken = new UsernamePasswordAuthenticationToken(
                     userDetails,
                     null,
                     userDetails.getAuthorities()
             );
+
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
             filterChain.doFilter(request, response);
-        } catch(ExpiredJwtException e) {
-            // 토큰이 만료된 경우, SecurityContext를 비우고 401 응답
+
+        } catch (ExpiredJwtException e) {
+            // 토큰이 만료된 경우
             SecurityContextHolder.clearContext();
             authenticationEntryPoint.commence(request, response, new JwtAuthenticationException("토큰이 만료되었습니다."));
+            // 다른 위치에서 로그인 된 경우
+        } catch (ConcurrentLoginException e) {
+            SecurityContextHolder.clearContext();
+            authenticationEntryPoint.commence(request, response, e);
+
         } catch (Exception e) {
-            // 그 외의 예외는 모두 401 응답
+            // 토큰이 없거나, 사용자가 존재하지 않거나, 그 외 토큰이 유효하지 않은 경우
             SecurityContextHolder.clearContext();
             authenticationEntryPoint.commence(request, response, new JwtAuthenticationException("유효하지 않은 토큰입니다."));
         }

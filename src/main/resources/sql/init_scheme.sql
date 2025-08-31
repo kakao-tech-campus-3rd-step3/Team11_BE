@@ -12,9 +12,7 @@ CREATE TABLE member (
     created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
     enabled        BOOLEAN NOT NULL DEFAULT TRUE,
-    account_non_expired BOOLEAN NOT NULL DEFAULT TRUE,
-    credentials_non_expired BOOLEAN NOT NULL DEFAULT TRUE,
-    account_non_locked BOOLEAN NOT NULL DEFAULT TRUE,
+    last_login_at  TIMESTAMP DEFAULT NULL,
     UNIQUE(provider, provider_id)
 );
 

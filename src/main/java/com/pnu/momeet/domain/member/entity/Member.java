@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,11 +41,7 @@ public class Member extends BaseEntity {
 
     private boolean enabled = true;
 
-    private boolean accountNonExpired = true;
-
-    private boolean credentialsNonExpired = true;
-
-    private boolean accountNonLocked = true;
+    private LocalDateTime lastLoginAt;
 
     protected Member() {
 

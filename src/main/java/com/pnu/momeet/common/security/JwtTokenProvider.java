@@ -1,7 +1,7 @@
 package com.pnu.momeet.common.security;
 
+import com.pnu.momeet.common.model.TokenInfo;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,11 +64,14 @@ public class JwtTokenProvider {
         return getClaims(token).getPayload();
     }
 
-    public Claims getPayloadWithoutExpiration(String token) {
-        try {
-            return getClaims(token).getPayload();
-        } catch (ExpiredJwtException e) {
-            return e.getClaims(); // 토큰이 만료되어도 페이로드는 반환
-        }
+    public TokenInfo parseToken(String token) {
+        Claims claims = getPayload(token);
+
+        return new TokenInfo(
+                claims.getSubject(),
+                claims.getIssuedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(),
+                claims.getExpiration().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+        );
     }
+
 }
