@@ -13,8 +13,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -31,17 +29,10 @@ public class WebSecurityConfig {
             "/api/auth/login",
             "/api/auth/signup",
             "/api/auth/logout",
+            "/api/auth/refresh",
             "/swagger-ui/**",
             "/v3/api-docs/**"
     };
-
-    private final static String REFRESH_PATH = "/api/auth/refresh";
-
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
@@ -49,8 +40,7 @@ public class WebSecurityConfig {
                 tokenProvider,
                 userDetailService,
                 authenticationEntryPoint,
-                WHITE_LIST_PATTERNS,
-                REFRESH_PATH
+                WHITE_LIST_PATTERNS
         );
     }
 
