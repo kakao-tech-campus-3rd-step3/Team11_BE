@@ -1,6 +1,6 @@
 package com.pnu.momeet.domain.member.service;
 
-import com.pnu.momeet.domain.common.enums.Provider;
+import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.entity.Role;
 import com.pnu.momeet.domain.member.repository.MemberRepository;
@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @Slf4j
 @Service
@@ -48,5 +49,34 @@ public class MemberService {
         return memberRepository.findMemberByEmail(email).orElseThrow(
             () -> new IllegalArgumentException("해당 이메일의 사용자가 존재하지 않습니다. email=" + email)
         );
+    }
+
+    @Transactional
+    public Member updateMemberById(UUID id, Consumer<Member> updater) {
+        Member member = findMemberById(id);
+        updater.accept(member);
+        return memberRepository.save(member);
+    }
+
+    @Transactional
+    public Member updateRolesById(UUID id, List<String> roles) {
+        Member member = findMemberById(id);
+        List<Role> roleEntities = roleService.findRolesByNames(roles);
+        member.setRoles(roleEntities);
+        return memberRepository.save(member);
+    }
+
+    @Transactional
+    public Member updatePasswordById(UUID id, String newPassword) {
+        Member member = findMemberById(id);
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        member.setPassword(encodedPassword);
+        return memberRepository.save(member);
+    }
+
+    @Transactional
+    public void deleteMemberById(UUID id) {
+        findMemberById(id);
+        memberRepository.deleteById(id);
     }
 }

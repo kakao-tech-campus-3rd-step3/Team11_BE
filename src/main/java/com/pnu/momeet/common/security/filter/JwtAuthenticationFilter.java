@@ -1,7 +1,7 @@
 package com.pnu.momeet.common.security.filter;
 
 import com.pnu.momeet.common.exception.JwtAuthenticationException;
-import com.pnu.momeet.common.util.JwtTokenProvider;
+import com.pnu.momeet.common.security.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;

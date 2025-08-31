@@ -1,6 +1,6 @@
 package com.pnu.momeet.domain.member.service;
 
-import com.pnu.momeet.domain.common.enums.MemberRole;
+import com.pnu.momeet.domain.member.enums.MemberRole;
 import com.pnu.momeet.domain.member.entity.Role;
 import com.pnu.momeet.domain.member.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;

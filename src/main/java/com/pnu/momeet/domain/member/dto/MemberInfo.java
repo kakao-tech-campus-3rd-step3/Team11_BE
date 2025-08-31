@@ -1,12 +1,10 @@
 package com.pnu.momeet.domain.member.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.pnu.momeet.domain.common.enums.Provider;
+import com.pnu.momeet.domain.member.enums.Provider;
 
 import java.util.List;
 import java.util.UUID;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public record MemberInfo(
         UUID id,
         String email,

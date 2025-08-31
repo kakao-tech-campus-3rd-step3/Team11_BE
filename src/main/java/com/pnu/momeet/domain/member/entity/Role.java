@@ -1,6 +1,6 @@
 package com.pnu.momeet.domain.member.entity;
 
-import com.pnu.momeet.domain.common.enums.MemberRole;
+import com.pnu.momeet.domain.member.enums.MemberRole;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

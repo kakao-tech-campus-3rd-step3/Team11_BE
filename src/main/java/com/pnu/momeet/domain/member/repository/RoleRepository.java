@@ -1,6 +1,6 @@
 package com.pnu.momeet.domain.member.repository;
 
-import com.pnu.momeet.domain.common.enums.MemberRole;
+import com.pnu.momeet.domain.member.enums.MemberRole;
 import com.pnu.momeet.domain.member.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 

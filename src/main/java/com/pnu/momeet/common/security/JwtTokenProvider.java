@@ -1,4 +1,4 @@
-package com.pnu.momeet.common.util;
+package com.pnu.momeet.common.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

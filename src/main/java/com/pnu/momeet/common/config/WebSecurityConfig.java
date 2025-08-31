@@ -4,7 +4,7 @@ import com.pnu.momeet.common.security.details.CustomUserDetailService;
 import com.pnu.momeet.common.security.filter.JwtAuthenticationFilter;
 import com.pnu.momeet.common.security.handler.CustomAccessDeniedHandler;
 import com.pnu.momeet.common.security.handler.CustomAuthenticationEntryPoint;
-import com.pnu.momeet.common.util.JwtTokenProvider;
+import com.pnu.momeet.common.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

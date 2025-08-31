@@ -1,10 +1,10 @@
 package com.pnu.momeet.domain.auth.service;
 
 import com.pnu.momeet.common.model.TokenPair;
-import com.pnu.momeet.common.util.JwtTokenProvider;
+import com.pnu.momeet.common.security.JwtTokenProvider;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
-import com.pnu.momeet.domain.common.enums.Provider;
+import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.service.MemberService;
 import io.jsonwebtoken.Claims;
@@ -72,6 +72,7 @@ public class EmailAuthService {
         return tokenPair;
     }
 
+    @Transactional
     public void logout(UUID memberId) {
         if (refreshTokenRepository.existsById(memberId)) {
             refreshTokenRepository.deleteById(memberId);
