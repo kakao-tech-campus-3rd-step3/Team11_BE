@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS refresh_token CASCADE;
 DROP TABLE IF EXISTS member_role CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
 DROP TABLE IF EXISTS member CASCADE;
@@ -27,3 +28,8 @@ CREATE TABLE member_role (
     role_id INT NOT NULL REFERENCES role(id),
     PRIMARY KEY (member_id, role_id)
 );
+
+CREATE TABLE refresh_token (
+    member_id uuid PRIMARY KEY REFERENCES member(id) ON DELETE CASCADE,
+    value varchar(255) NOT NULL
+)

@@ -26,7 +26,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final Pattern[] whitelistPatterns;
-    private final String refreshPath;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -35,8 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             JwtTokenProvider jwtTokenProvider,
             UserDetailsService userDetailsService,
             AuthenticationEntryPoint authenticationEntryPoint,
-            String[] whitelistUrls,
-            String refreshPath
+            String[] whitelistUrls
     ) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userDetailsService = userDetailsService;
@@ -48,7 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .replace("*", "[^/]*"); // '*'를 '[^/]*'로 변경
             this.whitelistPatterns[i] = Pattern.compile(regex);
         }
-        this.refreshPath = refreshPath;
     }
 
     @Override
@@ -71,23 +68,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 파싱 중 예외 발생 시 catch 블록으로 이동
             Claims claims = jwtTokenProvider.getPayload(token);
             String memberId = claims.getSubject();
-            saveAuthenticationToContext(memberId, request);
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(memberId);
+            var authenticationToken = new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities()
+            );
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
             filterChain.doFilter(request, response);
         } catch(ExpiredJwtException e) {
             // 토큰이 만료된 경우, SecurityContext를 비우고 401 응답
-            if (requestPath.equals(refreshPath)) {
-                // 리프레시 토큰 요청인 경우, 컨텍스트를 비우지 않고 다음 필터로 진행
-                try {
-                    String memberId = e.getClaims().getSubject();
-                    saveAuthenticationToContext(memberId, request);
-                    filterChain.doFilter(request, response);
-                    return;
-                } catch (Exception ex) {
-                    SecurityContextHolder.clearContext();
-                    authenticationEntryPoint.commence(request, response, new JwtAuthenticationException("유효하지 않은 토큰입니다."));
-                    return;
-                }
-            }
             SecurityContextHolder.clearContext();
             authenticationEntryPoint.commence(request, response, new JwtAuthenticationException("토큰이 만료되었습니다."));
         } catch (Exception e) {
@@ -112,16 +105,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
         return null;
-    }
-
-    private void saveAuthenticationToContext(String memberId, HttpServletRequest request) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(memberId);
-        var authenticationToken = new UsernamePasswordAuthenticationToken(
-                userDetails,
-                null,
-                userDetails.getAuthorities()
-        );
-        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
     }
 }
