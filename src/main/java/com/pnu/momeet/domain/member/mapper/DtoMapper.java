@@ -14,7 +14,7 @@ public class DtoMapper {
 
     public static Consumer<Member> toConsumer(MemberEditRequest request) {
         return member -> {
-            if (request.roles() != null) {
+            if (request.roles() != null && !request.roles().isEmpty()) {
                 member.setRoles( request.roles()
                         .stream()
                         .map(Role::valueOf)

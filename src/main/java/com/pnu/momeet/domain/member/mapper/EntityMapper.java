@@ -40,7 +40,10 @@ public class EntityMapper {
                 member.getEmail(),
                 member.getProvider(),
                 extractRoleNames(member.getRoles()),
-                member.isEnabled()
+                member.isEnabled(),
+                member.isAccountNonLocked(),
+                member.getCreatedAt(),
+                member.getUpdatedAt()
         );
     }
 }

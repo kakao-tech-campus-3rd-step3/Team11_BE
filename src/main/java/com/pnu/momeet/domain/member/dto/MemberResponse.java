@@ -11,6 +11,10 @@ public record MemberResponse(
         String email,
         Provider provider,
         List<String> roles,
-        boolean enabled
+        boolean enabled,
+        boolean isAccountNonLocked,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
+
 }
