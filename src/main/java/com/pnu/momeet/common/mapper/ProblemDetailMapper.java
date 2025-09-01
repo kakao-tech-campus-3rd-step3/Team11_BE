@@ -16,11 +16,11 @@ public class ProblemDetailMapper {
 
     public String toJson(ProblemDetail problemDetail) {
          Map<String, Object> map = new HashMap<>();
+         map.put("instance", problemDetail.getInstance());
+         map.put("detail", problemDetail.getDetail());
          map.put("type", problemDetail.getType());
          map.put("title", problemDetail.getTitle());
          map.put("status", problemDetail.getStatus());
-         map.put("detail", problemDetail.getDetail());
-         map.put("instance", problemDetail.getInstance());
 
          if (problemDetail.getProperties() != null) {
                 problemDetail.getProperties()
@@ -36,11 +36,11 @@ public class ProblemDetailMapper {
                     "null" : '"' + problemDetail.getInstance().toString() + '"';
 
             return "{" +
+                    "\"instance\":" + instanceStr + "," +
+                    "\"detail\":\"예외를 직렬화하던 중 문제가 발생했습니다.\"," +
                     "\"type\":\"https://example.com/error/internal\"," +
                     "\"title\":\"직렬화 도중 문제 발생\"," +
-                    "\"status\":500," +
-                    "\"detail\":\"예외를 직렬화하던 중 문제가 발생했습니다.\"," +
-                    "\"instance\":" + instanceStr +
+                    "\"status\":500" +
                 "}";
         }
     }
