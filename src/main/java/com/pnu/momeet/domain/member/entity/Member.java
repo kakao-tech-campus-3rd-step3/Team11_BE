@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.member.entity;
 
 import com.pnu.momeet.domain.common.entity.BaseEntity;
+import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.enums.Provider;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -31,17 +32,16 @@ public class Member extends BaseEntity {
 
     private String providerId;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "member_role",
-        joinColumns = @JoinColumn(name = "member_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private List<Role> roles = new ArrayList<>();
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "member_id")
+    private List<MemberRole> roles = new ArrayList<>();
+
 
     private boolean enabled = true;
 
-    private LocalDateTime lastLoginAt;
+    private boolean isAccountNonLocked = true;
+
+    private LocalDateTime tokenIssuedAt;
 
     protected Member() {
 
@@ -65,6 +65,9 @@ public class Member extends BaseEntity {
 
     public void setRoles(List<Role> roles) {
         this.roles.clear();
-        this.roles.addAll(roles);
+        this.roles.addAll(roles.stream()
+                .map(MemberRole::new)
+                .toList()
+        );
     }
 }

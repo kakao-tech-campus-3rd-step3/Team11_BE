@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface MemberRepository extends JpaRepository<Member, UUID> {
-
     Page<Member> findAllBy(Pageable pageable);
     Optional<Member> findMemberByEmail(String email);
+    boolean existsByEmail(String email);
 }

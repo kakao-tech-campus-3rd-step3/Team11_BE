@@ -14,7 +14,8 @@ public record MemberInfo(
         String providerId,
         List<String> roles,
         boolean enabled,
-        LocalDateTime lastLoginAt
+        boolean isAccountNonLocked,
+        LocalDateTime tokenIssuedAt
 ) {
 
 }

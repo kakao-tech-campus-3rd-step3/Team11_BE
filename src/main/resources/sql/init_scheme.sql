@@ -11,20 +11,19 @@ CREATE TABLE member (
     provider_id    varchar(255) DEFAULT NULL,                        -- 외부 식별자(소셜)
     created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+    token_issued_at  TIMESTAMP DEFAULT NULL,
     enabled        BOOLEAN NOT NULL DEFAULT TRUE,
-    last_login_at  TIMESTAMP DEFAULT NULL,
+    is_account_non_locked BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE(provider, provider_id)
 );
 
-CREATE TABLE role (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
 
 CREATE TABLE member_role (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     member_id uuid NOT NULL REFERENCES member(id) ON DELETE CASCADE,
-    role_id INT NOT NULL REFERENCES role(id),
-    PRIMARY KEY (member_id, role_id)
+    name varchar(50) NOT NULL,
+    granted_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE(member_id, name)
 );
 
 CREATE TABLE refresh_token (

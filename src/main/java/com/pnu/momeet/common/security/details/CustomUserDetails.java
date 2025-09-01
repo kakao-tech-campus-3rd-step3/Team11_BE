@@ -41,7 +41,12 @@ public class CustomUserDetails implements UserDetails {
         return memberInfo.enabled();
     }
 
-    public LocalDateTime getLastLoginAt() {
-        return memberInfo.lastLoginAt();
+    @Override
+    public boolean isAccountNonLocked() {
+        return memberInfo.isAccountNonLocked();
+    }
+
+    public LocalDateTime getTokenIssuedAt() {
+        return memberInfo.tokenIssuedAt();
     }
 }

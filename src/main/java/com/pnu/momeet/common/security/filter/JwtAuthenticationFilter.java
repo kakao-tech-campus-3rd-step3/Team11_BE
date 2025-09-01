@@ -18,6 +18,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -72,9 +73,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 해당 ID의 사용자가 존재하지 않으면 예외 발생
             CustomUserDetails userDetails = userDetailsService.loadUserByUsername(tokenInfo.subject());
 
-            // 사용자의 로그인 시간이 토큰 발급 시간 이후면 예외 발생
-            if (userDetails.getLastLoginAt().isBefore(tokenInfo.issuedAt())) {
-                throw new ConcurrentLoginException("다른 기기에서 로그인하여 토큰이 만료되었습니다. 다시 로그인 해주세요.");
+            // 토큰이 발급되지 않았다면 예외 발생
+            LocalDateTime tokenIssuedAt = Objects.requireNonNull(userDetails.getTokenIssuedAt());
+
+            if (tokenIssuedAt.isAfter(tokenInfo.issuedAt())) {
+                throw new ConcurrentLoginException("다른 위치에서 로그인된 토큰입니다.");
             }
 
             var authenticationToken = new UsernamePasswordAuthenticationToken(

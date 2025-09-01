@@ -33,12 +33,13 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(String sub, Long expirationSeconds) {
-        LocalDateTime expiredAt = LocalDateTime.now().plusSeconds(expirationSeconds);
+        LocalDateTime issuedAt = LocalDateTime.now();
+        LocalDateTime expiredAt = issuedAt.plusSeconds(expirationSeconds);
 
         return Jwts.builder()
                 .subject(sub)
                 .issuer(issuer)
-                .issuedAt(new Date())
+                .issuedAt(Date.from(issuedAt.atZone(ZoneId.systemDefault()).toInstant()))
                 .expiration(Date.from(expiredAt.atZone(ZoneId.systemDefault()).toInstant()))
                 .signWith(secretKey)
                 .compact();
