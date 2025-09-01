@@ -28,10 +28,10 @@ public class WebSecurityConfig {
     private final static String[] WHITE_LIST_PATTERNS = {
             "/api/auth/login",
             "/api/auth/signup",
-            "/api/auth/logout",
             "/api/auth/refresh",
             "/swagger-ui/**",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+            "/error"
     };
 
     @Bean
@@ -64,7 +64,8 @@ public class WebSecurityConfig {
 
                 // 요청에 대한 권한 설정(화이트리스트 이외의 요청은 인증 필요)
                 .authorizeHttpRequests(authorize ->
-                    authorize.requestMatchers(WHITE_LIST_PATTERNS).permitAll()
+                    authorize.requestMatchers(WHITE_LIST_PATTERNS)
+                        .permitAll()
                         .anyRequest()
                         .authenticated()
                 )
@@ -74,7 +75,7 @@ public class WebSecurityConfig {
                 // 예외 처리 설정
                 .exceptionHandling(handling ->
                     handling.authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler)
+                    .accessDeniedHandler(accessDeniedHandler)
                 )
                 .build();
     }
