@@ -52,10 +52,6 @@ public class EmailAuthService {
 
     @Transactional
     public TokenPair signUp(String email, String password) {
-        if (memberService.existsByEmail(email)) {
-            throw new AuthenticationException("이미 사용 중인 이메일입니다.") {
-            };
-        }
         Member savedMember = memberService.saveMember(new Member(email, password, List.of(Role.ROLE_USER)));
         return generateTokenPair(savedMember.getId());
     }

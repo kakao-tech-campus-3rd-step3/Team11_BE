@@ -17,6 +17,10 @@ public class MemberRole {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
+
     @Enumerated(EnumType.STRING)
     private Role name;
 
@@ -27,8 +31,9 @@ public class MemberRole {
 
     }
 
-
-    public MemberRole(Role name) {
+    public MemberRole(Role name, Member member) {
         this.name = name;
+        this.member = member;
+        this.grantedAt = LocalDateTime.now();
     }
 }

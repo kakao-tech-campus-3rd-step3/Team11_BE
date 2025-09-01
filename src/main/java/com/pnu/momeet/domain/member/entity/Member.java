@@ -32,8 +32,7 @@ public class Member extends BaseEntity {
 
     private String providerId;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "member_id")
+    @OneToMany(mappedBy = "member",fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberRole> roles = new ArrayList<>();
 
 
@@ -66,7 +65,7 @@ public class Member extends BaseEntity {
     public void setRoles(List<Role> roles) {
         this.roles.clear();
         this.roles.addAll(roles.stream()
-                .map(MemberRole::new)
+                .map(role -> new MemberRole(role, this))
                 .toList()
         );
     }

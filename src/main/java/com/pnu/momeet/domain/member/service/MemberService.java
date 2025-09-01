@@ -5,11 +5,10 @@ import com.pnu.momeet.domain.member.repository.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -24,13 +23,16 @@ public class MemberService {
 
     @Transactional
     public Member saveMember(Member member) {
+        if (memberRepository.existsByEmail(member.getEmail())) {
+            throw new IllegalArgumentException("이미 가입한 이메일입니다.");
+        }
         String encodedPassword = passwordEncoder.encode(member.getPassword());
         member.setPassword(encodedPassword);
         return memberRepository.save(member);
     }
 
-    public Page<Member> findAllMembers(Pageable pageable) {
-        return memberRepository.findAllBy(pageable);
+    public List<Member> findAllMembers() {
+        return memberRepository.findAll();
     }
 
     public Member findMemberById(UUID id) {
@@ -43,10 +45,6 @@ public class MemberService {
         return memberRepository.findMemberByEmail(email).orElseThrow(
             () -> new NoSuchElementException("해당 이메일의 사용자가 존재하지 않습니다. email=" + email)
         );
-    }
-
-    public boolean existsByEmail(String email) {
-        return memberRepository.existsByEmail(email);
     }
 
     public Member disableMemberById(UUID id) {
@@ -64,12 +62,19 @@ public class MemberService {
     }
 
     @Transactional
-    public Member updatePasswordById(UUID id, String oldPassword, String newPassword) {
+    public Member validateAndUpdatePasswordById(UUID id, String oldPassword, String newPassword) {
         Member member = disableMemberById(id); // 사용자 정보 변경 전 비활성화
 
         if (!passwordEncoder.matches(oldPassword, member.getPassword())) {
             throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
         }
+        member.setPassword(passwordEncoder.encode(newPassword));
+        return memberRepository.save(member);
+    }
+
+    @Transactional
+    public Member updatePasswordById(UUID id, String newPassword) {
+        Member member = disableMemberById(id);
         member.setPassword(passwordEncoder.encode(newPassword));
         return memberRepository.save(member);
     }
