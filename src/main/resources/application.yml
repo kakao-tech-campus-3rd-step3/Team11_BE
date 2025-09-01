@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: MoMeet
+
+  config:
+    import: classpath:db_config.yml,classpath:jwt_config.yml
