@@ -33,7 +33,7 @@ CREATE TABLE refresh_token (
 
 CREATE TABLE profile (
     id                       BIGSERIAL PRIMARY KEY,
-    member_id                BIGINT      NOT NULL UNIQUE REFERENCES member(id) ON DELETE CASCADE,
+    member_id                UUID      NOT NULL UNIQUE REFERENCES member(id) ON DELETE CASCADE,
     nickname                 VARCHAR(20) NOT NULL,
     age                      INTEGER,
     gender                   VARCHAR(10),
