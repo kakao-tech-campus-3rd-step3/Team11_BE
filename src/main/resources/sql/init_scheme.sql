@@ -37,7 +37,7 @@ CREATE TABLE profile (
     nickname                 VARCHAR(20) NOT NULL,
     age                      INTEGER NOT NULL,
     gender                   VARCHAR(10) NOT NULL,
-    image_url                TEXT,
+    image_url                VARCHAR(255),
     description              VARCHAR(500),
     base_location            VARCHAR(100) NOT NULL,
     temperature              NUMERIC(4,1) NOT NULL DEFAULT 36.5,
