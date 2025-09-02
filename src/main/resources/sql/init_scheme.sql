@@ -28,7 +28,7 @@ CREATE TABLE member_role (
 
 CREATE TABLE refresh_token (
     member_id uuid PRIMARY KEY REFERENCES member(id) ON DELETE CASCADE,
-    value varchar(255) NOT NULL
+    token_value varchar(255) NOT NULL
 );
 
 CREATE TABLE profile (

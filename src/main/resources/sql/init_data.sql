@@ -6,15 +6,42 @@ DO $$
     BEGIN
         -- password: testpass1212!
         INSERT INTO member (email, password)
-        VALUES ('admin@test.com', '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G')
-        RETURNING id INTO admin_id;
+        VALUES (
+                   'admin@test.com',
+                   '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G'
+               );
+
+        INSERT INTO member_role (member_id, name)
+        VALUES (
+                   (SELECT id FROM member WHERE email = 'admin@test.com'),
+                   'ROLE_ADMIN'
+               );
+
+        -- password: testpass1212!
+        INSERT INTO member (email, password)
+        VALUES (
+                   'user@test.com',
+                   '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G'
+               );
+
+        INSERT INTO member_role (member_id, name)
+        VALUES (
+                   (SELECT id FROM member WHERE email = 'user@test.com'),
+                   'ROLE_USER'
+               );
 
         INSERT INTO member (email, password)
-        VALUES ('alice@test.com', '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G')
+        VALUES (
+                'alice@test.com',
+                '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G'
+               )
             RETURNING id INTO user1_id;
 
         INSERT INTO member (email, password)
-        VALUES ('bob@test.com', '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G')
+        VALUES (
+                'bob@test.com',
+                '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G'
+               )
             RETURNING id INTO user2_id;
 
         INSERT INTO member_role (member_id, name)
