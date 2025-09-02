@@ -1,7 +1,9 @@
 package com.pnu.momeet.common.security.filter;
 
+import com.pnu.momeet.common.exception.BannedAccountException;
 import com.pnu.momeet.common.exception.ConcurrentLoginException;
-import com.pnu.momeet.common.exception.JwtAuthenticationException;
+import com.pnu.momeet.common.exception.DisabledAccountException;
+import com.pnu.momeet.common.exception.InvalidJwtTokenException;
 import com.pnu.momeet.common.model.TokenInfo;
 import com.pnu.momeet.common.security.JwtTokenProvider;
 import com.pnu.momeet.common.security.details.CustomUserDetailService;
@@ -12,6 +14,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -73,8 +76,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 해당 ID의 사용자가 존재하지 않으면 예외 발생
             CustomUserDetails userDetails = userDetailsService.loadUserByUsername(tokenInfo.subject());
 
+
+
+
             // 토큰이 발급되지 않았다면 예외 발생
             LocalDateTime tokenIssuedAt = Objects.requireNonNull(userDetails.getTokenIssuedAt());
+
+            if (!userDetails.isEnabled()) {
+                throw new DisabledAccountException("사용자 정보 변경 등으로 인해 일시적으로 비활성화된 계정입니다. 다시 로그인 해주세요.");
+            }
+            if (!userDetails.isAccountNonLocked()) {
+                throw new BannedAccountException("임시 제한 혹은 영구 정지된 계정입니다. 고객센터에 문의해주세요.");
+            }
 
             if (tokenIssuedAt.isAfter(tokenInfo.issuedAt())) {
                 throw new ConcurrentLoginException("다른 위치에서 로그인된 토큰입니다.");
@@ -94,16 +107,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (ExpiredJwtException e) {
             // 토큰이 만료된 경우
             SecurityContextHolder.clearContext();
-            authenticationEntryPoint.commence(request, response, new JwtAuthenticationException("토큰이 만료되었습니다."));
+            authenticationEntryPoint.commence(request, response, new InvalidJwtTokenException("토큰이 만료되었습니다."));
             // 다른 위치에서 로그인 된 경우
-        } catch (ConcurrentLoginException e) {
+        } catch (AuthenticationException e) {
             SecurityContextHolder.clearContext();
             authenticationEntryPoint.commence(request, response, e);
-
         } catch (Exception e) {
             // 토큰이 없거나, 사용자가 존재하지 않거나, 그 외 토큰이 유효하지 않은 경우
             SecurityContextHolder.clearContext();
-            authenticationEntryPoint.commence(request, response, new JwtAuthenticationException("유효하지 않은 토큰입니다."));
+            authenticationEntryPoint.commence(request, response, new InvalidJwtTokenException("유효하지 않은 토큰입니다."));
         }
     }
 

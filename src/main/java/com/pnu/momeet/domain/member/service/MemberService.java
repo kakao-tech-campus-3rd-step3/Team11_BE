@@ -5,10 +5,11 @@ import com.pnu.momeet.domain.member.repository.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -31,8 +32,8 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
-    public List<Member> findAllMembers() {
-        return memberRepository.findAll();
+    public Page<Member> findAllMembers(PageRequest pageRequest) {
+        return memberRepository.findAllBy(pageRequest);
     }
 
     public Member findMemberById(UUID id) {
