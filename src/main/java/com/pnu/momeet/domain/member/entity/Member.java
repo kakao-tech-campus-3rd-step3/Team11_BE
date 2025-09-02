@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Entity
@@ -46,7 +47,7 @@ public class Member extends BaseEntity {
 
     }
 
-    public Member(String email, String password, Provider provider, String providerId, List<Role> roles) {
+    public Member(String email, String password, Provider provider, String providerId, Collection<Role> roles) {
         this.email = email;
         this.password = password;
         this.provider = provider;
@@ -54,15 +55,15 @@ public class Member extends BaseEntity {
         setRoles(roles);
     }
 
-    public Member(String email, String password, List<Role> roles) {
+    public Member(String email, String password, Collection<Role> roles) {
         this(email, password, Provider.EMAIL, null, roles);
     }
 
-    public Member(String email, Provider provider, String providerId, List<Role> roles) {
+    public Member(String email, Provider provider, String providerId, Collection<Role> roles) {
         this(email, null, provider, providerId, roles);
     }
 
-    public void setRoles(List<Role> roles) {
+    public void setRoles(Collection<Role> roles) {
         this.roles.clear();
         this.roles.addAll(roles.stream()
                 .map(role -> new MemberRole(role, this))
