@@ -1,24 +1,19 @@
 package com.pnu.momeet.domain.profile.entity;
 
+import com.pnu.momeet.domain.common.entity.BaseEntity;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 @Entity
 @Table(
@@ -29,11 +24,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class Profile {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Profile extends BaseEntity {
 
     @Column(name = "member_id", nullable = false, columnDefinition = "UUID")
     private UUID memberId;
@@ -68,13 +59,6 @@ public class Profile {
 
     @Column(name = "un_evaluated_meetup_id")
     private Long unEvaluatedMeetupId;
-
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
 
     private Profile(
         UUID memberId,

@@ -32,7 +32,7 @@ CREATE TABLE refresh_token (
 );
 
 CREATE TABLE profile (
-    id                       BIGSERIAL PRIMARY KEY,
+    id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     member_id                UUID      NOT NULL UNIQUE REFERENCES member(id) ON DELETE CASCADE,
     nickname                 VARCHAR(20) NOT NULL,
     age                      INTEGER NOT NULL,
