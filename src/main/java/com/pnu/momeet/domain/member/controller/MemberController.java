@@ -7,6 +7,7 @@ import com.pnu.momeet.domain.member.mapper.EntityMapper;
 import com.pnu.momeet.domain.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,7 +15,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,12 +28,11 @@ public class MemberController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping
-    public ResponseEntity<List<MemberResponse>> memberList() {
-        List<Member> members = memberService.findAllMembers();
-        return ResponseEntity.ok(members.stream()
-                .map(EntityMapper::toDto)
-                .toList()
-        );
+    public ResponseEntity<Page<MemberResponse>> memberList(
+            @Valid @ModelAttribute MemberPageRequest request
+    ) {
+        Page<Member> members = memberService.findAllMembers(DtoMapper.toPageRequest(request));
+        return ResponseEntity.ok(members.map(EntityMapper::toDto));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
