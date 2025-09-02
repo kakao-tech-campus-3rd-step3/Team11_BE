@@ -9,7 +9,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
-import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -69,13 +68,13 @@ public class Profile extends BaseEntity {
         String description,
         String baseLocation
     ) {
-        this.memberId = Objects.requireNonNull(memberId, "memberId는 필수입니다.");
-        this.nickname = validateNickname(nickname);
-        this.age = validateAge(age);
-        this.gender = Objects.requireNonNull(gender, "성별은 필수입니다.");
+        this.memberId = memberId;
+        this.nickname = nickname;
+        this.age = age;
+        this.gender = gender;
         this.imageUrl = imageUrl;
-        this.description = validateDescription(description);
-        this.baseLocation = validateBaseLocation(baseLocation);
+        this.description = description;
+        this.baseLocation = baseLocation;
     }
 
     public static Profile create(
@@ -90,18 +89,20 @@ public class Profile extends BaseEntity {
         return new Profile(memberId, nickname, age, gender, imageUrl, description, baseLocation);
     }
 
-    public void updateProfile(String nickname,
+    public void updateProfile(
+        String nickname,
         Integer age,
         Gender gender,
         String imageUrl,
         String description,
-        String baseLocation) {
-        if (nickname != null) this.nickname = validateNickname(nickname);
-        if (age != null) this.age = validateAge(age);
-        if (gender != null) this.gender = gender;
-        if (imageUrl != null) this.imageUrl = validateImageUrl(imageUrl);
-        if (description != null) this.description = validateDescription(description);
-        if (baseLocation != null) this.baseLocation = validateBaseLocation(baseLocation);
+        String baseLocation
+    ) {
+        if (nickname == null) this.nickname = nickname;
+        if (age == null) this.age = age;
+        if (gender == null) this.gender = gender;
+        if (imageUrl == null) this.imageUrl = imageUrl;
+        if (description == null) this.description = description;
+        if (baseLocation == null) this.baseLocation = baseLocation;
     }
 
     public void increaseLikes() {
@@ -110,51 +111,5 @@ public class Profile extends BaseEntity {
 
     public void increaseDislikes() {
         this.dislikes++;
-    }
-
-    private String validateNickname(String raw) {
-        if (raw == null) throw new IllegalArgumentException("닉네임은 필수입니다.");
-        String trimmed = raw.trim();
-        if (trimmed.length() < 2 || trimmed.length() > 20) {
-            throw new IllegalArgumentException("닉네임은 2~20자여야 합니다.");
-        }
-        return trimmed;
-    }
-
-    private Integer validateAge(Integer age) {
-        if (age == null) throw new IllegalArgumentException("나이는 필수입니다.");
-        if (age < 14 || age > 100) {
-            throw new IllegalArgumentException("나이는 14~100 사이여야 합니다.");
-        }
-        return age;
-    }
-
-    private String validateImageUrl(String imageUrl) {
-        if (imageUrl != null) {
-            if (imageUrl.isBlank()) {
-                throw new IllegalArgumentException("이미지 URL이 비어 있을 수 없습니다.");
-            }
-            if (imageUrl.length() > 255) {
-                throw new IllegalArgumentException("이미지 URL은 255자 이하여야 합니다.");
-            }
-        }
-        return imageUrl;
-    }
-
-    private String validateDescription(String desc) {
-        if (desc != null && desc.length() > 500) {
-            throw new IllegalArgumentException("소개글은 500자 이하여야 합니다.");
-        }
-        return desc;
-    }
-
-    private String validateBaseLocation(String baseLocation) {
-        if (baseLocation == null || baseLocation.isBlank()) {
-            throw new IllegalArgumentException("기본 활동 지역은 필수입니다.");
-        }
-        if (baseLocation.length() > 100) {
-            throw new IllegalArgumentException("기본 활동 지역은 100자 이하여야 합니다.");
-        }
-        return baseLocation;
     }
 }
