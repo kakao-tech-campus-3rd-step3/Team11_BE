@@ -21,6 +21,6 @@ VALUES (
 INSERT INTO member_role (member_id, name)
 VALUES (
            (SELECT id FROM member WHERE email = 'user@test.com'),
-           'ROLE_ADMIN'
+           'ROLE_USER'
        );
 
