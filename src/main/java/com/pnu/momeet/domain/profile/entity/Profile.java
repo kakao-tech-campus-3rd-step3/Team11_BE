@@ -97,12 +97,12 @@ public class Profile extends BaseEntity {
         String description,
         String baseLocation
     ) {
-        if (nickname == null) this.nickname = nickname;
-        if (age == null) this.age = age;
-        if (gender == null) this.gender = gender;
-        if (imageUrl == null) this.imageUrl = imageUrl;
-        if (description == null) this.description = description;
-        if (baseLocation == null) this.baseLocation = baseLocation;
+        if (nickname != null) this.nickname = nickname;
+        if (age != null) this.age = age;
+        if (gender != null) this.gender = gender;
+        if (imageUrl != null) this.imageUrl = imageUrl;
+        if (description != null) this.description = description;
+        if (baseLocation != null) this.baseLocation = baseLocation;
     }
 
     public void increaseLikes() {

@@ -2,6 +2,7 @@ package com.pnu.momeet.domain.profile.service;
 
 import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
 import com.pnu.momeet.domain.profile.dto.ProfileResponse;
+import com.pnu.momeet.domain.profile.dto.ProfileUpdateRequest;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.mapper.EntityMapper;
@@ -47,5 +48,28 @@ public class ProfileService {
         );
 
         return EntityMapper.toResponseDto(profileRepository.save(newProfile));
+    }
+
+    @Transactional
+    public ProfileResponse updateMyProfile(UUID memberId, @Valid ProfileUpdateRequest request) {
+        Profile profile = profileRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
+
+        if (request.nickname() != null && !profile.getNickname().equalsIgnoreCase(request.nickname().trim())) {
+            if (profileRepository.existsByNicknameIgnoreCase(request.nickname().trim())) {
+                throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+            }
+        }
+
+        profile.updateProfile(
+            request.nickname(),
+            request.age(),
+            request.gender() != null ? Gender.valueOf(request.gender().toUpperCase()) : null,
+            request.imageUrl(),
+            request.description(),
+            request.baseLocation()
+        );
+
+        return EntityMapper.toResponseDto(profile);
     }
 }
