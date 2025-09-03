@@ -2,9 +2,14 @@ package com.pnu.momeet.unit.profile;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
 import com.pnu.momeet.domain.profile.dto.ProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
@@ -59,13 +64,88 @@ class ProfileServiceTest {
     @Test
     @DisplayName("내 프로필 조회 실패 - 프로필 없음이면 NoSuchElementException 발생")
     void getMyProfile_notFound() {
-        // given
         UUID memberId = UUID.randomUUID();
         given(profileRepository.findByMemberId(memberId)).willReturn(Optional.empty());
 
-        // when / then
         assertThrows(NoSuchElementException.class,
             () -> profileService.getMyProfile(memberId));
         verify(profileRepository).findByMemberId(memberId);
+    }
+
+    @Test
+    @DisplayName("내 프로필 생성 성공")
+    void createMyProfile_success() {
+        UUID memberId = UUID.randomUUID();
+        ProfileCreateRequest request = new ProfileCreateRequest(
+            "새로운유저",
+            30,
+            "FEMALE",
+            "url",
+            "소개",
+            "장소"
+        );
+
+        given(profileRepository.existsByMemberId(memberId)).willReturn(false);
+        given(profileRepository.existsByNicknameIgnoreCase(request.nickname().trim())).willReturn(false);
+        given(profileRepository.save(any(Profile.class))).will(returnsFirstArg());
+
+        ProfileResponse resp = profileService.createMyProfile(memberId, request);
+
+        assertThat(resp.nickname()).isEqualTo("새로운유저");
+        assertThat(resp.age()).isEqualTo(30);
+        assertThat(resp.gender()).isEqualTo(Gender.FEMALE);
+
+        verify(profileRepository).existsByMemberId(memberId);
+        verify(profileRepository).existsByNicknameIgnoreCase(request.nickname().trim());
+        verify(profileRepository).save(any(Profile.class));
+    }
+
+    @Test
+    @DisplayName("내 프로필 생성 실패 - 이미 프로필이 존재하면 IllegalStateException 발생")
+    void createMyProfile_fail_profileAlreadyExists() {
+        // given
+        UUID memberId = UUID.randomUUID();
+        ProfileCreateRequest request = new ProfileCreateRequest(
+            "닉네임",
+            20,
+            "MALE",
+            "url",
+            "소개",
+            "장소"
+        );
+
+        given(profileRepository.existsByMemberId(memberId)).willReturn(true);
+
+        // when & then
+        assertThrows(IllegalStateException.class,
+            () -> profileService.createMyProfile(memberId, request));
+
+        verify(profileRepository).existsByMemberId(memberId);
+        verify(profileRepository, never()).existsByNicknameIgnoreCase(anyString());
+        verify(profileRepository, never()).save(any(Profile.class));
+    }
+
+    @Test
+    @DisplayName("내 프로필 생성 실패 - 이미 닉네임이 존재하면 IllegalArgumentException 발생")
+    void createMyProfile_fail_nicknameAlreadyExists() {
+        UUID memberId = UUID.randomUUID();
+        ProfileCreateRequest request = new ProfileCreateRequest(
+            "중복된닉네임",
+            20,
+            "MALE",
+            "url",
+            "소개",
+            "장소"
+        );
+
+        given(profileRepository.existsByMemberId(memberId)).willReturn(false);
+        given(profileRepository.existsByNicknameIgnoreCase(request.nickname().trim())).willReturn(true);
+
+        assertThrows(IllegalArgumentException.class,
+            () -> profileService.createMyProfile(memberId, request));
+
+        verify(profileRepository).existsByMemberId(memberId);
+        verify(profileRepository).existsByNicknameIgnoreCase(request.nickname().trim());
+        verify(profileRepository, never()).save(any(Profile.class));
     }
 }
