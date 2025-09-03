@@ -71,6 +71,47 @@ class ProfileServiceTest {
     }
 
     @Test
+    @DisplayName("ID로 프로필 단건 조회 성공")
+    void getProfileById_success() {
+        // given
+        UUID profileId = UUID.randomUUID();
+        Profile profile = Profile.create(
+            UUID.randomUUID(), // memberId
+            "다른유저",
+            35,
+            Gender.FEMALE,
+            "url",
+            "소개글",
+            "서울 서초구"
+        );
+        given(profileRepository.findById(profileId)).willReturn(Optional.of(profile));
+
+        // when
+        ProfileResponse resp = profileService.getProfileById(profileId);
+
+        // then
+        assertThat(resp.nickname()).isEqualTo("다른유저");
+        assertThat(resp.age()).isEqualTo(35);
+        assertThat(resp.gender()).isEqualTo(Gender.FEMALE);
+
+        verify(profileRepository).findById(profileId);
+    }
+
+    @Test
+    @DisplayName("ID로 프로필 단건 조회 실패 - 프로필 없음")
+    void getProfileById_fail_notFound() {
+        // given
+        UUID profileId = UUID.randomUUID();
+        given(profileRepository.findById(profileId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(NoSuchElementException.class,
+            () -> profileService.getProfileById(profileId));
+
+        verify(profileRepository).findById(profileId);
+    }
+
+    @Test
     @DisplayName("내 프로필 생성 성공")
     void createMyProfile_success() {
         UUID memberId = UUID.randomUUID();
@@ -196,7 +237,7 @@ class ProfileServiceTest {
 
         given(profileRepository.findByMemberId(memberId)).willReturn(Optional.empty());
 
-        assertThrows(IllegalStateException.class,
+        assertThrows(NoSuchElementException.class,
             () -> profileService.updateMyProfile(memberId, request));
 
         verify(profileRepository).findByMemberId(memberId);

@@ -29,6 +29,15 @@ public class ProfileService {
         return EntityMapper.toResponseDto(profile);
     }
 
+    @Transactional(readOnly = true)
+    public ProfileResponse getProfileById(UUID profileId) {
+        Profile profile = profileRepository.findById(profileId)
+            .orElseThrow(() -> new NoSuchElementException(
+                "ID에 해당하는 프로필을 찾을 수 없습니다: " + profileId
+            ));
+        return EntityMapper.toResponseDto(profile);
+    }
+
     public ProfileResponse createMyProfile(UUID memberId, ProfileCreateRequest request) {
         if (profileRepository.existsByMemberId(memberId)) {
             throw new IllegalStateException("프로필이 이미 존재합니다.");

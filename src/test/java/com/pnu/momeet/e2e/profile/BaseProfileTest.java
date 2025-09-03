@@ -7,6 +7,7 @@ import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,9 @@ public abstract class BaseProfileTest extends BaseE2ETest {
     @Autowired
     protected EmailAuthService emailAuthService;
 
+    public static final UUID TEST_USER_PROFILE_UUID = UUID.fromString(
+        "b1a2b3c4-d5e6-7890-abcd-ef1234567890"
+    );
     public static final String TEST_USER_PROFILE_NICKNAME = "테스트유저";
     public static final String TEST_USER_PROFILE_LOCATION = "부산 금정구";
     public static final int TEST_USER_PROFILE_AGE = 25;
