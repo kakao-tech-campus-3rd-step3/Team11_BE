@@ -75,5 +75,7 @@ jobs:
           chmod 600 private_key.pem
           scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/MoMeetServer-0.0.1-SNAPSHOT.jar ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/MoMeetServer.jar
           scp -i private_key.pem -o StrictHostKeyChecking=no scripts/deploy.sh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/deploy.sh
-          ssh -i private_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "chmod +x /home/${{ secrets.EC2_USERNAME }}/deploy.sh && /home/${{ secrets.EC2_USERNAME }}/deploy.sh"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "chmod +x /home/${{ secrets.EC2_USERNAME }}/deploy.sh"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "/home/${{ secrets.EC2_USERNAME }}/deploy.sh"
           rm -f private_key.pem
+
