@@ -38,6 +38,7 @@ public class ProfileService {
         return EntityMapper.toResponseDto(profile);
     }
 
+    @Transactional
     public ProfileResponse createMyProfile(UUID memberId, ProfileCreateRequest request) {
         if (profileRepository.existsByMemberId(memberId)) {
             throw new IllegalStateException("프로필이 이미 존재합니다.");

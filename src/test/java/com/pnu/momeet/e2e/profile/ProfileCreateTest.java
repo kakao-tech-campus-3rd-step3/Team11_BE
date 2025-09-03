@@ -48,9 +48,9 @@ public class ProfileCreateTest extends BaseProfileTest {
             "닉네임",
             20,
             "FEMALE",
-            "부산",
             "url",
-            "소개"
+            "소개",
+            "부산"
         );
 
         RestAssured
@@ -71,9 +71,9 @@ public class ProfileCreateTest extends BaseProfileTest {
             "닉",
             20,
             "FEMALE",
-            "부산",
             "url",
-            "소개"
+            "소개",
+            "부산"
         );
 
         RestAssured
@@ -95,9 +95,9 @@ public class ProfileCreateTest extends BaseProfileTest {
             "테스트유저",
             30,
             "MALE",
-            "경기",
             "url",
-            "소개"
+            "소개",
+            "경기"
         );
 
         RestAssured

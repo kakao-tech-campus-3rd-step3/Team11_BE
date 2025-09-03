@@ -26,13 +26,13 @@ public record ProfileCreateRequest (
     @NotBlank(message = "성별은 필수입니다.")
     String gender,
 
-    @NotBlank(message = "지역은 반드시 입력해야 합니다. (예: '부산 금정구', '서울 마포구')")
-    String baseLocation,
-
     @Size(max = 255, message = "이미지 URL은 최대 255자까지 입력할 수 있습니다.")
     String imageUrl,
 
     @Size(max = 500, message = "최대 500자까지 작성할 수 있습니다.")
-    String description
+    String description,
+
+    @NotBlank(message = "지역은 반드시 입력해야 합니다. (예: '부산 금정구', '서울 마포구')")
+    String baseLocation
     ) {
 }
