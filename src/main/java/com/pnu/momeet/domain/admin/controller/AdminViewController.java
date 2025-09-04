@@ -15,23 +15,17 @@ public class AdminViewController {
     }
 
     @GetMapping
-    public String adminMain(Model model) {
-        model.addAttribute("title", "관리자 대시보드");
-        model.addAttribute("content", "admin/dashboard :: content");
-        return "admin/layout";
+    public String adminMain() {
+        return "admin/dashboard";
     }
 
     @GetMapping("/members")
-    public String memberManagement(Model model) {
-        model.addAttribute("title", "회원 관리");
-        model.addAttribute("content", "admin/members :: content");
-        return "admin/layout";
+    public String memberManagement() {
+        return "admin/members";
     }
 
     @GetMapping("/profiles")
-    public String profileManagement(Model model) {
-        model.addAttribute("title", "프로필 관리");
-        model.addAttribute("content", "admin/profiles :: content");
-        return "admin/layout";
+    public String profileManagement() {
+        return "admin/profiles";
     }
 }
