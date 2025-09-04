@@ -8,12 +8,11 @@ spring:
     password: ${DB_PASSWORD}
 
   jpa:
+    database: postgresql
+    database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
     show-sql: true
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
     defer-datasource-initialization: true
 
   sql:
