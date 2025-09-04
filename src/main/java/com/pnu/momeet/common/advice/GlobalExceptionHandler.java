@@ -15,6 +15,7 @@ import java.util.*;
 public class GlobalExceptionHandler {
 
     private Map<String, List<String>> extractValidationErrors(MethodArgumentNotValidException e) {
+        // 필드 에러 처리
         Map<String, List<String>> fieldErrors = new HashMap<>();
         e.getBindingResult()
             .getFieldErrors()
@@ -26,6 +27,14 @@ public class GlobalExceptionHandler {
                 }
                 fieldErrors.computeIfAbsent(field, key -> new ArrayList<>()).add(message);
         });
+
+        // 글로벌 에러 처리 (클래스 레벨)
+        e.getBindingResult().getGlobalErrors().forEach(error -> {
+            String message = error.getDefaultMessage();
+            if (message == null) return;
+            fieldErrors.computeIfAbsent("global", key -> new ArrayList<>()).add(message);
+        });
+
         return fieldErrors;
     }
 

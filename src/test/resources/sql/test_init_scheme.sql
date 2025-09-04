@@ -23,7 +23,6 @@ CREATE TABLE member_role (
     member_id VARCHAR(36) NOT NULL,
     name VARCHAR(50) NOT NULL,
     granted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-    UNIQUE(member_id, name),
     CONSTRAINT fk_member FOREIGN KEY (member_id) REFERENCES member(id) ON DELETE CASCADE
 );
 

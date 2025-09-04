@@ -11,7 +11,7 @@ public class RoleSetValidator implements ConstraintValidator<RoleSet, List<Strin
     @Override
     public boolean isValid(List<String> roles, jakarta.validation.ConstraintValidatorContext context) {
         if (roles == null || roles.isEmpty()) {
-            return false;
+            return true; // 값이 없으면 검증 통과
         }
 
         for (String role : roles) {

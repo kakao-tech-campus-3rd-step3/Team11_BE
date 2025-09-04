@@ -23,8 +23,7 @@ CREATE TABLE member_role (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     member_id uuid NOT NULL REFERENCES member(id) ON DELETE CASCADE,
     name varchar(50) NOT NULL,
-    granted_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    UNIQUE(member_id, name)
+    granted_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE refresh_token (
