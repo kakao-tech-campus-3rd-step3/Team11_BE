@@ -3,22 +3,36 @@ package com.pnu.momeet.e2e.profile;
 import com.pnu.momeet.common.model.TokenPair;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.member.enums.Role;
+import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.jdbc.Sql;
 
 @Tag("profile")
 public abstract class BaseProfileTest extends BaseE2ETest {
 
     protected Map<Role, TokenPair> testTokens;
+    protected List<UUID> membersToBeDeleted;
+    protected List<UUID> profilesToBeDeleted;
 
     @Autowired
     protected EmailAuthService emailAuthService;
+
+    @Autowired
+    protected MemberService memberService;
+
+    @Autowired
+    protected ProfileRepository profileRepository;
 
     public static final UUID TEST_USER_PROFILE_UUID = UUID.fromString(
         "b1a2b3c4-d5e6-7890-abcd-ef1234567890"
@@ -32,8 +46,23 @@ public abstract class BaseProfileTest extends BaseE2ETest {
         super.setup();
         RestAssured.basePath = "/api/profiles";
         testTokens = new HashMap<>();
+        membersToBeDeleted = new ArrayList<>();
+        profilesToBeDeleted = new ArrayList<>();
         testTokens.put(Role.ROLE_ADMIN, emailAuthService.login(TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD));
         testTokens.put(Role.ROLE_USER, emailAuthService.login(TEST_USER_EMAIL, TEST_USER_PASSWORD));
+    }
+
+    @AfterEach
+    protected void tearDown() {
+        if (profilesToBeDeleted != null && !profilesToBeDeleted.isEmpty()) {
+            profilesToBeDeleted.forEach(profileId -> profileRepository.deleteById(profileId));
+            profilesToBeDeleted.clear();
+        }
+
+        if (membersToBeDeleted != null && !membersToBeDeleted.isEmpty()) {
+            membersToBeDeleted.forEach(memberId -> memberService.deleteMemberById(memberId));
+            membersToBeDeleted.clear();
+        }
     }
 
     protected TokenPair getToken() {

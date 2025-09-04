@@ -8,6 +8,9 @@ import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.response.ExtractableResponse;
+import io.restassured.response.Response;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +29,7 @@ public class ProfileCreateTest extends BaseProfileTest {
             "새로운 자기소개입니다."
         );
 
-        RestAssured
+        ExtractableResponse<Response> response = RestAssured
             .given().log().all()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_ADMIN).accessToken())
             .contentType(ContentType.JSON)
@@ -38,7 +41,11 @@ public class ProfileCreateTest extends BaseProfileTest {
             .header("Location", "/api/profiles/me")
             .body("nickname", equalTo("새로운닉네임"))
             .body("age", equalTo(25))
-            .body("id", notNullValue());
+            .body("id", notNullValue())
+            .extract();
+
+        UUID createdProfileId = UUID.fromString(response.jsonPath().getString("id"));
+        profilesToBeDeleted.add(createdProfileId);
     }
 
     @Test

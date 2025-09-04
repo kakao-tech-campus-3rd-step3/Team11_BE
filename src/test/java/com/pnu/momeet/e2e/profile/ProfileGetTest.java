@@ -3,31 +3,12 @@ package com.pnu.momeet.e2e.profile;
 import static org.hamcrest.Matchers.equalTo;
 
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.profile.entity.Profile;
-import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import io.restassured.RestAssured;
-import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
 public class ProfileGetTest extends BaseProfileTest {
-
-    @Autowired
-    private ProfileRepository profileRepository;
-
-    private Profile testProfile;
-
-    @BeforeEach
-    void setUp() {
-        Optional<Profile> profileOptional = profileRepository.findById(TEST_USER_PROFILE_UUID);
-
-        this.testProfile = profileOptional.orElseThrow(
-            () -> new IllegalStateException("테스트용 프로필을 찾을 수 없습니다.")
-        );
-    }
 
     @Test
     @DisplayName("프로필 단건 조회 성공 - 200 OK")
@@ -41,10 +22,10 @@ public class ProfileGetTest extends BaseProfileTest {
             .given().log().all()
             .header(AUTH_HEADER, BEAR_PREFIX + accessToken)
             .when()
-            .get("/{profileId}", testProfile.getId())
+            .get("/{profileId}", TEST_USER_PROFILE_UUID)
             .then().log().all()
             .statusCode(HttpStatus.OK.value())
-            .body("id", equalTo(testProfile.getId().toString()))
+            .body("id", equalTo(TEST_USER_PROFILE_UUID.toString()))
             .body("nickname", equalTo(TEST_USER_PROFILE_NICKNAME));
     }
 
@@ -72,7 +53,7 @@ public class ProfileGetTest extends BaseProfileTest {
         RestAssured
             .given().log().all()
             .when()
-            .get("/{profileId}", testProfile.getId())
+            .get("/{profileId}", TEST_USER_PROFILE_UUID)
             .then().log().all()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
     }

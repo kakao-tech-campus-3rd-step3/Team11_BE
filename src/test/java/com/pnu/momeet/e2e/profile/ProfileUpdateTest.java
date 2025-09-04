@@ -12,7 +12,6 @@ import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,29 +25,24 @@ public class ProfileUpdateTest extends BaseProfileTest {
     @Autowired
     private ProfileRepository profileRepository;
 
-    @BeforeEach
-    void setUp() {
-        // '프로필이 이미 존재'하는 시나리오를 위해 ROLE_USER 계정에 프로필을 미리 생성
-        Member user = memberRepository.findMemberByEmail(TEST_USER_EMAIL).orElseThrow();
-        if (!profileRepository.existsByMemberId(user.getId())) {
-            Profile userProfile = Profile.create(
-                user.getId(),
-                "기존유저",
-                25,
-                Gender.MALE,
-                "url",
-                "소개",
-                "장소"
-            );
-            profileRepository.save(userProfile);
-        }
-    }
-
     @Test
     @DisplayName("프로필 수정 성공 - 200 OK")
     void updateMyProfile_success() {
+        Member testUser = new Member(
+            "test.update@test.com",
+            "pass",
+            List.of(Role.ROLE_USER)
+        );
+        memberRepository.save(testUser);
+        membersToBeDeleted.add(testUser.getId());
+
         ProfileUpdateRequest request = new ProfileUpdateRequest(
-            "수정된닉네임", 30, "FEMALE", null, "수정된소개", null
+            "수정된닉네임",
+            30,
+            "FEMALE",
+            null,
+            "수정된소개",
+            null
         );
 
         RestAssured
@@ -69,6 +63,13 @@ public class ProfileUpdateTest extends BaseProfileTest {
     @Test
     @DisplayName("프로필 수정 실패 - 401 Unauthorized (토큰 없음)")
     void updateMyProfile_fail_unauthorized() {
+        Member anotherUser = new Member(
+            "another@test.com",
+            "pass",
+            List.of(Role.ROLE_USER)
+        );
+        memberRepository.saveAndFlush(anotherUser);
+        membersToBeDeleted.add(anotherUser.getId());
         ProfileUpdateRequest request = new ProfileUpdateRequest(
             "수정",
             30,
@@ -122,6 +123,7 @@ public class ProfileUpdateTest extends BaseProfileTest {
             List.of(Role.ROLE_USER)
         );
         memberRepository.save(anotherUser);
+        membersToBeDeleted.add(anotherUser.getId());
         Profile conflictingProfile = Profile.create(
             anotherUser.getId(),
             "중복된닉네임",
