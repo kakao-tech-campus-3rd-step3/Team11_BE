@@ -24,9 +24,9 @@ public class ProfileCreateTest extends BaseProfileTest {
             "새로운닉네임",
             25,
             "MALE",
-            "서울 강남구",
             "http://example.com/profile.jpg",
-            "새로운 자기소개입니다."
+            "새로운 자기소개입니다.",
+            "서울 강남구"
         );
 
         ExtractableResponse<Response> response = RestAssured
