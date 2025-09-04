@@ -28,3 +28,15 @@ VALUES (
            'ROLE_USER'
        );
 
+INSERT INTO profile (
+    id, member_id, nickname, age, gender, image_url, description, base_location
+) VALUES (
+             'b1a2b3c4-d5e6-7890-abcd-ef1234567890',
+             '62344955-c8d3-4032-9352-f3b90f2b4eaa',
+             '테스트유저',
+             25,
+             'MALE',
+             'https://cdn.example.com/profiles/user.png',
+             '테스트 환경용 기본 프로필',
+             '부산 금정구'
+         );

@@ -1,6 +1,7 @@
 package com.pnu.momeet.common.security.details;
 
 import com.pnu.momeet.domain.member.dto.MemberInfo;
+import java.util.UUID;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -48,5 +49,9 @@ public class CustomUserDetails implements UserDetails {
 
     public LocalDateTime getTokenIssuedAt() {
         return memberInfo.tokenIssuedAt();
+    }
+
+    public UUID getMemberId() {
+        return memberInfo.id();
     }
 }
