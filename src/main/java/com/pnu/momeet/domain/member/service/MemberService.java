@@ -64,7 +64,8 @@ public class MemberService {
 
     @Transactional
     public Member validateAndUpdatePasswordById(UUID id, String oldPassword, String newPassword) {
-        Member member = disableMemberById(id); // 사용자 정보 변경 전 비활성화
+        Member member = findMemberById(id);
+        member.setEnabled(false); // 비밀번호 변경 전 비활성화
 
         if (!passwordEncoder.matches(oldPassword, member.getPassword())) {
             throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
@@ -75,7 +76,8 @@ public class MemberService {
 
     @Transactional
     public Member updatePasswordById(UUID id, String newPassword) {
-        Member member = disableMemberById(id);
+        Member member = findMemberById(id);
+        member.setEnabled(false); // 비밀번호 변경 전 비활성화
         member.setPassword(passwordEncoder.encode(newPassword));
         return memberRepository.save(member);
     }
