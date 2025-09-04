@@ -1,5 +1,7 @@
 package com.pnu.momeet.domain.auth.service;
 
+import com.pnu.momeet.common.exception.BannedAccountException;
+import com.pnu.momeet.common.exception.ExistEmailException;
 import com.pnu.momeet.common.model.TokenPair;
 import com.pnu.momeet.common.security.JwtTokenProvider;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
@@ -51,6 +53,10 @@ public class EmailAuthService {
 
     @Transactional
     public TokenPair signUp(String email, String password) {
+        if (memberService.existsByEmail(email)) {
+            throw new ExistEmailException("이미 가입한 이메일입니다.");
+        }
+
         Member savedMember = memberService.saveMember(new Member(email, password, List.of(Role.ROLE_USER)));
         return generateTokenPair(savedMember.getId());
     }
@@ -74,7 +80,7 @@ public class EmailAuthService {
         }
 
         if (!member.isAccountNonLocked()) {
-            throw new AuthenticationException("잠긴 계정입니다. 관리자에게 문의하세요.") {};
+            throw new BannedAccountException("잠긴 계정입니다. 관리자에게 문의하세요.") {};
         }
 
         return generateTokenPair(member.getId());
@@ -98,7 +104,7 @@ public class EmailAuthService {
             throw new AuthenticationException("리프레시 토큰이 만료되었습니다. 다시 로그인 해주세요.") {
             };
         } catch (Exception e) {
-            throw new AuthenticationException("유효하지 않은 리프레시 토큰입니다.") {
+            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") {
             };
         }
 
@@ -106,7 +112,7 @@ public class EmailAuthService {
                 () -> new AuthenticationException("로그아웃된 사용자입니다. 다시 로그인 해주세요.") {});
 
         if (!savedToken.getValue().equals(refreshToken)) {
-            throw new AuthenticationException("유효하지 않은 리프레시 토큰입니다.") {};
+            throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") {};
         }
 
         return generateTokenPair(memberId);

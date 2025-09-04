@@ -48,6 +48,10 @@ public class MemberService {
         );
     }
 
+    public boolean existsByEmail(String email) {
+        return memberRepository.existsByEmail(email);
+    }
+
     public Member disableMemberById(UUID id) {
         Member member = findMemberById(id);
         member.setEnabled(false);
