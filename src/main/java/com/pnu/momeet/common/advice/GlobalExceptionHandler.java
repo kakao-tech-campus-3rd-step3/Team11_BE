@@ -1,5 +1,7 @@
 package com.pnu.momeet.common.advice;
 
+import com.pnu.momeet.common.exception.BannedAccountException;
+import com.pnu.momeet.common.exception.ExistEmailException;
 import com.pnu.momeet.common.exception.UnMatchedPasswordException;
 import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.http.HttpStatus;
@@ -79,12 +81,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(problemDetail);
     }
 
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ProblemDetail> handleAuthenticationException(AuthenticationException e) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
-        problemDetail.setTitle("인증 실패 오류");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
+    @ExceptionHandler(BannedAccountException.class)
+    public ResponseEntity<ProblemDetail> handleBannedAccountException(BannedAccountException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+        problemDetail.setTitle("차단된 계정 오류");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
     }
 
-
+    @ExceptionHandler(ExistEmailException.class)
+    public ResponseEntity<ProblemDetail> handleExistEmailException(ExistEmailException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+        problemDetail.setTitle("중복된 이메일 오류");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
+    }
 }
