@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MoMeet 관리자 로그인</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #ffffff;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .login-container {
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        border: 1px solid #f0f0f0;
+      }
+
+      .login-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .login-logo {
+        max-width: 100px;
+        height: auto;
+        margin-bottom: 15px;
+      }
+
+      .login-header h1 {
+        color: #ff8a8a;
+        font-size: 2rem;
+        margin-bottom: 10px;
+      }
+
+      .login-header p {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+        font-weight: 500;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #f0f0f0;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #ff8a8a;
+      }
+
+      .login-btn {
+        width: 100%;
+        padding: 12px;
+        background: #ff8a8a;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      .login-btn:hover {
+        background: #e67373;
+      }
+
+      .login-btn:disabled {
+        background: #bdc3c7;
+        cursor: not-allowed;
+      }
+
+      .error-message {
+        color: #dc3545;
+        text-align: center;
+        margin-top: 10px;
+        font-size: 0.9rem;
+        display: none;
+      }
+
+      .success-message {
+        color: #28a745;
+        text-align: center;
+        margin-top: 10px;
+        font-size: 0.9rem;
+        display: none;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      .spinner {
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #ff8a8a;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-header">
+        <img src="https://i.ibb.co/fY9Dg11q/Group-36.png" alt="MoMeet Logo" class="login-logo" />
+        <h1>MoMeet 관리자</h1>
+        <p>관리자 계정으로 로그인하세요</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">이메일</label>
+          <input type="email" id="email" name="email" required placeholder="admin@test.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">비밀번호</label>
+          <input type="password" id="password" name="password" required placeholder="testpass1212!" />
+        </div>
+
+        <button type="submit" class="login-btn" id="loginBtn">로그인</button>
+      </form>
+
+      <div class="error-message" id="errorMessage"></div>
+      <div class="success-message" id="successMessage"></div>
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>로그인 중...</p>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById("loginForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const loginBtn = document.getElementById("loginBtn");
+        const loading = document.getElementById("loading");
+        const errorMessage = document.getElementById("errorMessage");
+        const successMessage = document.getElementById("successMessage");
+
+        // UI 상태 초기화
+        loginBtn.disabled = true;
+        loading.style.display = "block";
+        errorMessage.style.display = "none";
+        successMessage.style.display = "none";
+
+        try {
+          const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: email,
+              password: password,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            // 토큰 저장
+            localStorage.setItem("accessToken", data.accessToken);
+            localStorage.setItem("refreshToken", data.refreshToken);
+
+            successMessage.textContent = "로그인 성공! 관리자 페이지로 이동합니다...";
+            successMessage.style.display = "block";
+
+            // 2초 후 관리자 페이지로 리다이렉트
+            setTimeout(() => {
+              window.location.href = "/admin";
+            }, 2000);
+          } else {
+            errorMessage.textContent = data.detail || "로그인에 실패했습니다.";
+            errorMessage.style.display = "block";
+            loginBtn.disabled = false;
+          }
+        } catch (error) {
+          errorMessage.textContent = "네트워크 오류가 발생했습니다.";
+          errorMessage.style.display = "block";
+          loginBtn.disabled = false;
+        } finally {
+          loading.style.display = "none";
+        }
+      });
+
+      // 페이지 로드 시 기본값 설정
+      window.addEventListener("load", function () {
+        document.getElementById("email").value = "admin@test.com";
+        document.getElementById("password").value = "testpass1212!";
+      });
+    </script>
+  </body>
+</html>

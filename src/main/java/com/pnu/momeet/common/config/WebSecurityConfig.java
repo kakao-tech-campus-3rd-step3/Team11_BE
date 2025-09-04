@@ -33,7 +33,9 @@ public class WebSecurityConfig {
             "/api/auth/refresh",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/error"
+            "/error",
+            "/admin",  // 관리자 페이지 허용
+            "/admin/**",
     };
 
     @Bean
