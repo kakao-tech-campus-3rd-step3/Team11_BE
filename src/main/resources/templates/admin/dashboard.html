@@ -219,8 +219,8 @@
           <div class="dashboard-grid">
             <div class="dashboard-card">
               <h3>총 회원수</h3>
-              <div class="number">1,234</div>
-              <div class="description">이번 달 신규 가입: 56명</div>
+              <div class="number" id="totalMembers">-</div>
+              <div class="description" id="todayNewMembers">오늘 신규 가입: -명</div>
             </div>
             <div class="dashboard-card">
               <h3>활성 모임</h3>
@@ -233,6 +233,68 @@
     </div>
 
     <script>
+      // 페이지 로드 시 데이터 불러오기
+      document.addEventListener("DOMContentLoaded", function () {
+        loadDashboardData();
+      });
+
+      async function loadDashboardData() {
+        try {
+          const token = localStorage.getItem("accessToken");
+          if (!token) {
+            console.error("토큰이 없습니다");
+            return;
+          }
+
+          // 전체 회원수 가져오기 (큰 사이즈로 요청해서 totalElements 사용)
+          const response = await fetch("/api/members?page=0&size=1", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          // 총 회원수 업데이트
+          document.getElementById("totalMembers").textContent = data.totalElements.toLocaleString();
+
+          // 오늘 신규 가입자 계산
+          const today = new Date();
+          const todayString = today.toISOString().split("T")[0]; // YYYY-MM-DD 형식
+
+          let todayNewMembers = 0;
+          if (data.content && data.content.length > 0) {
+            // 전체 데이터를 가져와서 오늘 가입자 계산
+            const allMembersResponse = await fetch(`/api/members?page=0&size=${data.totalElements}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (allMembersResponse.ok) {
+              const allMembersData = await allMembersResponse.json();
+              todayNewMembers = allMembersData.content.filter((member) => {
+                const memberDate = new Date(member.createdAt).toISOString().split("T")[0];
+                return memberDate === todayString;
+              }).length;
+            }
+          }
+
+          // 오늘 신규 가입자 업데이트
+          document.getElementById("todayNewMembers").textContent = `오늘 신규 가입: ${todayNewMembers}명`;
+        } catch (error) {
+          console.error("대시보드 데이터 로딩 실패:", error);
+          document.getElementById("totalMembers").textContent = "오류";
+          document.getElementById("todayNewMembers").textContent = "오늘 신규 가입: 오류";
+        }
+      }
+
       function logout() {
         // JWT 토큰 제거
         localStorage.removeItem("accessToken");
