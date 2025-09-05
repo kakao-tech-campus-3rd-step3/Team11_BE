@@ -22,12 +22,6 @@ public class SigunguService {
         );
     }
 
-    public Sigungu findBySigunguCode(String sigunguCode) {
-        return  sigunguRepository.findBySigunguCode(sigunguCode).orElseThrow(
-            () -> new IllegalArgumentException("해당 시군구코드의 시군구가 존재하지 않습니다. sigunguCode=" + sigunguCode)
-        );
-    }
-
     public Sigungu findByPointIn(double latitude, double longitude) {
         Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
 
@@ -40,7 +34,7 @@ public class SigunguService {
         return sigunguRepository.findAllBy(pageable);
     }
 
-    public Page<Sigungu> findAllBySidoCode(String sidoCode, PageRequest pageable) {
+    public Page<Sigungu> findAllBySidoCode(Long sidoCode, PageRequest pageable) {
         return sigunguRepository.findAllBySidoCode(sidoCode, pageable);
     }
 }

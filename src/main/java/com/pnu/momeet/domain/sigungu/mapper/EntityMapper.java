@@ -14,11 +14,10 @@ public class EntityMapper {
     public static SigunguResponse toDto(Sigungu sigungu) {
         Point baseLocation = sigungu.getBaseLocation();
         return new SigunguResponse(
-                sigungu.getId(),
                 sigungu.getSidoName(),
                 sigungu.getSidoCode(),
                 sigungu.getSigunguName(),
-                sigungu.getSigunguCode(),
+                sigungu.getId(),
                 new BaseLocationResponse(
                         baseLocation.getX(),
                         baseLocation.getY()

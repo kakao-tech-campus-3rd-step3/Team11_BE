@@ -1,6 +1,8 @@
 package com.pnu.momeet.domain.sigungu.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.locationtech.jts.geom.Point;
@@ -16,20 +18,23 @@ import java.time.LocalDateTime;
 @Getter
 public class Sigungu {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "sgg_code", nullable = false)
     private Long id;
 
-    @Column(name="sido_name")
+    @NotNull
+    @Column(name = "sido_code", nullable = false)
+    private Long sidoCode;
+
+    @Size(max = 255)
+    @NotNull
+    @Column(name = "sido_name", nullable = false)
     private String sidoName;
 
-    @Column(name="sido_code")
-    private String sidoCode;
-
-    @Column(name="sgg_name")
+    @Size(max = 255)
+    @NotNull
+    @Column(name = "sgg_name", nullable = false)
     private String sigunguName;
 
-    @Column(name="sgg_code", unique = true)
-    private String sigunguCode;
 
     @Column(name="geom", columnDefinition = "geometry(Polygon, 4326)")
     private Polygon area;

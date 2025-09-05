@@ -11,6 +11,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MemberPageRequest extends BasePageRequest {
 
-    @AllowSortFields(fields = {"email", "createdAt", "updatedAt"})
+    @AllowSortFields(fields = {"email", "createdAt", "updatedAt"}, showFields = true)
     private String sort;
 }

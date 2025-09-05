@@ -30,7 +30,7 @@ public class SigunguController {
             sigunguPage = sigunguService.findAll(DtoMapper.toPageRequest(request));
         } else {
             sigunguPage = sigunguService.findAllBySidoCode(
-                    String.valueOf(request.getSidoCode()),
+                    request.getSidoCode(),
                     DtoMapper.toPageRequest(request)
             );
         }
@@ -43,15 +43,6 @@ public class SigunguController {
         @PathVariable Long id
     ) {
         Sigungu sigungu = sigunguService.findById(id);
-        return ResponseEntity.ok(EntityMapper.toDto(sigungu));
-    }
-
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @GetMapping("/code/{sigunguCode}")
-    public ResponseEntity<SigunguResponse> sigunguInfoByCode(
-        @PathVariable String  sigunguCode
-    ) {
-        Sigungu sigungu = sigunguService.findBySigunguCode(sigunguCode);
         return ResponseEntity.ok(EntityMapper.toDto(sigungu));
     }
 

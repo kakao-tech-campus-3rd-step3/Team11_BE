@@ -3,11 +3,10 @@ package com.pnu.momeet.domain.sigungu.dto;
 import java.time.LocalDateTime;
 
 public record SigunguResponse (
-    Long id,
     String sidoName,
-    String sidoCode,
+    Long sidoCode,
     String sigunguName,
-    String sigunguCode,
+    Long sigunguCode,
     BaseLocationResponse baseLocation,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
