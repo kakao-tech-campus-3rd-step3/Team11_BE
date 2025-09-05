@@ -75,7 +75,36 @@ jobs:
           chmod 600 private_key.pem
           scp -i private_key.pem -o StrictHostKeyChecking=no build/libs/MoMeetServer-0.0.1-SNAPSHOT.jar ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/MoMeetServer.jar
           scp -i private_key.pem -o StrictHostKeyChecking=no scripts/deploy.sh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/deploy.sh
-          ssh -i private_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "chmod +x /home/${{ secrets.EC2_USERNAME }}/deploy.sh"
-          ssh -i private_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "/home/${{ secrets.EC2_USERNAME }}/deploy.sh"
-          rm -f private_key.pem
+          # SSH를 통해 원격 서버에서 여러 명령을 실행합니다.
+          # 이 방식을 사용하면 스크립트 실행 후 로그를 즉시 확인할 수 있습니다.
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
+            echo "SSH connection successful."
+          
+            # 배포 스크립트에 실행 권한을 부여합니다.
+            chmod +x /home/${{ secrets.EC2_USERNAME }}/deploy.sh
+          
+            echo "Starting deployment script..."
+            # 스크립트를 실행합니다. 스크립트 내부에서 백그라운드 실행 및 로그 기록을 처리합니다.
+            /home/${{ secrets.EC2_USERNAME }}/deploy.sh
+            echo "Waiting for the application to start..."
+            sleep 10
+          
+            # 스크립트 실행 후 로그 파일 내용을 출력하여 GitHub Actions 로그에서 바로 확인합니다.
+            echo "-------------------------------------"
+            echo "Content of deploy.log:"
+            echo "-------------------------------------"
+            cat /home/${{ secrets.EC2_USERNAME }}/logs/deploy.log
+            echo "-------------------------------------"
+            echo "Content of app.log (last 20 lines):"
+            echo "-------------------------------------"
+            tail -n 20 /home/${{ secrets.EC2_USERNAME }}/logs/app.log
+          
+            # 애플리케이션이 정상적으로 실행되고 있는지 확인합니다.
+            echo "-------------------------------------"
+            echo "Running processes:"
+            echo "-------------------------------------"
+            ps aux | grep java
+          EOF
 
+          rm -f private_key.pem
+          echo "Deployment job finished."
