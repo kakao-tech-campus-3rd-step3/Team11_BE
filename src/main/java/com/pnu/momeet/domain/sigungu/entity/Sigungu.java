@@ -13,7 +13,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name="sigungu_boundary")
+@Table(name="sigungu_boundary", schema = "public")
 @Setter
 @Getter
 public class Sigungu {

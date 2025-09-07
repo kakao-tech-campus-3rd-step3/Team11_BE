@@ -69,10 +69,10 @@ public class MemberReadTest extends BaseMemberTest {
                 .statusCode(200)
                 .body(
                     "content.size()", equalTo(5),
-                    "totalElements", greaterThanOrEqualTo(15),
-                    "totalPages", greaterThanOrEqualTo(3),
-                    "number", equalTo(0),
-                    "size", equalTo(5),
+                    "page.totalElements", greaterThanOrEqualTo(15),
+                    "page.totalPages", greaterThanOrEqualTo(3),
+                    "page.number", equalTo(0),
+                    "page.size", equalTo(5),
                     "content[0].id", notNullValue()
                 );
     }
@@ -93,10 +93,10 @@ public class MemberReadTest extends BaseMemberTest {
                 .statusCode(200)
                 .body(
                     "content.size()", equalTo(5),
-                    "totalElements", greaterThanOrEqualTo(15),
-                    "totalPages", greaterThanOrEqualTo(3),
-                    "number", equalTo(0),
-                    "size", equalTo(5),
+                    "page.totalElements", greaterThanOrEqualTo(15),
+                    "page.totalPages", greaterThanOrEqualTo(3),
+                    "page.number", equalTo(0),
+                    "page.size", equalTo(5),
                     "content[0].id", notNullValue()
                 )
                 .extract()
@@ -117,7 +117,7 @@ public class MemberReadTest extends BaseMemberTest {
             Map.of("page", 0, "size", 0),   // size 0
             Map.of("page", -1, "size", 5),   // page -1
             Map.of("sort", "invalidField,asc") // 정렬 필드 잘못됨
-        ).forEach(params -> {
+        ).forEach(params ->
             RestAssured
                 .given()
                     .header(AUTH_HEADER, BEAR_PREFIX + getToken().accessToken())
@@ -126,8 +126,8 @@ public class MemberReadTest extends BaseMemberTest {
                     .get()
                 .then()
                     .log().all()
-                    .statusCode(400);
-        });
+                    .statusCode(400)
+        );
     }
 
     @Test

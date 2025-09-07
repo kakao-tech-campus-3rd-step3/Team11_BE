@@ -9,10 +9,9 @@ spring:
 
   jpa:
     database: postgresql
-    database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
     show-sql: true
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     defer-datasource-initialization: true
 
   sql:
