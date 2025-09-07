@@ -9,6 +9,7 @@ import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 
@@ -18,12 +19,14 @@ public class SigunguService {
     private final SigunguRepository sigunguRepository;
     private final GeometryFactory geometryFactory;
 
+    @Transactional(readOnly = true)
     public Sigungu findById(Long id) {
         return sigunguRepository.findById(id).orElseThrow(
             () -> new NoSuchElementException("해당 id의 시군구가 존재하지 않습니다. id=" + id)
         );
     }
 
+    @Transactional(readOnly = true)
     public Sigungu findByPointIn(double latitude, double longitude) {
         Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
 
@@ -32,10 +35,12 @@ public class SigunguService {
         );
     }
 
+    @Transactional(readOnly = true)
     public Page<Sigungu> findAll(PageRequest pageable) {
         return sigunguRepository.findAllBy(pageable);
     }
 
+    @Transactional(readOnly = true)
     public Page<Sigungu> findAllBySidoCode(Long sidoCode, PageRequest pageable) {
         return sigunguRepository.findAllBySidoCode(sidoCode, pageable);
     }

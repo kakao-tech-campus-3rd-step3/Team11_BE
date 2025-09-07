@@ -56,7 +56,3 @@ CREATE TABLE profile (
 
 -- 닉네임 대소문자 무시 유니크
 CREATE UNIQUE INDEX IF NOT EXISTS uq_profile_nickname_ci ON profile (LOWER(btrim(nickname)));
-
-CREATE TABLE IF NOT EXISTS sigungu_boundary (
-
-)

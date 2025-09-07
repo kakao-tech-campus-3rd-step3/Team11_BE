@@ -3,7 +3,9 @@ package com.pnu.momeet.domain.sigungu.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 @Table(name="sigungu_boundary", schema = "public")
 @Setter
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Sigungu {
     @Id
     @Column(name = "sgg_code", nullable = false)
