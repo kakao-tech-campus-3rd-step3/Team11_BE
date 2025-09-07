@@ -13,8 +13,6 @@ public class SigunguPageRequest extends BasePageRequest {
 
     private Long sidoCode;
 
-    private Long sigunguCode;
-
     @AllowSortFields(fields = {"sidoName", "sigunguName"}, showFields = true)
     private String sort;
 }

@@ -10,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
+
 @Service
 @RequiredArgsConstructor
 public class SigunguService {
@@ -18,7 +20,7 @@ public class SigunguService {
 
     public Sigungu findById(Long id) {
         return sigunguRepository.findById(id).orElseThrow(
-            () -> new IllegalArgumentException("해당 id의 시군구가 존재하지 않습니다. id=" + id)
+            () -> new NoSuchElementException("해당 id의 시군구가 존재하지 않습니다. id=" + id)
         );
     }
 
@@ -26,7 +28,7 @@ public class SigunguService {
         Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
 
         return sigunguRepository.findByPointIn(point).orElseThrow(
-            () -> new IllegalArgumentException("해당 좌표의 시군구가 존재하지 않습니다. point=" + point)
+            () -> new NoSuchElementException("해당 좌표의 시군구가 존재하지 않습니다. point=" + point)
         );
     }
 
