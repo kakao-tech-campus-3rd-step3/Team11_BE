@@ -20,9 +20,9 @@
 ## 백엔드 기술 스택 🛠️
 - Java 21, Spring Boot 3
 - Spring Security + OAuth2
+- Spring Data JPA
 - JPA + PostgreSQL(+PostGIS)
-- MongoDB(채팅 히스토리)
-- Redis(Cache/Pub-Sub)
+- Redis(Cache)
 - WebSocket + STOMP
 
 ## 진행 상태 🚧

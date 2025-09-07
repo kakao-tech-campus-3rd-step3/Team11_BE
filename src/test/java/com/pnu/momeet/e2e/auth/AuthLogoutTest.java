@@ -1,0 +1,57 @@
+package com.pnu.momeet.e2e.auth;
+
+import com.pnu.momeet.common.model.TokenPair;
+import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.member.entity.Member;
+import com.pnu.momeet.domain.member.enums.Role;
+import io.restassured.RestAssured;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+
+@DisplayName("인증 E2E 테스트 - 로그아웃")
+public class AuthLogoutTest extends BaseAuthTest {
+    @Autowired
+    private EmailAuthService emailAuthService;
+    private TokenPair loginnedInTokenPair;
+
+    @BeforeEach
+    @Override
+    protected void setup() {
+        super.setup();
+        Member loggedInMember = new Member("testLogout@test.com", testPassword, List.of(Role.ROLE_USER));
+        loggedInMember = memberService.saveMember(loggedInMember);
+        loginnedInTokenPair = emailAuthService.login(loggedInMember.getEmail(), testPassword);
+
+        toBeDeleted.add(loggedInMember);
+    }
+
+    @Test
+    @DisplayName("로그아웃 성공 테스트")
+    public void logout_success() {
+        RestAssured
+            .given()
+                .header(AUTH_HEADER, BEAR_PREFIX + loginnedInTokenPair.accessToken())
+            .when()
+                .post("/logout")
+            .then()
+                .log().all()
+                .statusCode(200);
+    }
+
+    @Test
+    @DisplayName("로그아웃 실패 테스트 - 인증 실패(401 Unauthorized)")
+    public void logout_fail_unauthorized() {
+        RestAssured
+            .given()
+                .header(AUTH_HEADER, BEAR_PREFIX + "invalidToken")
+            .when()
+                .post("/logout")
+            .then()
+                .log().all()
+                .statusCode(401);
+    }
+}

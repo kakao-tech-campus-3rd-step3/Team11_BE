@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: MoMeet
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    database: postgresql
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:sql/init_scheme.sql, classpath:sql/init_data.sql
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token:
+    expiration: ${ACCESS_TOKEN_EXPIRATION_SECONDS}
+  refresh-token:
+    expiration: ${REFRESH_TOKEN_EXPIRATION_SECONDS}
+  issuer: ${JWT_ISSUER}

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>회원 관리 - MoMeet 관리자</title>
+    <style>
+      /* 기본 스타일 복사 */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #ffffff;
+        color: #333;
+      }
+
+      .admin-container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        width: 250px;
+        background-color: #ffffff;
+        color: #333;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        border-right: 1px solid #e0e0e0;
+      }
+
+      .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid #e0e0e0;
+        text-align: center;
+      }
+
+      .sidebar-header h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #ff8a8a;
+        margin-top: 10px;
+      }
+
+      .sidebar-logo {
+        max-width: 80px;
+        height: auto;
+        border-radius: 8px;
+      }
+
+      .sidebar-nav {
+        padding: 20px 0;
+      }
+
+      .sidebar-nav ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .sidebar-nav li {
+        margin-bottom: 5px;
+      }
+
+      .sidebar-nav a {
+        display: block;
+        padding: 12px 20px;
+        color: #666;
+        text-decoration: none;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+      }
+
+      .sidebar-nav a:hover {
+        background-color: #fff5f5;
+        color: #ff8a8a;
+        border-left-color: #ff8a8a;
+      }
+
+      .sidebar-nav a.active {
+        background-color: #fff5f5;
+        color: #ff8a8a;
+        border-left-color: #ff8a8a;
+      }
+
+      .main-content {
+        flex: 1;
+        background-color: #f8f9fa;
+      }
+
+      .content-header {
+        background: white;
+        padding: 20px 30px;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .content-header h1 {
+        color: #333;
+        font-size: 1.8rem;
+        font-weight: 600;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .logout-btn {
+        padding: 8px 16px;
+        background: #ff8a8a;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s ease;
+      }
+
+      .logout-btn:hover {
+        background: #ff7070;
+      }
+
+      .content-body {
+        padding: 30px;
+      }
+
+      .dashboard-card {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid #f0f0f0;
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .search-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .search-controls select {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+      }
+
+      .refresh-btn {
+        padding: 8px 16px;
+        background: #ff8a8a;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .refresh-btn:hover {
+        background: #ff7070;
+      }
+
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+      }
+
+      .data-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+      }
+
+      .data-table tr:hover {
+        background: #f8f9fa;
+      }
+
+      .role-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .role-admin {
+        background: #ffe6e6;
+        color: #ff4444;
+      }
+
+      .role-user {
+        background: #e6f3ff;
+        color: #0066cc;
+      }
+
+      .action-btn {
+        padding: 4px 8px;
+        margin: 0 2px;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .action-btn:hover {
+        background: #e9ecef;
+      }
+
+      .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+      }
+
+      .pagination-controls {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+
+      .pagination-controls button {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        background: white;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      .pagination-controls button:hover:not(:disabled) {
+        background: #f8f9fa;
+      }
+
+      .pagination-controls button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .page-number {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        background: white;
+        cursor: pointer;
+        border-radius: 4px;
+        margin: 0 2px;
+      }
+
+      .page-number.active {
+        background: #ff8a8a;
+        color: white;
+        border-color: #ff8a8a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin-container">
+      <!-- 사이드바 -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <img src="https://i.ibb.co/fY9Dg11q/Group-36.png" alt="MoMeet Logo" class="sidebar-logo" />
+          <h2>MoMeet 관리자</h2>
+        </div>
+        <nav class="sidebar-nav">
+          <ul>
+            <li><a th:href="@{/admin}">대시보드</a></li>
+            <li><a th:href="@{/admin/members}" class="active">회원 관리</a></li>
+            <li><a th:href="@{/admin/profiles}">프로필 관리</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- 메인 콘텐츠 -->
+      <main class="main-content">
+        <header class="content-header">
+          <h1>회원 관리</h1>
+          <div class="user-info">
+            <span>관리자님 환영합니다</span>
+            <button onclick="logout()" class="logout-btn">로그아웃</button>
+          </div>
+        </header>
+
+        <div class="content-body">
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3>회원 관리</h3>
+              <div class="search-controls">
+                <select id="sortSelect">
+                  <option value="createdAt,desc">최신 가입순</option>
+                  <option value="createdAt,asc">오래된 가입순</option>
+                  <option value="email,asc">이메일순</option>
+                </select>
+                <select id="pageSizeSelect">
+                  <option value="10">10개씩</option>
+                  <option value="20" selected>20개씩</option>
+                  <option value="50">50개씩</option>
+                </select>
+                <button onclick="loadMembers()" class="refresh-btn">새로고침</button>
+              </div>
+            </div>
+
+            <div id="loadingMessage" style="text-align: center; padding: 20px">회원 목록을 불러오는 중...</div>
+
+            <div id="memberTableContainer" style="display: none">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>이메일</th>
+                    <th>역할</th>
+                    <th>가입일</th>
+                    <th>마지막 수정일</th>
+                    <th>액션</th>
+                  </tr>
+                </thead>
+                <tbody id="memberTableBody"></tbody>
+              </table>
+
+              <div class="pagination-container">
+                <div class="pagination-info">
+                  <span id="paginationInfo"></span>
+                </div>
+                <div class="pagination-controls">
+                  <button id="prevButton" onclick="goToPage(currentPage - 1)">이전</button>
+                  <span id="pageNumbers"></span>
+                  <button id="nextButton" onclick="goToPage(currentPage + 1)">다음</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="errorMessage" style="display: none; color: red; text-align: center; padding: 20px">회원 목록을 불러오는데 실패했습니다.</div>
+          </div>
+
+          <style>
+            .card-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+              padding-bottom: 15px;
+              border-bottom: 1px solid #eee;
+            }
+
+            .search-controls {
+              display: flex;
+              gap: 10px;
+              align-items: center;
+            }
+
+            .search-controls select {
+              padding: 8px 12px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              background: white;
+            }
+
+            .refresh-btn {
+              padding: 8px 16px;
+              background: #ff8a8a;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+            }
+
+            .refresh-btn:hover {
+              background: #ff7070;
+            }
+
+            .data-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+            }
+
+            .data-table th,
+            .data-table td {
+              padding: 12px;
+              text-align: left;
+              border-bottom: 1px solid #eee;
+            }
+
+            .data-table th {
+              background: #f8f9fa;
+              font-weight: 600;
+            }
+
+            .data-table tr:hover {
+              background: #f8f9fa;
+            }
+
+            .role-badge {
+              padding: 4px 8px;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: 500;
+            }
+
+            .role-admin {
+              background: #ffe6e6;
+              color: #ff4444;
+            }
+
+            .role-user {
+              background: #e6f3ff;
+              color: #0066cc;
+            }
+
+            .action-btn {
+              padding: 4px 8px;
+              margin: 0 2px;
+              background: #f8f9fa;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 12px;
+            }
+
+            .action-btn:hover {
+              background: #e9ecef;
+            }
+
+            .pagination-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 20px;
+            }
+
+            .pagination-controls {
+              display: flex;
+              gap: 5px;
+              align-items: center;
+            }
+
+            .pagination-controls button {
+              padding: 8px 12px;
+              border: 1px solid #ddd;
+              background: white;
+              cursor: pointer;
+              border-radius: 4px;
+            }
+
+            .pagination-controls button:hover:not(:disabled) {
+              background: #f8f9fa;
+            }
+
+            .pagination-controls button:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+            }
+
+            .page-number {
+              padding: 8px 12px;
+              border: 1px solid #ddd;
+              background: white;
+              cursor: pointer;
+              border-radius: 4px;
+              margin: 0 2px;
+            }
+
+            .page-number.active {
+              background: #ff8a8a;
+              color: white;
+              border-color: #ff8a8a;
+            }
+          </style>
+
+          <script>
+            let currentPage = 0;
+            let totalPages = 0;
+            let pageSize = 20;
+            let currentSort = "createdAt,desc";
+
+            // 페이지 로드 시 회원 목록 불러오기
+            document.addEventListener("DOMContentLoaded", function () {
+              loadMembers();
+            });
+
+            async function loadMembers() {
+              try {
+                document.getElementById("loadingMessage").style.display = "block";
+                document.getElementById("memberTableContainer").style.display = "none";
+                document.getElementById("errorMessage").style.display = "none";
+
+                const token = localStorage.getItem("accessToken");
+                if (!token) {
+                  throw new Error("토큰이 없습니다");
+                }
+
+                const response = await fetch(`/api/members?page=${currentPage}&size=${pageSize}&sort=${currentSort}`, {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                  },
+                });
+
+                if (!response.ok) {
+                  throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayMembers(data);
+
+                document.getElementById("loadingMessage").style.display = "none";
+                document.getElementById("memberTableContainer").style.display = "block";
+              } catch (error) {
+                console.error("회원 목록 로딩 실패:", error);
+                document.getElementById("loadingMessage").style.display = "none";
+                document.getElementById("errorMessage").style.display = "block";
+              }
+            }
+
+            function displayMembers(pageData) {
+              const tbody = document.getElementById("memberTableBody");
+              tbody.innerHTML = "";
+
+              totalPages = pageData.totalPages;
+
+              pageData.content.forEach((member) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+          <td>${member.email}</td>
+          <td>
+            <span class="role-badge ${member.roles.includes("ROLE_ADMIN") ? "role-admin" : "role-user"}">
+              ${member.roles.includes("ROLE_ADMIN") ? "관리자" : "일반 사용자"}
+            </span>
+          </td>
+          <td>${formatDate(member.createdAt)}</td>
+          <td>${formatDate(member.updatedAt)}</td>
+          <td>
+            <button class="action-btn" onclick="viewMember('${member.id}')">보기</button>
+            <button class="action-btn" onclick="editMember('${member.id}')">수정</button>
+            <button class="action-btn" onclick="deleteMember('${member.id}')">삭제</button>
+          </td>
+        `;
+                tbody.appendChild(row);
+              });
+
+              updatePaginationInfo(pageData);
+              updatePaginationControls();
+            }
+
+            function updatePaginationInfo(pageData) {
+              const info = document.getElementById("paginationInfo");
+              const start = pageData.number * pageData.size + 1;
+              const end = Math.min((pageData.number + 1) * pageData.size, pageData.totalElements);
+              info.textContent = `${start}-${end} of ${pageData.totalElements} 회원`;
+            }
+
+            function updatePaginationControls() {
+              document.getElementById("prevButton").disabled = currentPage === 0;
+              document.getElementById("nextButton").disabled = currentPage >= totalPages - 1;
+
+              const pageNumbers = document.getElementById("pageNumbers");
+              pageNumbers.innerHTML = "";
+
+              const startPage = Math.max(0, currentPage - 2);
+              const endPage = Math.min(totalPages - 1, currentPage + 2);
+
+              for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement("span");
+                pageBtn.className = `page-number ${i === currentPage ? "active" : ""}`;
+                pageBtn.textContent = i + 1;
+                pageBtn.onclick = () => goToPage(i);
+                pageNumbers.appendChild(pageBtn);
+              }
+            }
+
+            function goToPage(page) {
+              if (page >= 0 && page < totalPages && page !== currentPage) {
+                currentPage = page;
+                loadMembers();
+              }
+            }
+
+            function formatDate(dateString) {
+              const date = new Date(dateString);
+              return date.toLocaleDateString("ko-KR", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+            }
+
+            // 검색 옵션 변경 핸들러
+            document.addEventListener("DOMContentLoaded", function () {
+              document.getElementById("sortSelect").addEventListener("change", function () {
+                currentSort = this.value;
+                currentPage = 0;
+                loadMembers();
+              });
+
+              document.getElementById("pageSizeSelect").addEventListener("change", function () {
+                pageSize = parseInt(this.value);
+                currentPage = 0;
+                loadMembers();
+              });
+            });
+
+            // 액션 함수들 (임시 구현)
+            function viewMember(id) {
+              alert(`회원 상세보기: ${id}`);
+            }
+
+            function editMember(id) {
+              alert(`회원 수정: ${id}`);
+            }
+
+            function deleteMember(id) {
+              if (confirm("정말로 이 회원을 삭제하시겠습니까?")) {
+                alert(`회원 삭제: ${id}`);
+              }
+            }
+
+            function logout() {
+              localStorage.removeItem("accessToken");
+              localStorage.removeItem("refreshToken");
+              window.location.href = "/admin/login";
+            }
+          </script>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

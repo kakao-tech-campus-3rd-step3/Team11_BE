@@ -1,0 +1,85 @@
+package com.pnu.momeet.domain.profile.service;
+
+import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
+import com.pnu.momeet.domain.profile.dto.ProfileResponse;
+import com.pnu.momeet.domain.profile.dto.ProfileUpdateRequest;
+import com.pnu.momeet.domain.profile.entity.Profile;
+import com.pnu.momeet.domain.profile.enums.Gender;
+import com.pnu.momeet.domain.profile.mapper.EntityMapper;
+import com.pnu.momeet.domain.profile.repository.ProfileRepository;
+import jakarta.validation.Valid;
+import java.util.NoSuchElementException;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ProfileService {
+
+    private final ProfileRepository profileRepository;
+
+    @Transactional(readOnly = true)
+    public ProfileResponse getMyProfile(UUID memberId) {
+        Profile profile = profileRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
+        return EntityMapper.toResponseDto(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public ProfileResponse getProfileById(UUID profileId) {
+        Profile profile = profileRepository.findById(profileId)
+            .orElseThrow(() -> new NoSuchElementException(
+                "ID에 해당하는 프로필을 찾을 수 없습니다: " + profileId
+            ));
+        return EntityMapper.toResponseDto(profile);
+    }
+
+    @Transactional
+    public ProfileResponse createMyProfile(UUID memberId, ProfileCreateRequest request) {
+        if (profileRepository.existsByMemberId(memberId)) {
+            throw new IllegalStateException("프로필이 이미 존재합니다.");
+        }
+        if (profileRepository.existsByNicknameIgnoreCase(request.nickname().trim())) {
+            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+        }
+
+        Profile newProfile = Profile.create(
+            memberId,
+            request.nickname(),
+            request.age(),
+            Gender.valueOf(request.gender().toUpperCase()),
+            request.imageUrl(),
+            request.description(),
+            request.baseLocation()
+        );
+
+        return EntityMapper.toResponseDto(profileRepository.save(newProfile));
+    }
+
+    @Transactional
+    public ProfileResponse updateMyProfile(UUID memberId, @Valid ProfileUpdateRequest request) {
+        Profile profile = profileRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
+
+        if (request.nickname() != null && !profile.getNickname().equalsIgnoreCase(request.nickname().trim())) {
+            if (profileRepository.existsByNicknameIgnoreCase(request.nickname().trim())) {
+                throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+            }
+        }
+
+        profile.updateProfile(
+            request.nickname(),
+            request.age(),
+            request.gender() != null ? Gender.valueOf(request.gender().toUpperCase()) : null,
+            request.imageUrl(),
+            request.description(),
+            request.baseLocation()
+        );
+
+        return EntityMapper.toResponseDto(profile);
+    }
+}
