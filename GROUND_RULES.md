@@ -259,6 +259,30 @@ DB_PASS=password
 JWT_SECRET=your-secret-key
 ```
 
+#### 데이터베이스 설정
+1. PostgreSQL 설치 및 실행(17.5+ 권장)
+
+2. 데이터베이스 및 사용자 생성
+
+```sql
+CREATE DATABASE team11_dev;
+CREATE USER team11 WITH ENCRYPTED PASSWORD 'password';
+GRANT ALL PRIVILEGES ON DATABASE team11_dev TO team11;
+```
+
+3. PostGIS 확장 설치 (위치 기반 기능 사용 시)
+
+```sql
+CREATE EXTENSION postgis;
+```
+
+4. 시군구 영역 데이터 import
+
+```bash
+psql -U [username] -d team11_dev -f sql/sigungu_schema.sql
+pgdump -U [username] -d team11_dev -f sql/sigungu_data.sql
+```
+
 ### 4. 개발 도구 설정
 
 #### IDE 설정 (IntelliJ IDEA)
