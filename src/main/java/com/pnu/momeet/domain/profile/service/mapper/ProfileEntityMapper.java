@@ -1,11 +1,11 @@
-package com.pnu.momeet.domain.profile.mapper;
+package com.pnu.momeet.domain.profile.service.mapper;
 
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 
-public class EntityMapper {
+public class ProfileEntityMapper {
 
-    private EntityMapper() {}
+    private ProfileEntityMapper() {}
 
     public static ProfileResponse toResponseDto(Profile profile) {
         return new ProfileResponse(

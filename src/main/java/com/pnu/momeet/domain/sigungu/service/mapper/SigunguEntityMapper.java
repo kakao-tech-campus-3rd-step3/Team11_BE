@@ -1,13 +1,13 @@
-package com.pnu.momeet.domain.sigungu.mapper;
+package com.pnu.momeet.domain.sigungu.service.mapper;
 
 import com.pnu.momeet.domain.sigungu.dto.response.BaseLocationResponse;
 import com.pnu.momeet.domain.sigungu.dto.response.SigunguResponse;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import org.locationtech.jts.geom.Point;
 
-public class EntityMapper {
+public class SigunguEntityMapper {
 
-    private EntityMapper() {
+    private SigunguEntityMapper() {
         // private constructor to prevent instantiation
     }
 
