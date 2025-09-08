@@ -1,7 +1,6 @@
 package com.pnu.momeet.domain.auth.service;
 
 import com.pnu.momeet.common.exception.BannedAccountException;
-import com.pnu.momeet.common.exception.ExistEmailException;
 import com.pnu.momeet.common.model.TokenPair;
 import com.pnu.momeet.common.security.JwtTokenProvider;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
@@ -53,10 +52,6 @@ public class EmailAuthService {
 
     @Transactional
     public TokenPair signUp(String email, String password) {
-        if (memberService.existsByEmail(email)) {
-            throw new ExistEmailException("이미 가입한 이메일입니다.");
-        }
-
         Member savedMember = memberService.saveMember(new Member(email, password, List.of(Role.ROLE_USER)));
         return generateTokenPair(savedMember.getId());
     }

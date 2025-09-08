@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.member.repository.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +26,7 @@ public class MemberService {
     @Transactional
     public Member saveMember(Member member) {
         if (memberRepository.existsByEmail(member.getEmail())) {
-            throw new IllegalArgumentException("이미 가입한 이메일입니다.");
+            throw new DuplicateKeyException("이미 가입한 이메일입니다.");
         }
         String encodedPassword = passwordEncoder.encode(member.getPassword());
         member.setPassword(encodedPassword);
@@ -48,14 +49,10 @@ public class MemberService {
         );
     }
 
-    public boolean existsByEmail(String email) {
-        return memberRepository.existsByEmail(email);
-    }
-
-    public Member disableMemberById(UUID id) {
+    public void disableMemberById(UUID id) {
         Member member = findMemberById(id);
         member.setEnabled(false);
-        return memberRepository.save(member);
+        memberRepository.save(member);
     }
 
     @Transactional
