@@ -40,7 +40,7 @@ public class SigunguService {
 
     @Transactional(readOnly = true)
     public Page<SigunguResponse> findAll(Pageable pageable) {
-        return sigunguRepository.findAllBy(pageable)
+        return sigunguRepository.findAll(pageable)
                 .map(SigunguEntityMapper::toDto);
     }
 

@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,8 +44,8 @@ public class MemberService {
     }
 
     @Transactional(readOnly = true)
-    public Page<MemberResponse> findAllMembers(PageRequest pageRequest) {
-        return memberRepository.findAllBy(pageRequest)
+    public Page<MemberResponse> findAllMembers(Pageable pageable) {
+        return memberRepository.findAll(pageable)
             .map(MemberEntityMapper::toDto);
     }
 
