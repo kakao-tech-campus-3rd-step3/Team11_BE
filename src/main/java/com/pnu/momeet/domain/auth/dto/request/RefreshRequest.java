@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.auth.dto;
+package com.pnu.momeet.domain.auth.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

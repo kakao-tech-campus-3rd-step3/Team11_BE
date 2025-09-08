@@ -1,8 +1,7 @@
 package com.pnu.momeet.e2e.auth;
 
-import com.pnu.momeet.common.model.TokenPair;
-import com.pnu.momeet.domain.auth.dto.RefreshRequest;
-import com.pnu.momeet.domain.auth.dto.TokenResponse;
+import com.pnu.momeet.domain.auth.dto.request.RefreshRequest;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
@@ -23,7 +22,7 @@ public class AuthRefreshTest extends BaseAuthTest {
     @Autowired
     private EmailAuthService emailAuthService;
     private Member loggedInMember;
-    private TokenPair loginnedInTokenPair;
+    private TokenResponse loginnedInTokenPair;
 
     @Autowired
     RefreshTokenRepository refreshTokenRepository;

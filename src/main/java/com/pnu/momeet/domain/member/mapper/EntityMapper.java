@@ -1,7 +1,7 @@
 package com.pnu.momeet.domain.member.mapper;
 
-import com.pnu.momeet.domain.member.dto.MemberInfo;
-import com.pnu.momeet.domain.member.dto.MemberResponse;
+import com.pnu.momeet.domain.member.dto.response.MemberInfo;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.entity.MemberRole;
 

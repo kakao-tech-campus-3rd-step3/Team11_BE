@@ -1,7 +1,7 @@
 package com.pnu.momeet.e2e.auth;
 
-import com.pnu.momeet.domain.auth.dto.LoginRequest;
-import com.pnu.momeet.domain.auth.dto.TokenResponse;
+import com.pnu.momeet.domain.auth.dto.request.LoginRequest;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;

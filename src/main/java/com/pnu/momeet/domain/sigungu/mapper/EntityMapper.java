@@ -1,7 +1,7 @@
 package com.pnu.momeet.domain.sigungu.mapper;
 
-import com.pnu.momeet.domain.sigungu.dto.BaseLocationResponse;
-import com.pnu.momeet.domain.sigungu.dto.SigunguResponse;
+import com.pnu.momeet.domain.sigungu.dto.response.BaseLocationResponse;
+import com.pnu.momeet.domain.sigungu.dto.response.SigunguResponse;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import org.locationtech.jts.geom.Point;
 

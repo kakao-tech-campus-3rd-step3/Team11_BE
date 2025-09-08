@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.member.controller;
 
-import com.pnu.momeet.domain.member.dto.*;
+import com.pnu.momeet.domain.member.dto.request.*;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.mapper.DtoMapper;
 import com.pnu.momeet.domain.member.mapper.EntityMapper;

@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.profile.dto;
+package com.pnu.momeet.domain.profile.dto.response;
 
 import com.pnu.momeet.domain.profile.enums.Gender;
 import java.math.BigDecimal;

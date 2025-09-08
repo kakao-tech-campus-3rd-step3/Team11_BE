@@ -1,8 +1,8 @@
 package com.pnu.momeet.e2e.member;
 
-import com.pnu.momeet.domain.member.dto.AdminChangePasswordRequest;
-import com.pnu.momeet.domain.member.dto.ChangePasswordRequest;
-import com.pnu.momeet.domain.member.dto.MemberEditRequest;
+import com.pnu.momeet.domain.member.dto.request.AdminChangePasswordRequest;
+import com.pnu.momeet.domain.member.dto.request.ChangePasswordRequest;
+import com.pnu.momeet.domain.member.dto.request.MemberEditRequest;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;

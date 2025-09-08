@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.member.dto;
+package com.pnu.momeet.domain.sigungu.dto.request;
 
 import com.pnu.momeet.common.validation.annotation.AllowSortFields;
 import com.pnu.momeet.domain.common.dto.BasePageRequest;
@@ -9,8 +9,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class MemberPageRequest extends BasePageRequest {
+public class SigunguPageRequest extends BasePageRequest {
 
-    @AllowSortFields(fields = {"email", "createdAt", "updatedAt"}, showFields = true)
+    private Long sidoCode;
+
+    @AllowSortFields(fields = {"sidoName", "sigunguName"}, showFields = true)
     private String sort;
 }

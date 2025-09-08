@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.sigungu.dto;
+package com.pnu.momeet.domain.sigungu.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 

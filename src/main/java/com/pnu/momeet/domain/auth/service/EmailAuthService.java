@@ -1,8 +1,8 @@
 package com.pnu.momeet.domain.auth.service;
 
 import com.pnu.momeet.common.exception.BannedAccountException;
-import com.pnu.momeet.common.model.TokenPair;
 import com.pnu.momeet.common.security.JwtTokenProvider;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
 import com.pnu.momeet.domain.member.enums.Provider;
@@ -33,7 +33,7 @@ public class EmailAuthService {
 
     private static final long IAT_BUFFER_SECONDS = 10;
 
-    private TokenPair generateTokenPair(UUID memberId) {
+    private TokenResponse generateTokenPair(UUID memberId) {
         // 토큰 발급 시점 기록 & 계정 활성화
         memberService.updateMemberById(memberId, member -> {
             member.setTokenIssuedAt(LocalDateTime.now().minusSeconds(IAT_BUFFER_SECONDS));
@@ -47,17 +47,17 @@ public class EmailAuthService {
         // 반환 이전에 refresh token 저장 또는 갱신
         refreshTokenRepository.save(new RefreshToken(memberId, refreshToken));
 
-        return new TokenPair(refreshToken, accessToken);
+        return new TokenResponse(accessToken, refreshToken);
     }
 
     @Transactional
-    public TokenPair signUp(String email, String password) {
+    public TokenResponse signUp(String email, String password) {
         Member savedMember = memberService.saveMember(new Member(email, password, List.of(Role.ROLE_USER)));
         return generateTokenPair(savedMember.getId());
     }
 
     @Transactional
-    public TokenPair login(String email, String password) {
+    public TokenResponse login(String email, String password) {
 
         Member member;
         try {
@@ -90,7 +90,7 @@ public class EmailAuthService {
     }
 
     @Transactional
-    public TokenPair refreshTokens(String refreshToken) {
+    public TokenResponse refreshTokens(String refreshToken) {
         UUID memberId;
         try {
             Claims payload = tokenProvider.getPayload(refreshToken);

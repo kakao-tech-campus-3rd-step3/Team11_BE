@@ -5,7 +5,7 @@ import static org.hamcrest.Matchers.equalTo;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.repository.MemberRepository;
-import com.pnu.momeet.domain.profile.dto.ProfileUpdateRequest;
+import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;

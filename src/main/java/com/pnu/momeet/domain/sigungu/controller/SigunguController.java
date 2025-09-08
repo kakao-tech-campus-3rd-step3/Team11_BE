@@ -1,8 +1,8 @@
 package com.pnu.momeet.domain.sigungu.controller;
 
-import com.pnu.momeet.domain.sigungu.dto.PointWithInRequest;
-import com.pnu.momeet.domain.sigungu.dto.SigunguPageRequest;
-import com.pnu.momeet.domain.sigungu.dto.SigunguResponse;
+import com.pnu.momeet.domain.sigungu.dto.request.PointWithInRequest;
+import com.pnu.momeet.domain.sigungu.dto.request.SigunguPageRequest;
+import com.pnu.momeet.domain.sigungu.dto.response.SigunguResponse;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.mapper.DtoMapper;
 import com.pnu.momeet.domain.sigungu.mapper.EntityMapper;

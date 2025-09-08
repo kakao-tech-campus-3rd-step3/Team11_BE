@@ -1,7 +1,7 @@
 package com.pnu.momeet.domain.sigungu.mapper;
 
 import com.pnu.momeet.domain.common.mapper.PageMapper;
-import com.pnu.momeet.domain.sigungu.dto.SigunguPageRequest;
+import com.pnu.momeet.domain.sigungu.dto.request.SigunguPageRequest;
 import org.springframework.data.domain.PageRequest;
 
 

@@ -1,6 +1,6 @@
 package com.pnu.momeet.domain.profile.mapper;
 
-import com.pnu.momeet.domain.profile.dto.ProfileResponse;
+import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 
 public class EntityMapper {

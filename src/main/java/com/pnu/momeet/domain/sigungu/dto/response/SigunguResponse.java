@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.sigungu.dto;
+package com.pnu.momeet.domain.sigungu.dto.response;
 
 import java.time.LocalDateTime;
 

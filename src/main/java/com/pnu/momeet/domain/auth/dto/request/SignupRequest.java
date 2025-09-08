@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.auth.dto;
+package com.pnu.momeet.domain.auth.dto.request;
 
 import com.pnu.momeet.common.validation.annotation.Password;
 import jakarta.validation.constraints.Email;

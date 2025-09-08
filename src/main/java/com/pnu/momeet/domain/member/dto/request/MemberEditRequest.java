@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.member.dto;
+package com.pnu.momeet.domain.member.dto.request;
 
 import com.pnu.momeet.common.validation.annotation.RoleSet;
 

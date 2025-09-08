@@ -2,7 +2,7 @@ package com.pnu.momeet.e2e.auth;
 
 import com.pnu.momeet.common.model.TokenInfo;
 import com.pnu.momeet.common.security.JwtTokenProvider;
-import com.pnu.momeet.domain.auth.dto.TokenResponse;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.service.MemberService;

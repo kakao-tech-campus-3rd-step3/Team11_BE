@@ -1,6 +1,6 @@
 package com.pnu.momeet.e2e.auth;
 
-import com.pnu.momeet.common.model.TokenPair;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
@@ -16,7 +16,7 @@ import java.util.List;
 public class AuthLogoutTest extends BaseAuthTest {
     @Autowired
     private EmailAuthService emailAuthService;
-    private TokenPair loginnedInTokenPair;
+    private TokenResponse loginnedintokenpair;
 
     @BeforeEach
     @Override
@@ -24,7 +24,7 @@ public class AuthLogoutTest extends BaseAuthTest {
         super.setup();
         Member loggedInMember = new Member("testLogout@test.com", testPassword, List.of(Role.ROLE_USER));
         loggedInMember = memberService.saveMember(loggedInMember);
-        loginnedInTokenPair = emailAuthService.login(loggedInMember.getEmail(), testPassword);
+        loginnedintokenpair = emailAuthService.login(loggedInMember.getEmail(), testPassword);
 
         toBeDeleted.add(loggedInMember);
     }
@@ -34,7 +34,7 @@ public class AuthLogoutTest extends BaseAuthTest {
     public void logout_success() {
         RestAssured
             .given()
-                .header(AUTH_HEADER, BEAR_PREFIX + loginnedInTokenPair.accessToken())
+                .header(AUTH_HEADER, BEAR_PREFIX + loginnedintokenpair.accessToken())
             .when()
                 .post("/logout")
             .then()

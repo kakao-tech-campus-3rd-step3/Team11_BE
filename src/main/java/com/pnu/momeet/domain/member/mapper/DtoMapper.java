@@ -1,9 +1,9 @@
 package com.pnu.momeet.domain.member.mapper;
 
 import com.pnu.momeet.domain.common.mapper.PageMapper;
-import com.pnu.momeet.domain.member.dto.MemberCreateRequest;
-import com.pnu.momeet.domain.member.dto.MemberEditRequest;
-import com.pnu.momeet.domain.member.dto.MemberPageRequest;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
+import com.pnu.momeet.domain.member.dto.request.MemberEditRequest;
+import com.pnu.momeet.domain.member.dto.request.MemberPageRequest;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import org.springframework.data.domain.PageRequest;

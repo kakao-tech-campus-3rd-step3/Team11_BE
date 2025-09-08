@@ -1,8 +1,8 @@
 package com.pnu.momeet.unit.auth;
 
 
-import com.pnu.momeet.common.model.TokenPair;
 import com.pnu.momeet.common.security.JwtTokenProvider;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
@@ -61,7 +61,7 @@ public class AuthServiceTest extends BaseUnitTest {
         Mockito.when(memberService.updateMemberById(Mockito.any(), Mockito.any())).thenReturn(member);
 
         // then
-        TokenPair result = authService.signUp(email, password);
+        TokenResponse result = authService.signUp(email, password);
         Assertions.assertNotNull(result);
         Assertions.assertEquals("refresh", result.refreshToken());
         Assertions.assertEquals("access", result.accessToken());
@@ -87,7 +87,7 @@ public class AuthServiceTest extends BaseUnitTest {
         Mockito.when(tokenProvider.generateRefreshToken(member.getId())).thenReturn("refresh");
 
         // then
-        TokenPair result = authService.login(email, password);
+        TokenResponse result = authService.login(email, password);
         Assertions.assertNotNull(result);
         Assertions.assertEquals("refresh", result.refreshToken());
         Assertions.assertEquals("access", result.accessToken());
@@ -130,7 +130,7 @@ public class AuthServiceTest extends BaseUnitTest {
         Mockito.when(memberService.updateMemberById(Mockito.any(), Mockito.any())).thenReturn(dummyMember);
 
         // then
-        TokenPair result = authService.refreshTokens(refreshToken);
+        TokenResponse result = authService.refreshTokens(refreshToken);
         Assertions.assertNotNull(result);
         Assertions.assertEquals("refresh", result.refreshToken());
         Assertions.assertEquals("access", result.accessToken());

@@ -1,7 +1,7 @@
 package com.pnu.momeet.e2e.member;
 
-import com.pnu.momeet.domain.member.dto.MemberCreateRequest;
-import com.pnu.momeet.domain.member.dto.MemberResponse;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -71,7 +71,7 @@ public class MemberCreateTest extends BaseMemberTest {
                 .post()
             .then()
                 .log().all()
-                .statusCode(400);
+                .statusCode(409);
     }
 
     @Test
