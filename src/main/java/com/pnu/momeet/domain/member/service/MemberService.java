@@ -2,7 +2,6 @@ package com.pnu.momeet.domain.member.service;
 
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.repository.MemberRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -10,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -33,22 +33,26 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
+    @Transactional(readOnly = true)
     public Page<Member> findAllMembers(PageRequest pageRequest) {
         return memberRepository.findAllBy(pageRequest);
     }
 
+    @Transactional(readOnly = true)
     public Member findMemberById(UUID id) {
         return memberRepository.findById(id).orElseThrow(
             () -> new NoSuchElementException("해당 Id의 사용자가 존재하지 않습니다. id=" + id)
         );
     }
 
+    @Transactional(readOnly = true)
     public Member findMemberByEmail(String email) {
         return memberRepository.findMemberByEmail(email).orElseThrow(
             () -> new NoSuchElementException("해당 이메일의 사용자가 존재하지 않습니다. email=" + email)
         );
     }
 
+    @Transactional
     public void disableMemberById(UUID id) {
         Member member = findMemberById(id);
         member.setEnabled(false);
