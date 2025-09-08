@@ -5,6 +5,8 @@ import com.pnu.momeet.common.security.JwtTokenProvider;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
+import com.pnu.momeet.domain.member.dto.response.MemberInfo;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
@@ -52,33 +54,33 @@ public class EmailAuthService {
 
     @Transactional
     public TokenResponse signUp(String email, String password) {
-        Member savedMember = memberService.saveMember(new Member(email, password, List.of(Role.ROLE_USER)));
-        return generateTokenPair(savedMember.getId());
+        MemberResponse savedMember = memberService.saveMember(new Member(email, password, List.of(Role.ROLE_USER)));
+        return generateTokenPair(savedMember.id());
     }
 
     @Transactional
     public TokenResponse login(String email, String password) {
 
-        Member member;
+        MemberInfo memberInfo;
         try {
-            member = memberService.findMemberByEmail(email);
+            memberInfo = memberService.findMemberInfoByEmail(email);
         } catch (NoSuchElementException e) {
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
 
-        if (member.getProvider() != Provider.EMAIL) {
+        if (memberInfo.provider() != Provider.EMAIL) {
             throw new AuthenticationException("지원하지 않은 경로로 로그인을 시도하였습니다.") {};
         }
 
-        if (!passwordEncoder.matches(password, member.getPassword())) {
+        if (!passwordEncoder.matches(password, memberInfo.password())) {
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
 
-        if (!member.isAccountNonLocked()) {
+        if (!memberInfo.isAccountNonLocked()) {
             throw new BannedAccountException("잠긴 계정입니다. 관리자에게 문의하세요.") {};
         }
 
-        return generateTokenPair(member.getId());
+        return generateTokenPair(memberInfo.id());
     }
 
     @Transactional

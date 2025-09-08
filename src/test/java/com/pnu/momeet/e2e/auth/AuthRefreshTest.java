@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
@@ -21,8 +22,8 @@ public class AuthRefreshTest extends BaseAuthTest {
 
     @Autowired
     private EmailAuthService emailAuthService;
-    private Member loggedInMember;
-    private TokenResponse loginnedInTokenPair;
+    private MemberResponse loggedInMember;
+    private TokenResponse tokenResponse;
 
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
@@ -31,9 +32,10 @@ public class AuthRefreshTest extends BaseAuthTest {
     @Override
     protected void setup() {
         super.setup();
-        loggedInMember = new Member("testRefrsh@test.com", testPassword, List.of(Role.ROLE_USER));
-        loggedInMember = memberService.saveMember(loggedInMember);
-        loginnedInTokenPair = emailAuthService.login(loggedInMember.getEmail(), testPassword);
+        loggedInMember = memberService.saveMember(
+            new Member("testRefrsh@test.com", testPassword, List.of(Role.ROLE_USER))
+        );
+        tokenResponse = emailAuthService.login(loggedInMember.email(), testPassword);
 
         toBeDeleted.add(loggedInMember);
     }
@@ -41,7 +43,7 @@ public class AuthRefreshTest extends BaseAuthTest {
     @Test
     @DisplayName("토큰 재발급 성공 테스트")
     public void refresh_success() {
-        RefreshRequest request = new RefreshRequest(loginnedInTokenPair.refreshToken());
+        RefreshRequest request = new RefreshRequest(tokenResponse.refreshToken());
         TokenResponse pair = RestAssured
             .given()
                 .contentType("application/json")
@@ -81,8 +83,8 @@ public class AuthRefreshTest extends BaseAuthTest {
     public void refresh_fail_expired_token() {
         // 리프레시 토큰을 강제로 만료시킴
         RefreshToken refreshToken = new RefreshToken(
-            loggedInMember.getId(),
-            jwtTokenProvider.generateToken(loggedInMember.getId().toString(), -1000L) // 이미 만료된 토큰 생성
+            loggedInMember.id(),
+            jwtTokenProvider.generateToken(loggedInMember.id().toString(), -1000L) // 이미 만료된 토큰 생성
         );
         refreshTokenRepository.save(refreshToken); // DB에 저장
 

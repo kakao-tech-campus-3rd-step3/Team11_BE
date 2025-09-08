@@ -54,7 +54,7 @@ public abstract class BaseProfileTest extends BaseE2ETest {
 
         // 테스트용 프로필 ID 설정
         var testMember = memberService.findMemberByEmail(TEST_USER_EMAIL);
-        test_user_profile_uuid = profileService.getMyProfile(testMember.getId()).id();
+        test_user_profile_uuid = profileService.getMyProfile(testMember.id()).id();
     }
 
     @AfterEach

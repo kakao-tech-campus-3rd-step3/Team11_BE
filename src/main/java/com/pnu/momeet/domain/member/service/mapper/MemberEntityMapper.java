@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.member.mapper;
+package com.pnu.momeet.domain.member.service.mapper;
 
 import com.pnu.momeet.domain.member.dto.response.MemberInfo;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
@@ -7,9 +7,9 @@ import com.pnu.momeet.domain.member.entity.MemberRole;
 
 import java.util.List;
 
-public class EntityMapper {
+public class MemberEntityMapper {
 
-    private EntityMapper() {
+    private MemberEntityMapper() {
         // 이 클래스의 인스턴스화 방지
     }
 

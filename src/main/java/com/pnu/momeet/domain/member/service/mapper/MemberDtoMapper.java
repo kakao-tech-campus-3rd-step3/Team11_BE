@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.member.mapper;
+package com.pnu.momeet.domain.member.service.mapper;
 
 import com.pnu.momeet.domain.common.mapper.PageMapper;
 import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
@@ -12,8 +12,8 @@ import org.springframework.data.domain.Sort;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class DtoMapper {
-    private DtoMapper() {
+public class MemberDtoMapper {
+    private MemberDtoMapper() {
         // private constructor to prevent instantiation
     }
 

@@ -6,10 +6,12 @@ import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.member.service.mapper.MemberEntityMapper;
 import com.pnu.momeet.unit.BaseUnitTest;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.Assertions;
@@ -52,13 +54,14 @@ public class AuthServiceTest extends BaseUnitTest {
         String password = "pw123";
         Member member = new Member(email, password, List.of(Role.ROLE_USER));
         member.setId(UUID.randomUUID());
+        MemberResponse response = MemberEntityMapper.toDto(member);
 
         // when
-        Mockito.when(memberService.saveMember(Mockito.any(Member.class))).thenReturn(member);
+        Mockito.when(memberService.saveMember(Mockito.any(Member.class))).thenReturn(response);
         Mockito.when(tokenProvider.generateAccessToken(member.getId())).thenReturn("access");
         Mockito.when(tokenProvider.generateRefreshToken(member.getId())).thenReturn("refresh");
         Mockito.when(refreshTokenRepository.save(Mockito.any())).thenReturn(null);
-        Mockito.when(memberService.updateMemberById(Mockito.any(), Mockito.any())).thenReturn(member);
+        Mockito.when(memberService.updateMemberById(Mockito.any(), Mockito.any())).thenReturn(response);
 
         // then
         TokenResponse result = authService.signUp(email, password);
@@ -78,9 +81,12 @@ public class AuthServiceTest extends BaseUnitTest {
         member.setProvider(Provider.EMAIL);
         member.setAccountNonLocked(true);
 
+        var memberResponse = MemberEntityMapper.toMemberInfo(member);
+
         // when
-        Mockito.when(memberService.findMemberByEmail(email))
-                .thenReturn(member);
+        Mockito.when(memberService.findMemberInfoByEmail(email))
+                .thenReturn(memberResponse);
+
         Mockito.when(passwordEncoder.matches(password, member.getPassword()))
                 .thenReturn(true);
         Mockito.when(tokenProvider.generateAccessToken(member.getId())).thenReturn("access");
@@ -127,7 +133,8 @@ public class AuthServiceTest extends BaseUnitTest {
         // Member 생성자 접근 오류 해결: 테스트용 임의 Member 객체 생성
         Member dummyMember = new Member("dummy@email.com", "dummyPw", List.of(Role.ROLE_USER));
         dummyMember.setId(memberId);
-        Mockito.when(memberService.updateMemberById(Mockito.any(), Mockito.any())).thenReturn(dummyMember);
+        MemberResponse dummyMemberResponse = MemberEntityMapper.toDto(dummyMember);
+        Mockito.when(memberService.updateMemberById(Mockito.any(), Mockito.any())).thenReturn(dummyMemberResponse);
 
         // then
         TokenResponse result = authService.refreshTokens(refreshToken);
