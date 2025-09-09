@@ -22,7 +22,7 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   access-token:
-    expiration: ${ACCESS_TOKEN_EXPIRATION_SECONDS}
+    expiration: 3600
   refresh-token:
-    expiration: ${REFRESH_TOKEN_EXPIRATION_SECONDS}
-  issuer: ${JWT_ISSUER}
+    expiration: 604800
+  issuer: momeet

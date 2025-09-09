@@ -1,6 +1,6 @@
 package com.pnu.momeet.common.security.details;
 
-import com.pnu.momeet.domain.member.dto.MemberInfo;
+import com.pnu.momeet.domain.member.dto.response.MemberInfo;
 import java.util.UUID;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

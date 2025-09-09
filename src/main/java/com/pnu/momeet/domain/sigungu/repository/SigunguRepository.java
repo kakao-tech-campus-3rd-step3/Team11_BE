@@ -14,7 +14,5 @@ public interface SigunguRepository extends JpaRepository<Sigungu, Long> {
     @Query("SELECT s FROM Sigungu s WHERE ST_Contains(s.area, :point) = true")
     Optional<Sigungu> findByPointIn(Point point);
 
-    Page<Sigungu> findAllBy(Pageable pageable);
-
     Page<Sigungu> findAllBySidoCode(Long sidoCode, Pageable pageable);
 }

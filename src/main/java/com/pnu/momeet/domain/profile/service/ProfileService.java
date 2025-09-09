@@ -1,11 +1,11 @@
 package com.pnu.momeet.domain.profile.service;
 
-import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
-import com.pnu.momeet.domain.profile.dto.ProfileResponse;
-import com.pnu.momeet.domain.profile.dto.ProfileUpdateRequest;
+import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
+import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
+import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
-import com.pnu.momeet.domain.profile.mapper.EntityMapper;
+import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import jakarta.validation.Valid;
 import java.util.NoSuchElementException;
@@ -26,7 +26,7 @@ public class ProfileService {
     public ProfileResponse getMyProfile(UUID memberId) {
         Profile profile = profileRepository.findByMemberId(memberId)
             .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
-        return EntityMapper.toResponseDto(profile);
+        return ProfileEntityMapper.toResponseDto(profile);
     }
 
     @Transactional(readOnly = true)
@@ -35,7 +35,7 @@ public class ProfileService {
             .orElseThrow(() -> new NoSuchElementException(
                 "ID에 해당하는 프로필을 찾을 수 없습니다: " + profileId
             ));
-        return EntityMapper.toResponseDto(profile);
+        return ProfileEntityMapper.toResponseDto(profile);
     }
 
     @Transactional
@@ -57,7 +57,7 @@ public class ProfileService {
             request.baseLocation()
         );
 
-        return EntityMapper.toResponseDto(profileRepository.save(newProfile));
+        return ProfileEntityMapper.toResponseDto(profileRepository.save(newProfile));
     }
 
     @Transactional
@@ -80,6 +80,6 @@ public class ProfileService {
             request.baseLocation()
         );
 
-        return EntityMapper.toResponseDto(profile);
+        return ProfileEntityMapper.toResponseDto(profile);
     }
 }

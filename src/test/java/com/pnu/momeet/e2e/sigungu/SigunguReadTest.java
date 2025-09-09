@@ -1,6 +1,6 @@
 package com.pnu.momeet.e2e.sigungu;
 
-import com.pnu.momeet.domain.sigungu.dto.SigunguResponse;
+import com.pnu.momeet.domain.sigungu.dto.response.SigunguResponse;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
