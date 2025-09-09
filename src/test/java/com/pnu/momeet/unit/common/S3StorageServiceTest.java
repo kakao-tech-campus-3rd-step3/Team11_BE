@@ -7,14 +7,14 @@ import static org.mockito.Mockito.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Locale;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import javax.imageio.ImageIO;
 
-import com.pnu.momeet.common.service.S3UploaderService;
+import com.pnu.momeet.common.service.S3StorageService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,22 +29,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import org.springframework.util.StringUtils;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Utilities;
-import software.amazon.awssdk.services.s3.model.GetUrlRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
-class S3UploaderServiceTest {
+class S3StorageServiceTest {
 
     @Mock private S3Client s3Client;
     @Mock private S3Utilities s3Utilities;
 
-    @InjectMocks private S3UploaderService sut;
+    @InjectMocks private S3StorageService sut;
 
     private static final String BUCKET = "test-bucket";
 
@@ -273,6 +274,68 @@ class S3UploaderServiceTest {
         // 서비스의 buildKey에서 선행 "/" 제거 로직을 적용했다는 가정 하에 검증
         assertThat(key).startsWith("profiles/");
         assertThat(key).doesNotStartWith("/profiles/");
+    }
+
+    @Test
+    @DisplayName("deleteByUrl: 퍼블릭 S3 URL에서 key를 추출해 DeleteObject 호출")
+    void deleteByUrl_publicUrl() {
+        S3StorageService service = new S3StorageService(s3Client);
+        ReflectionTestUtils.setField(service, "bucket", "momeet-dev-bucket");
+
+        String url = "https://momeet-dev-bucket.s3.ap-northeast-2.amazonaws.com/profiles/abc.png";
+        service.deleteImage(url);
+
+        ArgumentCaptor<DeleteObjectRequest> captor = ArgumentCaptor.forClass(DeleteObjectRequest.class);
+        verify(s3Client, times(1)).deleteObject(captor.capture());
+
+        DeleteObjectRequest req = captor.getValue();
+        assertThat(req.bucket()).isEqualTo("momeet-dev-bucket");
+        assertThat(req.key()).isEqualTo("profiles/abc.png");
+    }
+
+    @Test
+    @DisplayName("deleteByUrl: CDN URL에서도 key만 올바르게 추출")
+    void deleteByUrl_cdnUrl() {
+        S3StorageService service = new S3StorageService(s3Client);
+        ReflectionTestUtils.setField(service, "bucket", "momeet-dev-bucket");
+
+        String url = "https://cdn.momeet.app/profiles/xyz.webp";
+        service.deleteImage(url);
+
+        ArgumentCaptor<DeleteObjectRequest> captor = ArgumentCaptor.forClass(DeleteObjectRequest.class);
+        verify(s3Client, times(1)).deleteObject(captor.capture());
+
+        DeleteObjectRequest req = captor.getValue();
+        assertThat(req.bucket()).isEqualTo("momeet-dev-bucket");
+        assertThat(req.key()).isEqualTo("profiles/xyz.webp");
+    }
+
+    @Test
+    @DisplayName("deleteByUrl: null/빈 문자열이면 아무 것도 하지 않음(멱등)")
+    void deleteByUrl_nullSafe() {
+        S3StorageService service = new S3StorageService(s3Client);
+        ReflectionTestUtils.setField(service, "bucket", "momeet-dev-bucket");
+
+        service.deleteImage(null);
+        service.deleteImage("  ");
+
+        verifyNoInteractions(s3Client);
+    }
+
+    @Test
+    @DisplayName("deleteObjectByKey: key로 직접 삭제")
+    void deleteObjectByKey() {
+        S3StorageService service = new S3StorageService(s3Client);
+        ReflectionTestUtils.setField(service, "bucket", "momeet-dev-bucket");
+
+        service.deleteImage("profiles/abc.png");
+
+        ArgumentCaptor<DeleteObjectRequest> captor = ArgumentCaptor.forClass(DeleteObjectRequest.class);
+        verify(s3Client, times(1)).deleteObject(captor.capture());
+
+        DeleteObjectRequest req = captor.getValue();
+        assertThat(req.bucket()).isEqualTo("momeet-dev-bucket");
+        assertThat(req.key()).isEqualTo("profiles/abc.png");
     }
 }
 

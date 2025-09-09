@@ -8,7 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import com.pnu.momeet.common.model.TokenPair;
-import com.pnu.momeet.common.service.S3UploaderService;
+import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -26,14 +26,14 @@ import org.springframework.http.HttpStatus;
 class ProfileImageUploadTest extends BaseProfileTest {
 
     @Autowired
-    private S3UploaderService s3UploaderService;
+    private S3StorageService s3StorageService;
 
     @TestConfiguration
     static class MockS3Config {
         @Bean @Primary
-        S3UploaderService s3UploaderService() {
+        S3StorageService s3UploaderService() {
             // 실제 S3 호출 방지용 mock 빈
-            return Mockito.mock(S3UploaderService.class);
+            return Mockito.mock(S3StorageService.class);
         }
     }
 
@@ -44,8 +44,8 @@ class ProfileImageUploadTest extends BaseProfileTest {
         TokenPair token = getToken(Role.ROLE_USER);
 
         // 업로더 mock: 정상 URL 반환
-        Mockito.reset(s3UploaderService);
-        given(s3UploaderService.uploadImage(any(), eq("profiles/")))
+        Mockito.reset(s3StorageService);
+        given(s3StorageService.uploadImage(any(), eq("profiles/")))
             .willReturn("https://cdn.example.com/profiles/uuid.png");
         RestAssured
             .given().log().all()
@@ -93,9 +93,9 @@ class ProfileImageUploadTest extends BaseProfileTest {
     void upload_bad_extension() {
         TokenPair token = getToken(Role.ROLE_USER);
 
-        Mockito.reset(s3UploaderService);
+        Mockito.reset(s3StorageService);
 
-        given(s3UploaderService.uploadImage(any(), eq("profiles/")))
+        given(s3StorageService.uploadImage(any(), eq("profiles/")))
             .willThrow(new IllegalArgumentException("허용되지 않은 확장자입니다."));
 
         RestAssured
@@ -115,8 +115,8 @@ class ProfileImageUploadTest extends BaseProfileTest {
     void upload_exceed_size() {
         TokenPair token = getToken(Role.ROLE_USER);
 
-        Mockito.reset(s3UploaderService);
-        given(s3UploaderService.uploadImage(any(), eq("profiles/")))
+        Mockito.reset(s3StorageService);
+        given(s3StorageService.uploadImage(any(), eq("profiles/")))
             .willThrow(new IllegalArgumentException("파일 크기가 5MB를 초과했습니다."));
 
         RestAssured

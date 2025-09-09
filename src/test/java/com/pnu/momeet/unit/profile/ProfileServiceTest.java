@@ -6,10 +6,15 @@ import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
-import com.pnu.momeet.common.service.S3UploaderService;
+import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
 import com.pnu.momeet.domain.profile.dto.ProfileResponse;
 import com.pnu.momeet.domain.profile.dto.ProfileUpdateRequest;
@@ -21,6 +26,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,7 +41,7 @@ class ProfileServiceTest {
     private ProfileRepository profileRepository;
 
     @Mock
-    private S3UploaderService s3UploaderService;
+    private S3StorageService s3StorageService;
 
     @InjectMocks
     private ProfileService profileService;
@@ -304,7 +310,7 @@ class ProfileServiceTest {
         String uploadedUrl = "https://cdn.example.com/profiles/uuid.png";
 
         given(profileRepository.findByMemberId(memberId)).willReturn(Optional.of(existing));
-        given(s3UploaderService.uploadImage(file, "profiles/")).willReturn(uploadedUrl);
+        given(s3StorageService.uploadImage(file, "profiles/")).willReturn(uploadedUrl);
 
         // when
         ProfileResponse resp = profileService.updateProfileImageUrl(memberId, file);
@@ -315,7 +321,7 @@ class ProfileServiceTest {
         assertThat(existing.getImageUrl()).isEqualTo(uploadedUrl);
 
         verify(profileRepository).findByMemberId(memberId);
-        verify(s3UploaderService).uploadImage(file, "profiles/");
+        verify(s3StorageService).uploadImage(file, "profiles/");
     }
 
     @Test
@@ -334,6 +340,55 @@ class ProfileServiceTest {
             () -> profileService.updateProfileImageUrl(memberId, file));
 
         verify(profileRepository).findByMemberId(memberId);
-        verify(s3UploaderService, never()).uploadImage(any(), anyString());
+        verify(s3StorageService, never()).uploadImage(any(), anyString());
+    }
+
+    @Nested
+    @DisplayName("deleteProfileImageUrl")
+    class DeleteProfileImageUrl {
+
+        @Test
+        @DisplayName("이미지 URL이 있으면: S3 삭제 호출 후 엔티티 imageUrl=null 처리")
+        void delete_whenImageExists() {
+            UUID memberId = UUID.randomUUID();
+            Profile profile = mock(Profile.class);
+            when(profileRepository.findByMemberId(memberId)).thenReturn(Optional.of(profile));
+            when(profile.getImageUrl())
+                .thenReturn("https://bucket.s3.ap-northeast-2.amazonaws.com/profiles/a.png");
+
+            profileService.deleteProfileImageUrl(memberId);
+
+            verify(s3StorageService, times(1))
+                .deleteImage("https://bucket.s3.ap-northeast-2.amazonaws.com/profiles/a.png");
+            verify(profile, times(1))
+                .updateProfile(null, null, null, null, null, null);
+            verifyNoMoreInteractions(s3StorageService, profileRepository, profile);
+        }
+
+        @Test
+        @DisplayName("이미지 URL이 없으면: S3 호출 없이 엔티티만 정리(멱등)")
+        void delete_whenImageNotExists() {
+            UUID memberId = UUID.randomUUID();
+            Profile profile = mock(Profile.class);
+            when(profileRepository.findByMemberId(memberId)).thenReturn(Optional.of(profile));
+            when(profile.getImageUrl()).thenReturn(null);
+
+            profileService.deleteProfileImageUrl(memberId);
+
+            verify(s3StorageService, never()).deleteImage(anyString());
+            verify(profile, times(1))
+                .updateProfile(null, null, null, null, null, null);
+        }
+
+        @Test
+        @DisplayName("프로필이 없으면: NoSuchElementException")
+        void delete_whenProfileNotFound() {
+            UUID memberId = UUID.randomUUID();
+            when(profileRepository.findByMemberId(memberId)).thenReturn(Optional.empty());
+
+            assertThrows(NoSuchElementException.class, () -> profileService.deleteProfileImageUrl(memberId));
+
+            verifyNoInteractions(s3StorageService);
+        }
     }
 }

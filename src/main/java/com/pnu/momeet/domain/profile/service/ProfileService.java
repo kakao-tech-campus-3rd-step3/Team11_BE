@@ -1,6 +1,6 @@
 package com.pnu.momeet.domain.profile.service;
 
-import com.pnu.momeet.common.service.S3UploaderService;
+import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
 import com.pnu.momeet.domain.profile.dto.ProfileResponse;
 import com.pnu.momeet.domain.profile.dto.ProfileUpdateRequest;
@@ -23,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ProfileService {
 
     private final ProfileRepository profileRepository;
-    private final S3UploaderService s3UploaderService;
+    private final S3StorageService s3StorageService;
 
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile(UUID memberId) {
@@ -91,10 +91,24 @@ public class ProfileService {
         Profile profile = profileRepository.findByMemberId(memberId)
             .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
 
-        String imageUrl = s3UploaderService.uploadImage(multipartFile, "profiles/");
+        String imageUrl = s3StorageService.uploadImage(multipartFile, "profiles/");
 
         profile.updateProfile(null, null, null, imageUrl, null, null);
 
         return EntityMapper.toResponseDto(profile);
+    }
+
+    @Transactional
+    public void deleteProfileImageUrl(UUID memberId) {
+        Profile profile = profileRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
+
+        String imageUrl = profile.getImageUrl();
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            // 1) S3에서 실제 객체 삭제 (멱등)
+            s3StorageService.deleteImage(imageUrl);
+        }
+
+        profile.updateImageUrl(null);
     }
 }

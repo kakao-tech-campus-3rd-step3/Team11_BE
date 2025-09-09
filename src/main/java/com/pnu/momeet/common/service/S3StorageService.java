@@ -2,6 +2,7 @@ package com.pnu.momeet.common.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -10,16 +11,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class S3UploaderService {
+public class S3StorageService {
 
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
     private static final Set<String> ALLOWED_EXT = Set.of("jpg","jpeg","png","gif","webp");
@@ -30,6 +33,18 @@ public class S3UploaderService {
     public String uploadImage(MultipartFile multipartFile, String prefix) {
         validate(multipartFile, multipartFile.getOriginalFilename());
         return uploadImageToS3(multipartFile, prefix);
+    }
+
+    public void deleteImage(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) return; // 멱등
+        String key = getKeyFromImageUrl(imageUrl);
+        if (key == null || key.isBlank()) return; // 파싱 실패 시 안전 탈출
+        if (!StringUtils.hasText(key)) return;
+        DeleteObjectRequest req = DeleteObjectRequest.builder()
+            .bucket(bucket)
+            .key(key)
+            .build();
+        s3Client.deleteObject(req);
     }
 
     private String uploadImageToS3(MultipartFile multipartFile, String prefix) {
@@ -59,6 +74,18 @@ public class S3UploaderService {
         }
 
         return s3Client.utilities().getUrl(url -> url.bucket(bucket).key(key)).toString();
+    }
+
+    private String getKeyFromImageUrl(String url) {
+        try {
+            URI uri = URI.create(url);
+            String path = uri.getPath();
+            if (!StringUtils.hasText(path)) return null;
+            String key = path.startsWith("/") ? path.substring(1) : path;
+            return StringUtils.hasText(key) ? key : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private String toMime(String ext) {
