@@ -4,11 +4,18 @@ import static org.hamcrest.Matchers.equalTo;
 
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 public class ProfileGetTest extends BaseProfileTest {
+
+    @BeforeEach
+    @Override
+    protected void setup() {
+        super.setup();
+    }
 
     @Test
     @DisplayName("프로필 단건 조회 성공 - 200 OK")
@@ -22,10 +29,10 @@ public class ProfileGetTest extends BaseProfileTest {
             .given().log().all()
             .header(AUTH_HEADER, BEAR_PREFIX + accessToken)
             .when()
-            .get("/{profileId}", TEST_USER_PROFILE_UUID)
+            .get("/{profileId}", test_user_profile_uuid)
             .then().log().all()
             .statusCode(HttpStatus.OK.value())
-            .body("id", equalTo(TEST_USER_PROFILE_UUID.toString()))
+            .body("id", equalTo(test_user_profile_uuid.toString()))
             .body("nickname", equalTo(TEST_USER_PROFILE_NICKNAME));
     }
 
@@ -53,7 +60,7 @@ public class ProfileGetTest extends BaseProfileTest {
         RestAssured
             .given().log().all()
             .when()
-            .get("/{profileId}", TEST_USER_PROFILE_UUID)
+            .get("/{profileId}", test_user_profile_uuid)
             .then().log().all()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
     }

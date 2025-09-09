@@ -37,6 +37,8 @@ ext {
     DOTENV_VERSION = '4.0.0'
     RESTASSURED_VERSION = '5.5.6'
     AWS_VERSION = '3.4.0'
+    JTS_VERSION = '1.20.0'
+    HIBERNATE_SPATIAL_VERSION = '7.1.0.Final'
 }
 
 dependencies {
@@ -57,8 +59,13 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
+
+    implementation "org.locationtech.jts:jts-core:${JTS_VERSION}"
+    implementation "org.hibernate:hibernate-spatial:${HIBERNATE_SPATIAL_VERSION}"
+    implementation "org.orbisgis:h2gis:2.2.3"
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

@@ -15,9 +15,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.pnu.momeet.common.service.S3StorageService;
-import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
-import com.pnu.momeet.domain.profile.dto.ProfileResponse;
-import com.pnu.momeet.domain.profile.dto.ProfileUpdateRequest;
+import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
+import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
+import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;

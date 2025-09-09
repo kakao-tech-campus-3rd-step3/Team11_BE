@@ -1,8 +1,9 @@
 package com.pnu.momeet.e2e.member;
 
-import com.pnu.momeet.domain.member.dto.AdminChangePasswordRequest;
-import com.pnu.momeet.domain.member.dto.ChangePasswordRequest;
-import com.pnu.momeet.domain.member.dto.MemberEditRequest;
+import com.pnu.momeet.domain.member.dto.request.AdminChangePasswordRequest;
+import com.pnu.momeet.domain.member.dto.request.ChangePasswordRequest;
+import com.pnu.momeet.domain.member.dto.request.MemberEditRequest;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
@@ -21,24 +22,25 @@ import static org.hamcrest.Matchers.*;
 @DisplayName("E2E : Member 수정 테스트")
 public class MemberUpdateTest extends BaseMemberTest {
 
-    Member testMember = null;
+    MemberResponse testMember = null;
     String testMemberToken = null;
 
     @BeforeEach
     @Override
     protected void setup() {
         super.setup();
-        testMember = memberService.saveMember(new Member(
+        testMember = memberService.saveMember(
+                new Member(
                 "update_info_test@test.com",
                 "updateTestPass1!",
-                List.of(Role.ROLE_USER)
+                    List.of(Role.ROLE_USER)
         ));
         testMemberToken = emailAuthService.login(
-                testMember.getEmail(),
+                testMember.email(),
                  "updateTestPass1!"
         ).accessToken();
 
-        toBeDeleted.add(testMember.getId());
+        toBeDeleted.add(testMember.id());
     }
 
     @Test
@@ -57,7 +59,7 @@ public class MemberUpdateTest extends BaseMemberTest {
                 .contentType(ContentType.JSON)
                 .body(editRequest)
             .when()
-                .put("/{id}", testMember.getId())
+                .put("/{id}", testMember.id())
             .then()
                 .log().all()
                 .statusCode(200)
@@ -135,7 +137,7 @@ public class MemberUpdateTest extends BaseMemberTest {
                 .contentType(ContentType.JSON)
                 .body(editRequest)
             .when()
-                .put("/{id}", testMember.getId())
+                .put("/{id}", testMember.id())
             .then()
                 .log().all()
                 .statusCode(403);
@@ -162,8 +164,8 @@ public class MemberUpdateTest extends BaseMemberTest {
                 .log().all()
                 .statusCode(200)
                 .body(
-                    "id", equalTo(testMember.getId().toString()),
-                    "email", equalTo(testMember.getEmail()),
+                    "id", equalTo(testMember.id().toString()),
+                    "email", equalTo(testMember.email()),
                     "roles", hasItem("ROLE_USER")
                 );
     }
@@ -214,12 +216,12 @@ public class MemberUpdateTest extends BaseMemberTest {
                 .contentType(ContentType.JSON)
                 .body(req)
             .when()
-                .put("/{id}/password", testMember.getId())
+                .put("/{id}/password", testMember.id())
             .then()
                 .statusCode(200)
                 .body(
-                    "id", equalTo(testMember.getId().toString()),
-                    "email", equalTo(testMember.getEmail()),
+                    "id", equalTo(testMember.id().toString()),
+                    "email", equalTo(testMember.email()),
                     "roles", hasItem("ROLE_USER")
                 );
     }
@@ -234,7 +236,7 @@ public class MemberUpdateTest extends BaseMemberTest {
                 .contentType(ContentType.JSON)
                 .body(req)
             .when()
-                .put("/{id}/password", testMember.getId())
+                .put("/{id}/password", testMember.id())
             .then()
                 .statusCode(400)
                 .body("validationErrors", not(empty()));

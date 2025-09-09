@@ -1,6 +1,6 @@
 package com.pnu.momeet.e2e.member;
 
-import com.pnu.momeet.domain.member.dto.MemberResponse;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.*;
 @DisplayName("E2E : Member 조회 테스트")
 public class MemberReadTest extends BaseMemberTest {
 
-    private Member testMember;
+    private MemberResponse testMember;
     private String testMemberToken;
 
     @BeforeEach
@@ -39,19 +39,19 @@ public class MemberReadTest extends BaseMemberTest {
                 toBeDeleted.add(member.getId());
             });
 
-        testMember = new Member(
+        testMember = memberService.saveMember(
+                new Member(
                 "testerRead@test.com",
                 "ReadTestPass123!@#",
                 List.of(Role.ROLE_USER)
-        );
-        testMember = memberService.saveMember(testMember);
+        ));
 
         testMemberToken = emailAuthService.login(
-                testMember.getEmail(),
+                testMember.email(),
                 "ReadTestPass123!@#"
         ).accessToken();
 
-        toBeDeleted.add(testMember.getId());
+        toBeDeleted.add(testMember.id());
 
     }
 
@@ -69,10 +69,10 @@ public class MemberReadTest extends BaseMemberTest {
                 .statusCode(200)
                 .body(
                     "content.size()", equalTo(5),
-                    "totalElements", greaterThanOrEqualTo(15),
-                    "totalPages", greaterThanOrEqualTo(3),
-                    "number", equalTo(0),
-                    "size", equalTo(5),
+                    "page.totalElements", greaterThanOrEqualTo(15),
+                    "page.totalPages", greaterThanOrEqualTo(3),
+                    "page.number", equalTo(0),
+                    "page.size", equalTo(5),
                     "content[0].id", notNullValue()
                 );
     }
@@ -93,10 +93,10 @@ public class MemberReadTest extends BaseMemberTest {
                 .statusCode(200)
                 .body(
                     "content.size()", equalTo(5),
-                    "totalElements", greaterThanOrEqualTo(15),
-                    "totalPages", greaterThanOrEqualTo(3),
-                    "number", equalTo(0),
-                    "size", equalTo(5),
+                    "page.totalElements", greaterThanOrEqualTo(15),
+                    "page.totalPages", greaterThanOrEqualTo(3),
+                    "page.number", equalTo(0),
+                    "page.size", equalTo(5),
                     "content[0].id", notNullValue()
                 )
                 .extract()
@@ -117,7 +117,7 @@ public class MemberReadTest extends BaseMemberTest {
             Map.of("page", 0, "size", 0),   // size 0
             Map.of("page", -1, "size", 5),   // page -1
             Map.of("sort", "invalidField,asc") // 정렬 필드 잘못됨
-        ).forEach(params -> {
+        ).forEach(params ->
             RestAssured
                 .given()
                     .header(AUTH_HEADER, BEAR_PREFIX + getToken().accessToken())
@@ -126,8 +126,8 @@ public class MemberReadTest extends BaseMemberTest {
                     .get()
                 .then()
                     .log().all()
-                    .statusCode(400);
-        });
+                    .statusCode(400)
+        );
     }
 
     @Test
@@ -167,13 +167,13 @@ public class MemberReadTest extends BaseMemberTest {
             .given()
                 .header(AUTH_HEADER, BEAR_PREFIX + getToken().accessToken())
             .when()
-                .get("/{id}", testMember.getId())
+                .get("/{id}", testMember.id())
             .then()
                 .log().all()
                 .statusCode(200)
                 .body(
-                    "id", equalTo(testMember.getId().toString()),
-                    "email", equalTo(testMember.getEmail()),
+                    "id", equalTo(testMember.id().toString()),
+                    "email", equalTo(testMember.email()),
                     "roles", hasItem("ROLE_USER"),
                     "createdAt", notNullValue(),
                     "updatedAt", notNullValue()
@@ -187,7 +187,7 @@ public class MemberReadTest extends BaseMemberTest {
             .given()
                 .header(AUTH_HEADER, BEAR_PREFIX + "invalid_token")
             .when()
-                .get("/{id}", testMember.getId())
+                .get("/{id}", testMember.id())
             .then()
                 .log().all()
                 .statusCode(401);
@@ -200,7 +200,7 @@ public class MemberReadTest extends BaseMemberTest {
             .given()
                 .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
             .when()
-                .get("/{id}", testMember.getId())
+                .get("/{id}", testMember.id())
             .then()
                 .log().all()
                 .statusCode(403);
@@ -231,8 +231,8 @@ public class MemberReadTest extends BaseMemberTest {
                 .log().all()
                 .statusCode(200)
                 .body(
-                    "id", equalTo(testMember.getId().toString()),
-                    "email", equalTo(testMember.getEmail()),
+                    "id", equalTo(testMember.id().toString()),
+                    "email", equalTo(testMember.email()),
                     "roles", hasItem("ROLE_USER"),
                     "createdAt", notNullValue(),
                     "updatedAt", notNullValue()

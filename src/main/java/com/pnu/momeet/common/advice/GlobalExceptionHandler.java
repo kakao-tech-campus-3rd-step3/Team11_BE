@@ -1,9 +1,8 @@
 package com.pnu.momeet.common.advice;
 
 import com.pnu.momeet.common.exception.BannedAccountException;
-import com.pnu.momeet.common.exception.ExistEmailException;
 import com.pnu.momeet.common.exception.UnMatchedPasswordException;
-import org.apache.tomcat.websocket.AuthenticationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -74,7 +73,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UnMatchedPasswordException.class)
-    public ResponseEntity<ProblemDetail> handleUnMatchedPasswordException(UnMatchedPasswordException e) {
+    public ResponseEntity<ProblemDetail> handleUnMatchedPasswordException(UnMatchedPasswordException ignored) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
         problemDetail.setTitle("유효성 검사 실패");
         problemDetail.setProperty("validationErrors", Map.of("password2", "비밀번호가 일치하지 않습니다."));
@@ -88,10 +87,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
     }
 
-    @ExceptionHandler(ExistEmailException.class)
-    public ResponseEntity<ProblemDetail> handleExistEmailException(ExistEmailException e) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
-        problemDetail.setTitle("중복된 이메일 오류");
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<ProblemDetail> handleDuplicateKeyException(DuplicateKeyException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "중복된 키 오류: " + e.getMessage());
+        problemDetail.setTitle("중복된 키 오류");
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
     }
 }

@@ -5,7 +5,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
+import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;

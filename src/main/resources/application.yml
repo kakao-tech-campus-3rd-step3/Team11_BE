@@ -13,12 +13,10 @@ spring:
     password: ${DB_PASSWORD}
 
   jpa:
+    database: postgresql
     show-sql: true
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
     defer-datasource-initialization: true
 
   sql:
@@ -29,10 +27,10 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   access-token:
-    expiration: ${ACCESS_TOKEN_EXPIRATION_SECONDS}
+    expiration: 3600
   refresh-token:
-    expiration: ${REFRESH_TOKEN_EXPIRATION_SECONDS}
-  issuer: ${JWT_ISSUER}
+    expiration: 604800
+  issuer: momeet
 
 cloud:
   aws:

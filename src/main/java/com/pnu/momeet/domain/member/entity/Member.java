@@ -4,7 +4,9 @@ import com.pnu.momeet.domain.common.entity.BaseEntity;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.enums.Provider;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -20,6 +22,7 @@ import java.util.List;
         @UniqueConstraint(columnNames = {"provider", "provider_id"})
     }
 )
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
 
     @Column(unique = true)
@@ -42,10 +45,6 @@ public class Member extends BaseEntity {
     private boolean isAccountNonLocked = true;
 
     private LocalDateTime tokenIssuedAt;
-
-    protected Member() {
-
-    }
 
     public Member(String email, String password, Provider provider, String providerId, Collection<Role> roles) {
         this.email = email;
