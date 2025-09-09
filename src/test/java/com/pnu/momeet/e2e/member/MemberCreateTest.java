@@ -55,7 +55,7 @@ public class MemberCreateTest extends BaseMemberTest {
     }
 
     @Test
-    @DisplayName("멤버 생성 실패 테스트 - 400 Bad Request - 이메일 중복")
+    @DisplayName("멤버 생성 실패 테스트 - 409 Conflict - 이메일 중복")
     public void create_member_fail_by_duplicate_email() {
         MemberCreateRequest request = new MemberCreateRequest(
                 TEST_USER_EMAIL,
