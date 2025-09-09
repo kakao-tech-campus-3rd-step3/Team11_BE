@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.profile.service;
 
+import com.pnu.momeet.common.service.S3UploaderService;
 import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
 import com.pnu.momeet.domain.profile.dto.ProfileResponse;
 import com.pnu.momeet.domain.profile.dto.ProfileUpdateRequest;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfileService {
 
     private final ProfileRepository profileRepository;
+    private final S3UploaderService s3UploaderService;
 
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile(UUID memberId) {
@@ -79,6 +82,18 @@ public class ProfileService {
             request.description(),
             request.baseLocation()
         );
+
+        return EntityMapper.toResponseDto(profile);
+    }
+
+    @Transactional
+    public ProfileResponse updateProfileImageUrl(UUID memberId, MultipartFile multipartFile) {
+        Profile profile = profileRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
+
+        String imageUrl = s3UploaderService.uploadImage(multipartFile, "profiles/");
+
+        profile.updateProfile(null, null, null, imageUrl, null, null);
 
         return EntityMapper.toResponseDto(profile);
     }

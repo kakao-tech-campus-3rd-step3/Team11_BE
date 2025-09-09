@@ -9,6 +9,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.pnu.momeet.common.service.S3UploaderService;
 import com.pnu.momeet.domain.profile.dto.ProfileCreateRequest;
 import com.pnu.momeet.domain.profile.dto.ProfileResponse;
 import com.pnu.momeet.domain.profile.dto.ProfileUpdateRequest;
@@ -25,12 +26,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 class ProfileServiceTest {
 
     @Mock
     private ProfileRepository profileRepository;
+
+    @Mock
+    private S3UploaderService s3UploaderService;
 
     @InjectMocks
     private ProfileService profileService;
@@ -274,5 +279,61 @@ class ProfileServiceTest {
 
         verify(profileRepository).findByMemberId(memberId);
         verify(profileRepository).existsByNicknameIgnoreCase(request.nickname().trim());
+    }
+
+    @Test
+    @DisplayName("프로필 이미지 업로드 성공 - S3 URL을 imageUrl로 반영하고 ProfileResponse로 반환")
+    void updateProfileImageUrl_success() {
+        // given
+        UUID memberId = UUID.randomUUID();
+
+        Profile existing = Profile.create(
+            memberId,
+            "기존유저",
+            25,
+            Gender.MALE,
+            "https://old.example.com/old.png",
+            "소개",
+            "서울 강남구"
+        );
+
+        MockMultipartFile file = new MockMultipartFile(
+            "image", "avatar.png", "image/png", new byte[]{1, 2, 3}
+        );
+
+        String uploadedUrl = "https://cdn.example.com/profiles/uuid.png";
+
+        given(profileRepository.findByMemberId(memberId)).willReturn(Optional.of(existing));
+        given(s3UploaderService.uploadImage(file, "profiles/")).willReturn(uploadedUrl);
+
+        // when
+        ProfileResponse resp = profileService.updateProfileImageUrl(memberId, file);
+
+        // then
+        assertThat(resp.imageUrl()).isEqualTo(uploadedUrl);
+        // 엔티티가 영속 상태에서 갱신되므로, 실제 엔티티의 값도 갱신됐는지 확인(선택)
+        assertThat(existing.getImageUrl()).isEqualTo(uploadedUrl);
+
+        verify(profileRepository).findByMemberId(memberId);
+        verify(s3UploaderService).uploadImage(file, "profiles/");
+    }
+
+    @Test
+    @DisplayName("프로필 이미지 업로드 실패 - 프로필이 존재하지 않으면 NoSuchElementException 발생")
+    void updateProfileImageUrl_fail_profileNotFound() {
+        // given
+        UUID memberId = UUID.randomUUID();
+        MockMultipartFile file = new MockMultipartFile(
+            "image", "avatar.png", "image/png", new byte[]{1, 2, 3}
+        );
+
+        given(profileRepository.findByMemberId(memberId)).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(NoSuchElementException.class,
+            () -> profileService.updateProfileImageUrl(memberId, file));
+
+        verify(profileRepository).findByMemberId(memberId);
+        verify(s3UploaderService, never()).uploadImage(any(), anyString());
     }
 }

@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -60,6 +62,16 @@ public class ProfileController {
         @Valid @RequestBody ProfileUpdateRequest request
     ) {
         ProfileResponse response = profileService.updateMyProfile(userDetails.getMemberId(), request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @PostMapping("/image")
+    public ResponseEntity<ProfileResponse> uploadProfileImage(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestPart("image") MultipartFile multipartFile
+    ) {
+        ProfileResponse response = profileService.updateProfileImageUrl(userDetails.getMemberId(), multipartFile);
         return ResponseEntity.ok(response);
     }
 }
