@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Service
@@ -74,7 +75,7 @@ public class MeetupService {
         }
 
         Member owner = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다"));
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 회원입니다"));
 
         // 위치 정보 변환 (DTO -> PostGIS Point)
         Point locationPoint = geometryFactory.createPoint(
@@ -110,10 +111,10 @@ public class MeetupService {
 
         // 모임 조회 및 소유자 권한 확인
         Meetup meetup = meetupRepository.findById(meetupId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 모임입니다"));
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 모임입니다"));
 
         if (!meetup.getOwner().getId().equals(memberId)) {
-            throw new IllegalArgumentException("모임을 수정할 권한이 없습니다");
+            throw new IllegalStateException("모임을 수정할 권한이 없습니다");
         }
 
         // 위치 정보 변환 (DTO -> PostGIS Point)
@@ -144,10 +145,10 @@ public class MeetupService {
     public void deleteMeetup(UUID meetupId, UUID memberId) {
         // 모임 조회 및 소유자 권한 확인
         Meetup meetup = meetupRepository.findById(meetupId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 모임입니다"));
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 모임입니다"));
 
         if (!meetup.getOwner().getId().equals(memberId)) {
-            throw new IllegalArgumentException("모임을 삭제할 권한이 없습니다");
+            throw new IllegalStateException("모임을 삭제할 권한이 없습니다");
         }
 
         meetupRepository.delete(meetup);
