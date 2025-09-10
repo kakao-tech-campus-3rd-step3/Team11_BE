@@ -8,11 +8,13 @@ import java.io.InputStream;
 import java.util.Locale;
 import java.util.Set;
 import javax.imageio.ImageIO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 
 public class ImageValidator implements ConstraintValidator<ValidImage, MultipartFile> {
 
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    @Value("${spring.servlet.multipart.max-file-size}")
+    private static long MAX_FILE_SIZE;
     private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "gif", "webp");
 
     @Override
