@@ -2,6 +2,7 @@ package com.pnu.momeet.domain.meetup.service;
 
 import com.pnu.momeet.domain.meetup.dto.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.MeetupResponse;
+import com.pnu.momeet.domain.meetup.dto.MeetupUpdateRequest;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import com.pnu.momeet.domain.member.entity.Member;
@@ -99,6 +100,44 @@ public class MeetupService {
         Meetup savedMeetup = meetupRepository.save(meetup);
 
         return convertToMeetupResponse(savedMeetup);
+    }
+
+    @Transactional
+    public MeetupResponse updateMeetup(UUID meetupId, UUID memberId, MeetupUpdateRequest request) {
+        if (request.getStartAt().isAfter(request.getEndAt())) {
+            throw new IllegalArgumentException("시작 시간은 종료 시간보다 이전이어야 합니다");
+        }
+
+        // 모임 조회 및 소유자 권한 확인
+        Meetup meetup = meetupRepository.findById(meetupId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 모임입니다"));
+
+        if (!meetup.getOwner().getId().equals(memberId)) {
+            throw new IllegalArgumentException("모임을 수정할 권한이 없습니다");
+        }
+
+        // 위치 정보 변환 (DTO -> PostGIS Point)
+        Point locationPoint = geometryFactory.createPoint(
+                new Coordinate(request.getLocation().getLongitude(), request.getLocation().getLatitude())
+        );
+        locationPoint.setSRID(4326);
+
+        meetup.updateMeetup(
+                request.getName(),
+                request.getCategory(),
+                request.getDescription(),
+                request.getTags(),
+                request.getHashTags(),
+                request.getCapacity(),
+                request.getScoreLimit(),
+                locationPoint,
+                request.getLocation().getAddress(),
+                request.getStatus(),
+                request.getStartAt(),
+                request.getEndAt()
+        );
+
+        return convertToMeetupResponse(meetup);
     }
 
     private MeetupResponse convertToMeetupResponse(Meetup meetup) {
