@@ -55,4 +55,14 @@ public class MeetupController {
         MeetupResponse response = meetupService.updateMeetup(meetupId, userDetails.getMemberId(), request);
         return ResponseEntity.ok(response);
     }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/{meetupId}")
+    public ResponseEntity<Void> deleteMeetup(
+            @PathVariable UUID meetupId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        meetupService.deleteMeetup(meetupId, userDetails.getMemberId());
+        return ResponseEntity.noContent().build();
+    }
 }
