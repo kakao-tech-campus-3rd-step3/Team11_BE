@@ -37,6 +37,9 @@ public class Meetup extends BaseEntity {
     @Column(name = "tags", columnDefinition = "TEXT[]")
     private String[] tags;
 
+    @Column(name = "hash_tags", columnDefinition = "TEXT[]")
+    private String[] hashTags;
+
     @Column(name = "capacity", nullable = false)
     private Integer capacity = 10;
 
@@ -60,13 +63,14 @@ public class Meetup extends BaseEntity {
     private LocalDateTime endAt;
 
     public Meetup(Member owner, String name, MeetupCategory category, String description,
-                  String[] tags, Integer capacity, Integer scoreLimit, Point locationPoint,
+                  String[] tags, String[] hashTags, Integer capacity, Integer scoreLimit, Point locationPoint,
                   String locationText, LocalDateTime startAt, LocalDateTime endAt) {
         this.owner = owner;
         this.name = name;
         this.category = category;
         this.description = description;
         this.tags = tags;
+        this.hashTags = hashTags;
         this.capacity = capacity != null ? capacity : 10;
         this.scoreLimit = scoreLimit;
         this.locationPoint = locationPoint;
@@ -77,13 +81,14 @@ public class Meetup extends BaseEntity {
     }
 
     public void updateMeetup(String name, MeetupCategory category, String description,
-                            String[] tags, Integer capacity, Integer scoreLimit,
+                            String[] tags, String[] hashTags, Integer capacity, Integer scoreLimit,
                             Point locationPoint, String locationText, MeetupStatus status,
                             LocalDateTime startAt, LocalDateTime endAt) {
         this.name = name;
         this.category = category;
         this.description = description;
         this.tags = tags;
+        this.hashTags = hashTags;
         this.capacity = capacity;
         this.scoreLimit = scoreLimit;
         this.locationPoint = locationPoint;
