@@ -1,15 +1,22 @@
 package com.pnu.momeet.domain.meetup.service;
 
+import com.pnu.momeet.domain.meetup.dto.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.MeetupResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
+import com.pnu.momeet.domain.member.entity.Member;
+import com.pnu.momeet.domain.member.repository.MemberRepository;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +25,8 @@ public class MeetupService {
 
     private final MeetupRepository meetupRepository;
     private final ProfileRepository profileRepository;
+    private final MemberRepository memberRepository;
+    private final GeometryFactory geometryFactory = new GeometryFactory();
 
     public List<MeetupResponse> getAllMeetups(String category, String status, String search) {
         List<Meetup> meetups;
@@ -55,6 +64,41 @@ public class MeetupService {
         return meetups.stream()
                 .map(this::convertToMeetupResponse)
                 .toList();
+    }
+
+    @Transactional
+    public MeetupResponse createMeetup(UUID memberId, MeetupCreateRequest request) {
+        if (request.getStartAt().isAfter(request.getEndAt())) {
+            throw new IllegalArgumentException("시작 시간은 종료 시간보다 이전이어야 합니다");
+        }
+
+        Member owner = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다"));
+
+        // 위치 정보 변환 (DTO -> PostGIS Point)
+        Point locationPoint = geometryFactory.createPoint(
+                new Coordinate(request.getLocation().getLongitude(), request.getLocation().getLatitude())
+        );
+        locationPoint.setSRID(4326);
+
+        Meetup meetup = new Meetup(
+                owner,
+                request.getName(),
+                request.getCategory(),
+                request.getDescription(),
+                request.getTags(),
+                request.getHashTags(),
+                request.getCapacity() != null ? request.getCapacity() : 10,
+                request.getScoreLimit(),
+                locationPoint,
+                request.getLocation().getAddress(),
+                request.getStartAt(),
+                request.getEndAt()
+        );
+
+        Meetup savedMeetup = meetupRepository.save(meetup);
+
+        return convertToMeetupResponse(savedMeetup);
     }
 
     private MeetupResponse convertToMeetupResponse(Meetup meetup) {
