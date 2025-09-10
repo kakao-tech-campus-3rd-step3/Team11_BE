@@ -2,8 +2,8 @@ package com.pnu.momeet.domain.profile.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
-import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
+import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.service.ProfileService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -12,16 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -48,7 +45,7 @@ public class ProfileController {
     @PostMapping
     public ResponseEntity<ProfileResponse> createMyProfile(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @Valid @RequestBody ProfileCreateRequest request
+        @Valid @ModelAttribute ProfileCreateRequest request
     ) {
         ProfileResponse response = profileService.createMyProfile(userDetails.getMemberId(), request);
         return ResponseEntity
@@ -60,28 +57,9 @@ public class ProfileController {
     @PatchMapping("/me")
     public ResponseEntity<ProfileResponse> updateMyProfile(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @Valid @RequestBody ProfileUpdateRequest request
+        @Valid @ModelAttribute ProfileUpdateRequest request
     ) {
         ProfileResponse response = profileService.updateMyProfile(userDetails.getMemberId(), request);
         return ResponseEntity.ok(response);
-    }
-
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @PostMapping("/image")
-    public ResponseEntity<ProfileResponse> uploadProfileImage(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
-        @RequestPart("image") MultipartFile multipartFile
-    ) {
-        ProfileResponse response = profileService.updateProfileImageUrl(userDetails.getMemberId(), multipartFile);
-        return ResponseEntity.ok(response);
-    }
-
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @DeleteMapping("/image")
-    public ResponseEntity<Void> deleteProfileImage(
-        @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        profileService.deleteProfileImageUrl(userDetails.getMemberId());
-        return ResponseEntity.noContent().build();
     }
 }

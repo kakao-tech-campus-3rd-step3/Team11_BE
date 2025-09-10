@@ -2,12 +2,12 @@ package com.pnu.momeet.domain.profile.service;
 
 import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
-import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
+import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
-import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
+import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
 import jakarta.validation.Valid;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -50,12 +49,18 @@ public class ProfileService {
             throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
         }
 
+        String profileImageUrl = null;
+
+        if (request.image() != null) {
+            profileImageUrl = s3StorageService.uploadImage(request.image(), "/profiles");
+        }
+
         Profile newProfile = Profile.create(
             memberId,
             request.nickname(),
             request.age(),
             Gender.valueOf(request.gender().toUpperCase()),
-            request.imageUrl(),
+            profileImageUrl,
             request.description(),
             request.baseLocation()
         );
@@ -74,41 +79,24 @@ public class ProfileService {
             }
         }
 
+        if (request.image() != null && !request.image().isEmpty()) {
+            // 1. 기존 이미지가 있다면 S3에서 삭제
+            if (profile.getImageUrl() != null) {
+                s3StorageService.deleteImage(profile.getImageUrl());
+            }
+            // 2. 새 이미지 업로드 및 URL 업데이트
+            String newImageUrl = s3StorageService.uploadImage(request.image(), "/profiles");
+            profile.updateImageUrl(newImageUrl);
+        }
+
         profile.updateProfile(
             request.nickname(),
             request.age(),
             request.gender() != null ? Gender.valueOf(request.gender().toUpperCase()) : null,
-            request.imageUrl(),
             request.description(),
             request.baseLocation()
         );
 
         return ProfileEntityMapper.toResponseDto(profile);
-    }
-
-    @Transactional
-    public ProfileResponse updateProfileImageUrl(UUID memberId, MultipartFile multipartFile) {
-        Profile profile = profileRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
-
-        String imageUrl = s3StorageService.uploadImage(multipartFile, "profiles/");
-
-        profile.updateProfile(null, null, null, imageUrl, null, null);
-
-        return ProfileEntityMapper.toResponseDto(profile);
-    }
-
-    @Transactional
-    public void deleteProfileImageUrl(UUID memberId) {
-        Profile profile = profileRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
-
-        String imageUrl = profile.getImageUrl();
-        if (imageUrl != null && !imageUrl.isBlank()) {
-            // 1) S3에서 실제 객체 삭제 (멱등)
-            s3StorageService.deleteImage(imageUrl);
-        }
-
-        profile.updateImageUrl(null);
     }
 }

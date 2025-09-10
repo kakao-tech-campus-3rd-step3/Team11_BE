@@ -1,5 +1,6 @@
 package com.pnu.momeet.common.service;
 
+import com.pnu.momeet.common.exception.StorageException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -24,14 +25,11 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 @RequiredArgsConstructor
 public class S3StorageService {
 
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
-    private static final Set<String> ALLOWED_EXT = Set.of("jpg","jpeg","png","gif","webp");
     private final S3Client s3Client;
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
     public String uploadImage(MultipartFile multipartFile, String prefix) {
-        validate(multipartFile, multipartFile.getOriginalFilename());
         return uploadImageToS3(multipartFile, prefix);
     }
 
@@ -67,10 +65,10 @@ public class S3StorageService {
             log.error("S3Exception code={} requestId={} msg={}",
                 s3e.awsErrorDetails() != null ? s3e.awsErrorDetails().errorCode() : "N/A",
                 s3e.requestId(), s3e.getMessage());
-            throw new IllegalStateException("파일 저장 중 오류가 발생했습니다.");
+            throw new StorageException("파일 저장 중 오류가 발생했습니다.");
         } catch (IOException ioe) {
             log.error("I/O error while uploading to S3", ioe);
-            throw new IllegalStateException("파일 저장 중 오류가 발생했습니다.");
+            throw new StorageException("파일 저장 중 오류가 발생했습니다.");
         }
 
         return s3Client.utilities().getUrl(url -> url.bucket(bucket).key(key)).toString();
@@ -94,7 +92,7 @@ public class S3StorageService {
             case "png" -> "image/png";
             case "gif" -> "image/gif";
             case "webp" -> "image/webp";
-            default -> "application/octet-stream";
+            default -> throw new IllegalArgumentException("지원하지 않는 확장자입니다.");
         };
     }
 
@@ -112,55 +110,5 @@ public class S3StorageService {
         }
         if (!prefix.isEmpty() && !prefix.endsWith("/")) prefix += "/";
         return prefix + UUID.randomUUID() + "." + extension;
-    }
-
-    private void validate(MultipartFile multipartFile, String fileName) {
-        validateFileSize(multipartFile);
-        validateFile(fileName);
-        validateContentType(multipartFile);
-        validateImageContent(multipartFile);
-    }
-
-    private void validateFile(String fileName) {
-        if (fileName == null || fileName.isEmpty()) {
-            throw new IllegalArgumentException("파일 이름은 비어 있을 수 없습니다");
-        }
-
-        int lastIndexOf = fileName.lastIndexOf(".");
-        if (lastIndexOf < 0) {
-            throw new IllegalArgumentException("확장자가 존재해야 합니다.");
-        }
-
-        String extension = safeExt(fileName);
-        if (!ALLOWED_EXT.contains(extension)) {
-            throw new IllegalArgumentException("허용되지 않은 확장자입니다.");
-        }
-    }
-
-    private void validateContentType(MultipartFile file) {
-        String ct = file.getContentType();
-        if (ct == null || !ct.toLowerCase(Locale.ROOT).startsWith("image/")) {
-            throw new IllegalArgumentException("이미지 Content-Type이 아닙니다.");
-        }
-    }
-
-    private void validateFileSize(MultipartFile multipartFile) {
-        long size = multipartFile.getSize();
-        if (size <= 0) {
-            throw new IllegalArgumentException("파일이 비어있습니다.");
-        }
-        if (size > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("파일 크기가 5MB를 초과했습니다.");
-        }
-    }
-
-    private void validateImageContent(MultipartFile multipartFile) {
-        try (InputStream in = multipartFile.getInputStream()) {
-            if (ImageIO.read(in) == null) {
-                throw new IllegalArgumentException("이미지 파일이 아닙니다.");
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException("이미지 판별 중 오류가 발생했습니다.");
-        }
     }
 }
