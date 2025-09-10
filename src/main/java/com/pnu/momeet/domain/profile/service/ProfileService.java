@@ -69,7 +69,7 @@ public class ProfileService {
     }
 
     @Transactional
-    public ProfileResponse updateMyProfile(UUID memberId, @Valid ProfileUpdateRequest request) {
+    public ProfileResponse updateMyProfile(UUID memberId, ProfileUpdateRequest request) {
         Profile profile = profileRepository.findByMemberId(memberId)
             .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
 

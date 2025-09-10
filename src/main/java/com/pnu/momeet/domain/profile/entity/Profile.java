@@ -103,10 +103,6 @@ public class Profile extends BaseEntity {
         if (baseLocation != null) this.baseLocation = baseLocation;
     }
 
-    public void createImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
     public void updateImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
