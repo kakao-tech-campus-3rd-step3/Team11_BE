@@ -2,6 +2,7 @@ package com.pnu.momeet.domain.meetup.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.domain.meetup.dto.MeetupCreateRequest;
+import com.pnu.momeet.domain.meetup.dto.MeetupDetailResponse;
 import com.pnu.momeet.domain.meetup.dto.MeetupResponse;
 import com.pnu.momeet.domain.meetup.dto.MeetupUpdateRequest;
 import com.pnu.momeet.domain.meetup.service.MeetupService;
@@ -30,6 +31,12 @@ public class MeetupController {
             @RequestParam(required = false) String search
     ) {
         List<MeetupResponse> response = meetupService.getAllMeetups(category, status, search);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{meetupId}")
+    public ResponseEntity<MeetupDetailResponse> getMeetupById(@PathVariable UUID meetupId) {
+        MeetupDetailResponse response = meetupService.getMeetupById(meetupId);
         return ResponseEntity.ok(response);
     }
 
