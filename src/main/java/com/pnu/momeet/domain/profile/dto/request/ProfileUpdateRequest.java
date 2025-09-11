@@ -1,9 +1,11 @@
 package com.pnu.momeet.domain.profile.dto.request;
 
+import com.pnu.momeet.common.validation.annotation.ValidImage;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.springframework.web.multipart.MultipartFile;
 
 public record ProfileUpdateRequest(
     @Size(min = 2, max = 20, message = "닉네임은 2자 이상 20자 이하로 입력해주세요.")
@@ -20,8 +22,8 @@ public record ProfileUpdateRequest(
     @Pattern(regexp = "^(MALE|FEMALE)$", message = "성별은 MALE 또는 FEMALE만 가능합니다.")
     String gender,
 
-    @Size(max = 255, message = "이미지 URL은 최대 255자까지 입력할 수 있습니다.")
-    String imageUrl,
+    @ValidImage
+    MultipartFile image,
 
     @Size(max = 500, message = "소개글은 최대 500자까지 입력할 수 있습니다.")
     String description,

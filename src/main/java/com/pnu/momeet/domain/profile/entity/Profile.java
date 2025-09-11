@@ -93,16 +93,18 @@ public class Profile extends BaseEntity {
         String nickname,
         Integer age,
         Gender gender,
-        String imageUrl,
         String description,
         String baseLocation
     ) {
         if (nickname != null) this.nickname = nickname;
         if (age != null) this.age = age;
         if (gender != null) this.gender = gender;
-        if (imageUrl != null) this.imageUrl = imageUrl;
         if (description != null) this.description = description;
         if (baseLocation != null) this.baseLocation = baseLocation;
+    }
+
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public void increaseLikes() {

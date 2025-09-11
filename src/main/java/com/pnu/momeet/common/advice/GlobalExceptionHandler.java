@@ -1,6 +1,7 @@
 package com.pnu.momeet.common.advice;
 
 import com.pnu.momeet.common.exception.BannedAccountException;
+import com.pnu.momeet.common.exception.StorageException;
 import com.pnu.momeet.common.exception.UnMatchedPasswordException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
@@ -92,5 +93,12 @@ public class GlobalExceptionHandler {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "중복된 키 오류: " + e.getMessage());
         problemDetail.setTitle("중복된 키 오류");
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<ProblemDetail> handleStorageException(StorageException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        problemDetail.setTitle("서버 저장소 오류");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
     }
 }
