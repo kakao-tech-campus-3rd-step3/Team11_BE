@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ImageValidator implements ConstraintValidator<ValidImage, MultipartFile> {
 
     @Value("${spring.servlet.multipart.max-file-size}")
-    private static long MAX_FILE_SIZE;
+    private static long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "gif", "webp");
 
     @Override
