@@ -24,6 +24,11 @@ spring:
       mode: always
       data-locations: classpath:sql/init_scheme.sql, classpath:sql/init_data.sql
 
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+
 jwt:
   secret: ${JWT_SECRET}
   access-token:
