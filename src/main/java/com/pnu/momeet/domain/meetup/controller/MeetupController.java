@@ -1,13 +1,17 @@
 package com.pnu.momeet.domain.meetup.controller;
 
+import com.pnu.momeet.common.exception.CustomValidationException;
 import com.pnu.momeet.common.security.details.CustomUserDetails;
-import com.pnu.momeet.domain.meetup.dto.MeetupCreateRequest;
-import com.pnu.momeet.domain.meetup.dto.MeetupDetailResponse;
-import com.pnu.momeet.domain.meetup.dto.MeetupResponse;
-import com.pnu.momeet.domain.meetup.dto.MeetupUpdateRequest;
+import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
+import com.pnu.momeet.domain.meetup.dto.request.MeetupGeoSearchRequest;
+import com.pnu.momeet.domain.meetup.dto.request.MeetupPageRequest;
+import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
+import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
+import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.meetup.service.MeetupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -24,52 +29,89 @@ public class MeetupController {
 
     private final MeetupService meetupService;
 
-    @GetMapping
-    public ResponseEntity<List<MeetupResponse>> getAllMeetups(
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String search
-    ) {
-        List<MeetupResponse> response = meetupService.getAllMeetups(category, status, search);
-        return ResponseEntity.ok(response);
+    private void validateCategories(String mainCategory, String subCategory) {
+        if (mainCategory != null && subCategory != null) {
+            if (!SubCategory.valueOf(subCategory).getMainCategory().name().equals(mainCategory)) {
+                throw new CustomValidationException(Map.of(
+                        "subCategory", List.of("서브 카테고리가 메인 카테고리에 속하지 않습니다.")
+                ));
+            }
+        }
     }
 
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping
+    public Page<MeetupResponse> meetupPage(
+            @Valid  @ModelAttribute MeetupPageRequest request
+    ) {
+        return meetupService.findAllBySpecification(request);
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping("/geo")
+    public ResponseEntity<List<MeetupResponse>> meetupGeoSearch(
+            @Valid @ModelAttribute MeetupGeoSearchRequest request
+            ) {
+        return ResponseEntity.ok(meetupService.findAllByLocation(request));
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/{meetupId}")
-    public ResponseEntity<MeetupDetailResponse> getMeetupById(@PathVariable UUID meetupId) {
-        MeetupDetailResponse response = meetupService.getMeetupById(meetupId);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<MeetupResponse> meetupResponse(
+            @PathVariable UUID meetupId
+    ) {
+        return ResponseEntity.ok(meetupService.findById(meetupId));
+    };
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping("/me")
+    public ResponseEntity<MeetupResponse> meetupSelf(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(meetupService.findByMemberId(userDetails.getMemberId()));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<MeetupResponse> createMeetup(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody MeetupCreateRequest request
-    ) {
-        MeetupResponse response = meetupService.createMeetup(userDetails.getMemberId(), request);
-        return ResponseEntity
-                .created(URI.create("/api/meetups/" + response.getId()))
-                .body(response);
+            @RequestBody @Valid MeetupCreateRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            ) {
+        validateCategories(request.category(), request.subCategory());
+        var createdMeetup = meetupService.createMeetup(request, userDetails.getMemberId());
+        return ResponseEntity.created(URI.create("/api/meetups/" + createdMeetup.id()))
+                .body(createdMeetup);
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PutMapping("/{meetupId}")
     public ResponseEntity<MeetupResponse> updateMeetup(
             @PathVariable UUID meetupId,
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody MeetupUpdateRequest request
+            @RequestBody @Valid MeetupUpdateRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        MeetupResponse response = meetupService.updateMeetup(meetupId, userDetails.getMemberId(), request);
-        return ResponseEntity.ok(response);
+        validateCategories(request.category(), request.subCategory());
+        return ResponseEntity.ok(
+                meetupService.updateMeetup(meetupId, request, userDetails.getMemberId())
+        );
     }
 
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @DeleteMapping("/{meetupId}")
     public ResponseEntity<Void> deleteMeetup(
             @PathVariable UUID meetupId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         meetupService.deleteMeetup(meetupId, userDetails.getMemberId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/admin/{meetupId}")
+    public ResponseEntity<Void> adminDeleteMeetup(
+            @PathVariable UUID meetupId
+    ) {
+        meetupService.deleteMeetupAdmin(meetupId);
         return ResponseEntity.noContent().build();
     }
 }

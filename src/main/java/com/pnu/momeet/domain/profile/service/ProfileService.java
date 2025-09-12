@@ -8,7 +8,6 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
-import jakarta.validation.Valid;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
