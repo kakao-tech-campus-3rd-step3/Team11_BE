@@ -19,6 +19,11 @@ spring:
       ddl-auto: update
     defer-datasource-initialization: true
 
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+
   sql:
     init:
       mode: always
