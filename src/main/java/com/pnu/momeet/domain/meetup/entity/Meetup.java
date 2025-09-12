@@ -2,20 +2,23 @@ package com.pnu.momeet.domain.meetup.entity;
 
 
 import com.pnu.momeet.domain.common.entity.BaseEntity;
+import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
+import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "meetup")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Meetup extends BaseEntity {
 
@@ -26,26 +29,30 @@ public class Meetup extends BaseEntity {
     @Column(name = "name", nullable = false, length = 60)
     private String name;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "category_id", nullable = false)
-    private MeetupCategory category;
+    @Column(nullable = false, length = 30)
+    @Enumerated(EnumType.STRING)
+    private MainCategory category;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "sub_category_id", nullable = false)
-    private MeetupSubCategory subCategory;
+    @Column(nullable = false, length = 30)
+    @Enumerated(EnumType.STRING)
+    private SubCategory subCategory;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @OneToMany(mappedBy = "meetup", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MeetupHashTag> hashTags = new ArrayList<>();
+
+    @Column(name = "description", columnDefinition = "TEXT", nullable = false)
     private String description;
 
     @Column(name = "capacity", nullable = false)
     private Integer capacity = 10;
 
-    @Column(name = "score_limit")
+    @Column(name = "score_limit", nullable = false)
     private Integer scoreLimit;
 
     @Column(name = "location_point", nullable = false, columnDefinition = "geography(Point, 4326)")
     private Point locationPoint;
 
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String address;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -61,4 +68,42 @@ public class Meetup extends BaseEntity {
 
     @Column(name = "end_at")
     private LocalDateTime endAt;
+
+    @Builder
+    public Meetup(
+            Profile owner,
+            String name,
+            MainCategory category,
+            SubCategory subCategory,
+            List<String> hashTags,
+            String description,
+            Integer capacity,
+            Integer scoreLimit,
+            Point locationPoint,
+            String address,
+            Sigungu sigungu,
+            LocalDateTime startAt,
+            LocalDateTime endAt
+    ) {
+        this.owner = owner;
+        this.name = name;
+        this.category = category;
+        this.subCategory = subCategory;
+        setHashTags(hashTags);
+        this.description = description;
+        this.capacity = capacity;
+        this.scoreLimit = scoreLimit;
+        this.locationPoint = locationPoint;
+        this.address = address;
+        this.sigungu = sigungu;
+        this.startAt = startAt;
+        this.endAt = endAt;
+    }
+
+    public void setHashTags(List<String> hashTags) {
+        this.hashTags.clear();
+        for (String tag : hashTags) {
+            this.hashTags.add(new MeetupHashTag(tag, this));
+        }
+    }
 }
