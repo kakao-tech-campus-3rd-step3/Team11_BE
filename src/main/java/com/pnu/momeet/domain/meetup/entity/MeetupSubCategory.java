@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.meetup.entity;
 
 import com.pnu.momeet.domain.common.entity.SimpleCreationEntity;
+import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -17,5 +18,6 @@ public class MeetupSubCategory extends SimpleCreationEntity {
     private MeetupCategory category;
 
     @Column(length = 30, nullable = false)
-    private String name;
+    @Enumerated(EnumType.STRING)
+    private SubCategory name;
 }

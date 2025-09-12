@@ -10,7 +10,8 @@ public enum MainCategory {
     STUDY("스터디"),
     TRAVEL("여행"),
     GAME("게임"),
-    OTAKU("덕질");
+    OTAKU("덕질"),
+    OTHER("기타");
 
     private final String description;
 

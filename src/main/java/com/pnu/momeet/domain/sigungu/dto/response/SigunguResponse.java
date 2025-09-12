@@ -1,5 +1,7 @@
 package com.pnu.momeet.domain.sigungu.dto.response;
 
+import com.pnu.momeet.domain.common.dto.response.LocationResponse;
+
 import java.time.LocalDateTime;
 
 public record SigunguResponse (
@@ -7,7 +9,7 @@ public record SigunguResponse (
     Long sidoCode,
     String sigunguName,
     Long sigunguCode,
-    BaseLocationResponse baseLocation,
+    LocationResponse baseLocation,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {
