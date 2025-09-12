@@ -16,30 +16,30 @@ public interface MeetupRepository extends JpaRepository<Meetup, UUID>, JpaSpecif
     @Query(value = """
             SELECT * FROM meetup m
             WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
+            AND m.status = 'OPEN'
     """, nativeQuery = true)
     List<Meetup> findAllByDistance(Point location, double radius);
 
     @Query(value = """
             SELECT * FROM meetup m
             WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
-            AND m.category_id = (
-                SELECT id FROM meetup_category WHERE name = :category
-            )
+            AND m.status = 'OPEN'
+            AND m.category = :category
     """, nativeQuery = true)
     List<Meetup> findAllByDistanceAndCategory (Point location, double radius, String category);
 
     @Query(value = """
             SELECT * FROM meetup m
             WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
-            AND m.sub_category_id = (
-                SELECT id FROM meetup_sub_category WHERE name = :subCategory
-            )
+            AND m.status = 'OPEN'
+            AND m.sub_category = :subCategory
     """, nativeQuery = true)
     List<Meetup> findAllByDistanceAndSubCategory(Point location, double radius, String subCategory);
 
     @Query(value = """
             SELECT * FROM meetup m
             WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
+            AND m.status = 'OPEN'
             AND (
                 LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
                 LOWER(m.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -50,9 +50,8 @@ public interface MeetupRepository extends JpaRepository<Meetup, UUID>, JpaSpecif
     @Query(value = """
             SELECT * FROM meetup m
             WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
-            AND m.category_id = (
-                SELECT id FROM meetup_category WHERE name = :category
-            )
+            AND m.status = 'OPEN'
+            AND m.category = :category
             AND (
                 LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
                 LOWER(m.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -63,9 +62,8 @@ public interface MeetupRepository extends JpaRepository<Meetup, UUID>, JpaSpecif
     @Query(value = """
             SELECT * FROM meetup m
             WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
-            AND m.sub_category_id = (
-                SELECT id FROM meetup_sub_category WHERE name = :subCategory
-            )
+            AND m.status = 'OPEN'
+            AND m.sub_category = :subCategory
             AND (
                 LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
                 LOWER(m.description) LIKE LOWER(CONCAT('%', :keyword, '%'))

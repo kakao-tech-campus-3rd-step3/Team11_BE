@@ -13,11 +13,10 @@ public record MeetupResponse(
     String subCategory,
     String description,
     Integer capacity,
-    Integer scoreLimit,
+    Double scoreLimit,
     SigunguResponse sigungu,
     LocationResponse location,
     String status,
-    LocalDateTime startAt,
     LocalDateTime endAt,
     LocalDateTime createdAt,
     LocalDateTime updatedAt

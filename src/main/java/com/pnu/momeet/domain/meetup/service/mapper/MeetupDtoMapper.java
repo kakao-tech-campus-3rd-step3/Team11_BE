@@ -6,10 +6,13 @@ import com.pnu.momeet.domain.meetup.dto.request.MeetupPageRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
+import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class MeetupDtoMapper {
@@ -18,15 +21,24 @@ public class MeetupDtoMapper {
     }
 
     public static Meetup toEntity(MeetupCreateRequest request) {
+        MainCategory category = MainCategory.valueOf(request.category());
+        SubCategory subCategory = null;
+        if (request.subCategory() != null) {
+            subCategory = SubCategory.valueOf(request.subCategory());
+        }
+        LocalDateTime endAt = LocalDateTime.now().plusHours(request.durationHours());
+
+        // hashTags는 서비스 레이어에서 설정
         return Meetup.builder()
                 .name(request.name())
-                .hashTags(request.hashTags())
+                .category(category)
+                .subCategory(subCategory)
+                .hashTags(List.of())
                 .description(request.description())
                 .capacity(request.capacity())
                 .scoreLimit(request.scoreLimit())
                 .address(request.location().address())
-                .startAt(request.startAt())
-                .endAt(request.endAt())
+                .endAt(endAt)
                 .build();
     }
 
@@ -38,6 +50,7 @@ public class MeetupDtoMapper {
             }
             if (request.category() != null) {
                 meetup.setCategory(MainCategory.valueOf(request.category()));
+                meetup.setSubCategory(null); // 카테고리가 변경되면 서브카테고리 초기화
             }
             if (request.subCategory() != null) {
                 meetup.setSubCategory(SubCategory.valueOf(request.subCategory()));
@@ -53,12 +66,6 @@ public class MeetupDtoMapper {
             }
             if (request.scoreLimit() != null) {
                 meetup.setScoreLimit(request.scoreLimit());
-            }
-            if (request.startAt() != null) {
-                meetup.setStartAt(request.startAt());
-            }
-            if (request.endAt() != null) {
-                meetup.setEndAt(request.endAt());
             }
             if (request.location() != null) {
                 meetup.setAddress(request.location().address());
@@ -90,6 +97,13 @@ public class MeetupDtoMapper {
             spec = spec.and((root, query, cb)
                     -> cb.equal(root.get("subCategory"), subCategory));
         }
+
+        if (request.getStatus() != null) {
+            MeetupStatus status = MeetupStatus.valueOf(request.getStatus());
+            spec = spec.and((root, query, cb)
+                    -> cb.equal(root.get("status"), status));
+        }
+
         if (request.getSearch() != null && !request.getSearch().isEmpty()) {
             String pattern = "%" + request.getSearch().toLowerCase() + "%";
             spec = spec.and((root, query, cb)

@@ -23,5 +23,6 @@ public class MeetupHashTag extends SimpleCreationEntity {
 
     public MeetupHashTag(String name, Meetup meetup) {
         this.name = name;
+        this.meetup = meetup;
     }
 }

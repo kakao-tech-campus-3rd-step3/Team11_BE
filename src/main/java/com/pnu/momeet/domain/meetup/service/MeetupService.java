@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.meetup.service;
 
+import com.pnu.momeet.common.exception.CustomValidationException;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupGeoSearchRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupPageRequest;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -95,7 +97,6 @@ public class MeetupService {
                 .orElseThrow(() -> new NoSuchElementException("해당 ID의 모임이 존재하지 않습니다: " + meetupId));
     }
 
-
     @Transactional(readOnly = true)
     public MeetupResponse findById(UUID meetupId) {
         Meetup meetup = findEntityById(meetupId);
@@ -103,10 +104,15 @@ public class MeetupService {
     }
 
     @Transactional(readOnly = true)
-    public MeetupResponse findByMemberId(UUID memberId) {
+    public Meetup findEntityByMemberId(UUID memberId) {
         Profile profile = profileService.getProfileEntityByMemberId(memberId);
-        Meetup meetup = meetupRepository.findByOwner(profile)
+        return meetupRepository.findByOwner(profile)
                 .orElseThrow(() -> new NoSuchElementException("해당 회원이 소유한 모임이 존재하지 않습니다: " + memberId));
+    }
+
+    @Transactional(readOnly = true)
+    public MeetupResponse findByMemberId(UUID memberId) {
+        Meetup meetup = findEntityByMemberId(memberId);
         return MeetupEntityMapper.toDto(meetup);
     }
 
@@ -117,13 +123,20 @@ public class MeetupService {
                 request.location().latitude()
         ));
         Meetup meetup = MeetupDtoMapper.toEntity(request);
+        Profile profile = profileService.getProfileEntityByMemberId(memberId);
 
-        // entity 영속 처리
+        if (profile.getTemperature().doubleValue() < meetup.getScoreLimit()) {
+            throw new CustomValidationException(Map.of(
+                    "scoreLimit", List.of("회원님의 모임 참여 점수가 모임의 제한 점수보다 낮습니다.")
+            ));
+        }
+
         meetup.setOwner(profileService.getProfileEntityByMemberId(memberId));
         meetup.setLocationPoint(locationPoint);
         meetup.setSigungu(sigunguService.findEntityByPointIn(locationPoint));
-
-        return MeetupEntityMapper.toDto(meetupRepository.save(meetup));
+        Meetup createdMeetup = meetupRepository.save(meetup);
+        createdMeetup.setHashTags(request.hashTags()); // 해시태그는 모임 ID가 있어야 설정 가능
+        return MeetupEntityMapper.toDto(createdMeetup);
     }
 
     @Transactional
@@ -134,13 +147,17 @@ public class MeetupService {
     }
 
     @Transactional
-    public MeetupResponse updateMeetup(UUID meetupId, MeetupUpdateRequest request, UUID memberId) {
-        Meetup meetup = findEntityById(meetupId);
+    public MeetupResponse updateMeetupByMemberId(MeetupUpdateRequest request, UUID memberId) {
+        Meetup meetup = findEntityByMemberId(memberId);
+        
         if (!meetup.getOwner().getMemberId().equals(memberId)) {
             throw new SecurityException("모임을 수정할 권한이 없습니다.");
         }
+        if (meetup.getStatus() != MeetupStatus.OPEN) {
+            throw new IllegalStateException("모집 중인 모임만 수정할 수 있습니다.");
+        }
 
-        Meetup updatedMeetup = updateMeetupEntityById(meetupId, MeetupDtoMapper.toConsumer(request));
+        Meetup updatedMeetup = updateMeetupEntityById(meetup.getId(), MeetupDtoMapper.toConsumer(request));
         // 영속성 처리
         if (request.location() != null) {
             Point locationPoint = geometryFactory.createPoint(new Coordinate(
@@ -160,13 +177,10 @@ public class MeetupService {
     }
 
     @Transactional
-    public void deleteMeetup(UUID meetupId, UUID memberId) {
-        Meetup meetup = findEntityById(meetupId);
-        if (!meetup.getOwner().getMemberId().equals(memberId)) {
-            throw new SecurityException("모임을 삭제할 권한이 없습니다.");
-        }
+    public void deleteMeetup(UUID memberId) {
+        Meetup meetup = findEntityByMemberId(memberId);
         if (meetup.getStatus() == MeetupStatus.IN_PROGRESS) {
-            throw new IllegalStateException("진행 중인 모임은 삭제할 수 없습니다. 모임 종료 후 삭제해주세요.");
+            throw new IllegalStateException("진행 중인 모임은 삭제할 수 없습니다.");
         }
         meetupRepository.delete(meetup);
     }

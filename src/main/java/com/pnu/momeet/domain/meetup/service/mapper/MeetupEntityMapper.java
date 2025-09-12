@@ -29,7 +29,6 @@ public class MeetupEntityMapper {
                 SigunguEntityMapper.toDto(meetup.getSigungu()),
                 location,
                 meetup.getStatus().name(),
-                meetup.getStartAt(),
                 meetup.getEndAt(),
                 meetup.getCreatedAt(),
                 meetup.getUpdatedAt()

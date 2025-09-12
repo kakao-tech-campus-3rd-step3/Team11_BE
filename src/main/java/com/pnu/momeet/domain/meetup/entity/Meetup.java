@@ -47,7 +47,7 @@ public class Meetup extends BaseEntity {
     private Integer capacity = 10;
 
     @Column(name = "score_limit", nullable = false)
-    private Integer scoreLimit;
+    private Double scoreLimit;
 
     @Column(name = "location_point", nullable = false, columnDefinition = "geography(Point, 4326)")
     private Point locationPoint;
@@ -55,16 +55,13 @@ public class Meetup extends BaseEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String address;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sgg_code", nullable = false)
     private Sigungu sigungu;
 
     @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private MeetupStatus status = MeetupStatus.OPEN;
-
-    @Column(name = "start_at")
-    private LocalDateTime startAt;
 
     @Column(name = "end_at")
     private LocalDateTime endAt;
@@ -78,11 +75,10 @@ public class Meetup extends BaseEntity {
             List<String> hashTags,
             String description,
             Integer capacity,
-            Integer scoreLimit,
+            Double scoreLimit,
             Point locationPoint,
             String address,
             Sigungu sigungu,
-            LocalDateTime startAt,
             LocalDateTime endAt
     ) {
         this.owner = owner;
@@ -96,7 +92,6 @@ public class Meetup extends BaseEntity {
         this.locationPoint = locationPoint;
         this.address = address;
         this.sigungu = sigungu;
-        this.startAt = startAt;
         this.endAt = endAt;
     }
 

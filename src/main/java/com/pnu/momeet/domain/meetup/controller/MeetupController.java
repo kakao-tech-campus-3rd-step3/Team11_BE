@@ -61,7 +61,7 @@ public class MeetupController {
             @PathVariable UUID meetupId
     ) {
         return ResponseEntity.ok(meetupService.findById(meetupId));
-    };
+    }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/me")
@@ -84,30 +84,28 @@ public class MeetupController {
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @PutMapping("/{meetupId}")
+    @PutMapping("/me")
     public ResponseEntity<MeetupResponse> updateMeetup(
-            @PathVariable UUID meetupId,
             @RequestBody @Valid MeetupUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         validateCategories(request.category(), request.subCategory());
         return ResponseEntity.ok(
-                meetupService.updateMeetup(meetupId, request, userDetails.getMemberId())
+                meetupService.updateMeetupByMemberId(request, userDetails.getMemberId())
         );
     }
 
-    @PreAuthorize("hasRole('ROLE_USER')")
-    @DeleteMapping("/{meetupId}")
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/me")
     public ResponseEntity<Void> deleteMeetup(
-            @PathVariable UUID meetupId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        meetupService.deleteMeetup(meetupId, userDetails.getMemberId());
+        meetupService.deleteMeetup(userDetails.getMemberId());
         return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @DeleteMapping("/admin/{meetupId}")
+    @DeleteMapping("/{meetupId}")
     public ResponseEntity<Void> adminDeleteMeetup(
             @PathVariable UUID meetupId
     ) {
