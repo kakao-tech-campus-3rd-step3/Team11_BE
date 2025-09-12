@@ -11,7 +11,6 @@ public record MeetupGeoSearchRequest(
         @NotNull(message = "경도는 필수입니다.")
         Double longitude,
 
-        @NotNull(message = "거리 반경은 필수입니다.(단위: km)")
         Double radius,
 
         @ValidMainCategory
@@ -22,5 +21,19 @@ public record MeetupGeoSearchRequest(
 
         String search
 ) {
-
+        public MeetupGeoSearchRequest(
+                Double latitude,
+                Double longitude,
+                Double radius,
+                String category,
+                String subCategory,
+                String search
+        ) {
+                this.latitude = latitude;
+                this.longitude = longitude;
+                this.radius = radius != null ? radius : 5.0; // 기본 반경 5km
+                this.category = category;
+                this.subCategory = subCategory;
+                this.search = search;
+        }
 }

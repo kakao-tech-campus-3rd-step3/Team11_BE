@@ -11,4 +11,10 @@ public record LocationRequest(
 
         String address
 ) {
+        public static LocationRequest of(Double latitude, Double longitude, String address) {
+                if (address == null) {
+                        address = "";
+                }
+                return new LocationRequest(latitude, longitude, address);
+        }
 }

@@ -1,6 +1,7 @@
 package com.pnu.momeet.common.advice;
 
 import com.pnu.momeet.common.exception.BannedAccountException;
+import com.pnu.momeet.common.exception.CustomValidationException;
 import com.pnu.momeet.common.exception.StorageException;
 import com.pnu.momeet.common.exception.UnMatchedPasswordException;
 import org.springframework.dao.DuplicateKeyException;
@@ -70,6 +71,14 @@ public class GlobalExceptionHandler {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "유효성 검사에 실패했습니다.");
         problemDetail.setTitle("유효성 검사 실패");
         problemDetail.setProperty("validationErrors", extractValidationErrors(e));
+        return ResponseEntity.badRequest().body(problemDetail);
+    }
+
+    @ExceptionHandler(CustomValidationException.class)
+    public ResponseEntity<ProblemDetail> handleCustomValidationException(CustomValidationException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+        problemDetail.setTitle("유효성 검사 실패");
+        problemDetail.setProperty("validationErrors", e.getFieldErrors());
         return ResponseEntity.badRequest().body(problemDetail);
     }
 

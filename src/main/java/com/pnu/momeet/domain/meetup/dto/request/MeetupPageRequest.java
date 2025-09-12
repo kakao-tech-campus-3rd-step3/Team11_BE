@@ -14,8 +14,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MeetupPageRequest extends BasePageRequest {
 
-    @NotNull(message = "시군구 ID는 필수입니다.")
-    private Long sigunguId;
+    @NotNull(message = "시군구 코드는 필수입니다.")
+    private Long sigunguCode;
 
     @ValidMainCategory
     private String category;
