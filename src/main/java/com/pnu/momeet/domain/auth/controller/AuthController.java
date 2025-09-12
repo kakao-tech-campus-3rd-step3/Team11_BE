@@ -1,8 +1,10 @@
 package com.pnu.momeet.domain.auth.controller;
 
 import com.pnu.momeet.common.exception.UnMatchedPasswordException;
-import com.pnu.momeet.domain.auth.dto.*;
-import com.pnu.momeet.domain.auth.mapper.ModelMapper;
+import com.pnu.momeet.domain.auth.dto.request.LoginRequest;
+import com.pnu.momeet.domain.auth.dto.request.RefreshRequest;
+import com.pnu.momeet.domain.auth.dto.request.SignupRequest;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,24 +33,21 @@ public class AuthController {
         if (!request.password1().equals(request.password2())) {
             throw new UnMatchedPasswordException("비밀번호가 일치하지 않습니다.");
         }
-        var dto = ModelMapper.toDto(authService.signUp(request.email(), request.password1()));
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(authService.signUp(request.email(), request.password1()));
     }
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> MemberLogin(
             @Valid @RequestBody LoginRequest request
     ) {
-        var dto = ModelMapper.toDto(authService.login(request.email(), request.password()));
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(authService.login(request.email(), request.password()));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> TokenRefresh(
             @Valid @RequestBody RefreshRequest request
             ) {
-        var dto = ModelMapper.toDto(authService.refreshTokens(request.refreshToken()));
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(authService.refreshTokens(request.refreshToken()));
     }
 
     @PostMapping("/logout")

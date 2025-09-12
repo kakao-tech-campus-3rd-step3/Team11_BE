@@ -1,10 +1,10 @@
 package com.pnu.momeet.e2e.auth;
 
-import com.pnu.momeet.domain.auth.dto.SignupRequest;
-import com.pnu.momeet.domain.auth.dto.TokenResponse;
-import com.pnu.momeet.domain.member.entity.Member;
+import com.pnu.momeet.domain.auth.dto.request.SignupRequest;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
+import com.pnu.momeet.domain.member.dto.response.MemberInfo;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.enums.Provider;
-import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
@@ -39,16 +39,17 @@ public class AuthSignupTest extends BaseAuthTest {
                 .extract()
                 .as(TokenResponse.class);
 
-        Member signedUpMember = memberService.findMemberByEmail(request.email());
+        MemberResponse signedUpMember = memberService.findMemberByEmail(request.email());
         toBeDeleted.add(signedUpMember); // 회원가입한 계정 삭제를 위해 리스트에 추가
+        MemberInfo memberInfo = memberService.findMemberInfoById(signedUpMember.id());
 
         testTokenPair(response, signedUpMember);
         assertThat(signedUpMember).isNotNull();
-        assertThat(signedUpMember.getProvider()).isEqualTo(Provider.EMAIL);
-        assertThat(signedUpMember.isEnabled()).isTrue(); // 계정 활성화 여부
-        assertThat(signedUpMember.getTokenIssuedAt()).isNotNull(); // 토큰 발급 시점
-        assertThat(signedUpMember.getRoles().size()).isEqualTo(1);
-        assertThat(signedUpMember.getRoles().getFirst().getName()).isEqualTo(Role.ROLE_USER);
+        assertThat(memberInfo.provider()).isEqualTo(Provider.EMAIL);
+        assertThat(memberInfo.enabled()).isTrue(); // 계정 활성화 여부
+        assertThat(memberInfo.tokenIssuedAt()).isNotNull(); // 토큰 발급 시점
+        assertThat(memberInfo.roles().size()).isEqualTo(1);
+        assertThat(memberInfo.roles().getFirst()).isEqualTo("ROLE_USER");
     }
 
     @Test
@@ -75,7 +76,7 @@ public class AuthSignupTest extends BaseAuthTest {
     @Test
     @DisplayName("회원가입 실패 테스트 - 중복된 이메일(409 Conflict)")
     public void signup_fail_duplicate_email() {
-        SignupRequest request = new SignupRequest(testMember.getEmail(), "testSignup123@", "testSignup123@");
+        SignupRequest request = new SignupRequest(testMember.email(), "testSignup123@", "testSignup123@");
         RestAssured
             .given()
                 .contentType(ContentType.JSON)

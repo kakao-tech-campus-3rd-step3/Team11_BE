@@ -1,11 +1,12 @@
 package com.pnu.momeet.domain.auth.service;
 
 import com.pnu.momeet.common.exception.BannedAccountException;
-import com.pnu.momeet.common.exception.ExistEmailException;
-import com.pnu.momeet.common.model.TokenPair;
 import com.pnu.momeet.common.security.JwtTokenProvider;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
+import com.pnu.momeet.domain.member.dto.response.MemberInfo;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
@@ -34,7 +35,7 @@ public class EmailAuthService {
 
     private static final long IAT_BUFFER_SECONDS = 10;
 
-    private TokenPair generateTokenPair(UUID memberId) {
+    private TokenResponse generateTokenPair(UUID memberId) {
         // 토큰 발급 시점 기록 & 계정 활성화
         memberService.updateMemberById(memberId, member -> {
             member.setTokenIssuedAt(LocalDateTime.now().minusSeconds(IAT_BUFFER_SECONDS));
@@ -48,42 +49,38 @@ public class EmailAuthService {
         // 반환 이전에 refresh token 저장 또는 갱신
         refreshTokenRepository.save(new RefreshToken(memberId, refreshToken));
 
-        return new TokenPair(refreshToken, accessToken);
+        return new TokenResponse(accessToken, refreshToken);
     }
 
     @Transactional
-    public TokenPair signUp(String email, String password) {
-        if (memberService.existsByEmail(email)) {
-            throw new ExistEmailException("이미 가입한 이메일입니다.");
-        }
-
-        Member savedMember = memberService.saveMember(new Member(email, password, List.of(Role.ROLE_USER)));
-        return generateTokenPair(savedMember.getId());
+    public TokenResponse signUp(String email, String password) {
+        MemberResponse savedMember = memberService.saveMember(new Member(email, password, List.of(Role.ROLE_USER)));
+        return generateTokenPair(savedMember.id());
     }
 
     @Transactional
-    public TokenPair login(String email, String password) {
+    public TokenResponse login(String email, String password) {
 
-        Member member;
+        MemberInfo memberInfo;
         try {
-            member = memberService.findMemberByEmail(email);
+            memberInfo = memberService.findMemberInfoByEmail(email);
         } catch (NoSuchElementException e) {
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
 
-        if (member.getProvider() != Provider.EMAIL) {
+        if (memberInfo.provider() != Provider.EMAIL) {
             throw new AuthenticationException("지원하지 않은 경로로 로그인을 시도하였습니다.") {};
         }
 
-        if (!passwordEncoder.matches(password, member.getPassword())) {
+        if (!passwordEncoder.matches(password, memberInfo.password())) {
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
 
-        if (!member.isAccountNonLocked()) {
+        if (!memberInfo.isAccountNonLocked()) {
             throw new BannedAccountException("잠긴 계정입니다. 관리자에게 문의하세요.") {};
         }
 
-        return generateTokenPair(member.getId());
+        return generateTokenPair(memberInfo.id());
     }
 
     @Transactional
@@ -95,7 +92,7 @@ public class EmailAuthService {
     }
 
     @Transactional
-    public TokenPair refreshTokens(String refreshToken) {
+    public TokenResponse refreshTokens(String refreshToken) {
         UUID memberId;
         try {
             Claims payload = tokenProvider.getPayload(refreshToken);

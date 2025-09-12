@@ -36,6 +36,7 @@ ext {
     JJWT_VERSION = '0.13.0'
     DOTENV_VERSION = '4.0.0'
     RESTASSURED_VERSION = '5.5.6'
+    AWS_VERSION = '3.4.0'
     JTS_VERSION = '1.20.0'
     HIBERNATE_SPATIAL_VERSION = '7.1.0.Final'
 }
@@ -50,6 +51,8 @@ dependencies {
     implementation "io.jsonwebtoken:jjwt-api:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${JJWT_VERSION}"
+
+    implementation "io.awspring.cloud:spring-cloud-aws-starter-s3:${AWS_VERSION}"
 
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'

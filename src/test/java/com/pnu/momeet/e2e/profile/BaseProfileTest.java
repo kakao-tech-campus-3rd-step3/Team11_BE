@@ -1,6 +1,6 @@
 package com.pnu.momeet.e2e.profile;
 
-import com.pnu.momeet.common.model.TokenPair;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.service.MemberService;
@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Tag("profile")
 public abstract class BaseProfileTest extends BaseE2ETest {
 
-    protected Map<Role, TokenPair> testTokens;
+    protected Map<Role, TokenResponse> testTokens;
     protected List<UUID> membersToBeDeleted;
     protected List<UUID> profilesToBeDeleted;
     protected UUID test_user_profile_uuid;
@@ -54,7 +54,7 @@ public abstract class BaseProfileTest extends BaseE2ETest {
 
         // 테스트용 프로필 ID 설정
         var testMember = memberService.findMemberByEmail(TEST_USER_EMAIL);
-        test_user_profile_uuid = profileService.getMyProfile(testMember.getId()).id();
+        test_user_profile_uuid = profileService.getMyProfile(testMember.id()).id();
     }
 
     @AfterEach
@@ -70,7 +70,7 @@ public abstract class BaseProfileTest extends BaseE2ETest {
         }
     }
 
-    protected TokenPair getToken(Role role) {
+    protected TokenResponse getToken(Role role) {
         return testTokens.get(role);
     }
 }

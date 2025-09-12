@@ -1,5 +1,7 @@
 package com.pnu.momeet.unit.member;
 
+import com.pnu.momeet.domain.member.dto.response.MemberInfo;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.repository.MemberRepository;
@@ -41,10 +43,10 @@ public class MemberServiceTest extends BaseUnitTest {
         Mockito.when(memberRepository.save(Mockito.any(Member.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Member savedMember = memberService.saveMember(newMember);
+        MemberResponse savedMember = memberService.saveMember(newMember);
+
         // then
         Assertions.assertNotNull(savedMember);
-        Assertions.assertEquals("encoded_password123", savedMember.getPassword());
         Mockito.verify(memberRepository).save(newMember);
     }
 
@@ -64,10 +66,9 @@ public class MemberServiceTest extends BaseUnitTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when: 닉네임 변경
-        Member updated = memberService.updateMemberById(memberId, m -> m.setAccountNonLocked(false));
+        MemberResponse updated = memberService.updateMemberById(memberId, m -> m.setAccountNonLocked(false));
 
         // then
-        Assertions.assertFalse(updated.isEnabled()); // 수정 전 비활성화
         Assertions.assertFalse(updated.isAccountNonLocked()); // 수정된 값
         Mockito.verify(memberRepository).save(originMember);
     }
@@ -89,11 +90,9 @@ public class MemberServiceTest extends BaseUnitTest {
         Mockito.when(passwordEncoder.encode("newpass")).thenReturn("encoded_newpass");
 
         // when
-        Member updated = memberService.validateAndUpdatePasswordById(memberId, "oldpass", "newpass");
+        memberService.validateAndUpdatePasswordById(memberId, "oldpass", "newpass");
 
         // then
-        Assertions.assertFalse(updated.isEnabled()); // 변경 전 비활성화
-        Assertions.assertEquals("encoded_newpass", updated.getPassword());
         Mockito.verify(memberRepository).save(member);
     }
 
@@ -113,11 +112,12 @@ public class MemberServiceTest extends BaseUnitTest {
         Mockito.when(passwordEncoder.encode("newadminpass")).thenReturn("encoded_newadminpass");
 
         // when
-        Member updated = memberService.updatePasswordById(memberId, "newadminpass");
+        memberService.updatePasswordById(memberId, "newadminpass");
+        MemberInfo info = memberService.findMemberInfoById(memberId);
 
         // then
-        Assertions.assertFalse(updated.isEnabled()); // 변경 전 비활성화
-        Assertions.assertEquals("encoded_newadminpass", updated.getPassword());
+        Assertions.assertFalse(info.enabled()); // 변경 전 비활성화
+        Assertions.assertEquals("encoded_newadminpass", info.password()); // 변경된 비밀번호
         Mockito.verify(memberRepository).save(member);
     }
 }

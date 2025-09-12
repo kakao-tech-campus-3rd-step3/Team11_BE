@@ -1,5 +1,6 @@
 package com.pnu.momeet.e2e.member;
 
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
@@ -19,14 +20,14 @@ public class MemberDeleteTest extends BaseMemberTest {
     @Override
     protected void setup() {
         super.setup();
-        Member member = memberService.saveMember(
+        MemberResponse member = memberService.saveMember(
             new Member(
                 "delete_test1@test.com",
                 "deleteTestPass1!",
                 List.of(Role.ROLE_USER)
             )
         );
-        toBeDeleted.add(member.getId());
+        toBeDeleted.add(member.id());
     }
 
     @Test

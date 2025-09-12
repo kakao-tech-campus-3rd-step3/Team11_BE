@@ -1,9 +1,8 @@
 package com.pnu.momeet.domain.member.controller;
 
-import com.pnu.momeet.domain.member.dto.*;
-import com.pnu.momeet.domain.member.entity.Member;
-import com.pnu.momeet.domain.member.mapper.DtoMapper;
-import com.pnu.momeet.domain.member.mapper.EntityMapper;
+import com.pnu.momeet.domain.member.dto.request.*;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
+import com.pnu.momeet.domain.member.service.mapper.MemberDtoMapper;
 import com.pnu.momeet.domain.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +30,8 @@ public class MemberController {
     public ResponseEntity<Page<MemberResponse>> memberList(
             @Valid @ModelAttribute MemberPageRequest request
     ) {
-        Page<Member> members = memberService.findAllMembers(DtoMapper.toPageRequest(request));
-        return ResponseEntity.ok(members.map(EntityMapper::toDto));
+        var members = memberService.findAllMembers(MemberDtoMapper.toPageRequest(request));
+        return ResponseEntity.ok(members);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -40,8 +39,7 @@ public class MemberController {
     public ResponseEntity<MemberResponse> memberInfo(
             @PathVariable UUID id
     ) {
-        Member member = memberService.findMemberById(id);
-        return ResponseEntity.ok(EntityMapper.toDto(member));
+        return ResponseEntity.ok(memberService.findMemberById(id));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
@@ -49,8 +47,8 @@ public class MemberController {
     public ResponseEntity<MemberResponse> memberSelf(
             @AuthenticationPrincipal UserDetails userDetails
             ) {
-        Member member = memberService.findMemberById(UUID.fromString(userDetails.getUsername()));
-        return ResponseEntity.ok(EntityMapper.toDto(member));
+        var member = memberService.findMemberById(UUID.fromString(userDetails.getUsername()));
+        return ResponseEntity.ok(member);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -58,9 +56,8 @@ public class MemberController {
     public ResponseEntity<MemberResponse> memberCreate(
             @Valid @RequestBody MemberCreateRequest request
             ) {
-        Member savedMember = memberService.saveMember(DtoMapper.toEntity(request));
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(EntityMapper.toDto(savedMember));
+        var savedMember = memberService.saveMember(MemberDtoMapper.toEntity(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedMember);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -69,8 +66,10 @@ public class MemberController {
             @PathVariable UUID id,
             @Valid @RequestBody MemberEditRequest request
     ) {
-        Member updatedMember = memberService.updateMemberById(id, DtoMapper.toConsumer(request));
-        return ResponseEntity.ok(EntityMapper.toDto(updatedMember));
+        return ResponseEntity.ok(
+                memberService.updateMemberById(
+                        id, MemberDtoMapper.toConsumer(request)
+                ));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -79,8 +78,8 @@ public class MemberController {
             @PathVariable UUID id,
             @Valid @RequestBody AdminChangePasswordRequest request
     ) {
-        Member updatedMember = memberService.updatePasswordById(id, request.newPassword());
-        return ResponseEntity.ok(EntityMapper.toDto(updatedMember));
+        var updatedMember = memberService.updatePasswordById(id, request.newPassword());
+        return ResponseEntity.ok(updatedMember);
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
@@ -89,12 +88,12 @@ public class MemberController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody ChangePasswordRequest request
     ) {
-        Member updatedMember = memberService.validateAndUpdatePasswordById(
+        var updatedMember = memberService.validateAndUpdatePasswordById(
                 UUID.fromString(userDetails.getUsername()),
                 request.oldPassword(),
                 request.newPassword()
         );
-        return ResponseEntity.ok(EntityMapper.toDto(updatedMember));
+        return ResponseEntity.ok(updatedMember);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

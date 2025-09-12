@@ -2,7 +2,9 @@ package com.pnu.momeet.domain.member.entity;
 
 import com.pnu.momeet.domain.member.enums.Role;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 
@@ -12,6 +14,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MemberRole {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,10 +29,6 @@ public class MemberRole {
 
     @CreatedDate
     LocalDateTime grantedAt;
-
-    protected MemberRole() {
-
-    }
 
     public MemberRole(Role name, Member member) {
         this.name = name;

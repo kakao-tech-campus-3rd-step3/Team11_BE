@@ -1,8 +1,8 @@
 package com.pnu.momeet.e2e.auth;
 
-import com.pnu.momeet.domain.auth.dto.LoginRequest;
-import com.pnu.momeet.domain.auth.dto.TokenResponse;
-import com.pnu.momeet.domain.member.entity.Member;
+import com.pnu.momeet.domain.auth.dto.request.LoginRequest;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
+import com.pnu.momeet.domain.member.dto.response.MemberInfo;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
@@ -17,7 +17,7 @@ public class AuthLoginTest extends BaseAuthTest {
     @Test
     @DisplayName("로그인 성공 테스트")
     public void login_success() {
-        LoginRequest request = new LoginRequest(testMember.getEmail(), testPassword);
+        LoginRequest request = new LoginRequest(testMember.email(), testPassword);
         TokenResponse response = RestAssured
                 .given()
                 .contentType(ContentType.JSON)
@@ -36,9 +36,9 @@ public class AuthLoginTest extends BaseAuthTest {
 
         testTokenPair(response, testMember);
 
-        Member loggedInMember = memberService.findMemberById(testMember.getId());
-        assertThat(loggedInMember.isEnabled()).isTrue(); // 계정 활성화 여부
-        assertThat(loggedInMember.getTokenIssuedAt()).isNotNull(); // 토큰 발급 시점
+        MemberInfo loggedInMember = memberService.findMemberInfoById(testMember.id());
+        assertThat(loggedInMember.enabled()).isTrue(); // 계정 활성화 여부
+        assertThat(loggedInMember.tokenIssuedAt()).isNotNull(); // 토큰 발급 시점
     }
 
     @Test
@@ -64,7 +64,7 @@ public class AuthLoginTest extends BaseAuthTest {
     public void login_fail_invalid_email_or_password() {
         List.of(
                 new LoginRequest("notExist@test.com", "testAuth123!"),
-                new LoginRequest(testMember.getEmail(), "testAuth1!")
+                new LoginRequest(testMember.email(), "testAuth1!")
         ).forEach(request ->
             RestAssured
                 .given()
@@ -82,9 +82,9 @@ public class AuthLoginTest extends BaseAuthTest {
     @DisplayName("로그인 실패 테스트 - 계정 잠금(403 Forbidden)")
     public void login_fail_banned_account() {
         // given
-        memberService.updateMemberById(testMember.getId(), member -> member.setAccountNonLocked(false));
+        memberService.updateMemberById(testMember.id(), member -> member.setAccountNonLocked(false));
 
-        LoginRequest request = new LoginRequest(testMember.getEmail(), testPassword);
+        LoginRequest request = new LoginRequest(testMember.email(), testPassword);
         RestAssured
                 .given()
                 .contentType(ContentType.JSON)
