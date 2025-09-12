@@ -3,6 +3,10 @@ DROP TABLE IF EXISTS member_role CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
 DROP TABLE IF EXISTS profile CASCADE;
 DROP TABLE IF EXISTS member CASCADE;
+DROP TABLE IF EXISTS meetup CASCADE;
+DROP TABLE IF EXISTS meetup_sub_category CASCADE;
+DROP TABLE IF EXISTS meetup_category CASCADE;
+DROP TABLE IF EXISTS meetup_hash_tag CASCADE;
 
 CREATE TABLE member (
     id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -56,3 +60,53 @@ CREATE TABLE profile (
 
 -- 닉네임 대소문자 무시 유니크
 CREATE UNIQUE INDEX IF NOT EXISTS uq_profile_nickname_ci ON profile (LOWER(btrim(nickname)));
+
+CREATE TABLE IF NOT EXISTS public.sigungu_boundary (
+     sgg_code      BIGINT PRIMARY KEY,
+     sido_code     BIGINT      NOT NULL,
+     sido_name     VARCHAR(255) NOT NULL,
+     sgg_name      VARCHAR(255) NOT NULL,
+     geom          geometry(Polygon, 4326),
+     base_location geometry(Point, 4326),
+     created_at    TIMESTAMP,
+     updated_at    TIMESTAMP
+);
+
+CREATE TABLE meetup_category (
+    id          BIGSERIAL PRIMARY KEY,
+    name        VARCHAR(30) NOT NULL UNIQUE,
+    created_at  TIMESTAMP   NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE meetup_sub_category (
+    id              BIGSERIAL PRIMARY KEY,
+    category_id     BIGINT NOT NULL REFERENCES meetup_category(id) ON DELETE CASCADE,
+    name            VARCHAR(30) NOT NULL,
+    UNIQUE(category_id, name),
+    created_at      TIMESTAMP   NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE meetup (
+    id              UUID        PRIMARY KEY,
+    owner_id        UUID        NOT NULL REFERENCES profile(id),
+    name            VARCHAR(60) NOT NULL,
+    category_id     BIGINT      NOT NULL REFERENCES meetup_category(id),
+    sub_category_id BIGINT      REFERENCES meetup_sub_category(id),
+    description     TEXT,
+    capacity        INTEGER     NOT NULL DEFAULT 10,
+    score_limit     INTEGER,
+    location_point  geography(Point, 4326) NOT NULL,
+    address         TEXT,
+    sgg_code        BIGINT      NOT NULL REFERENCES sigungu_boundary(sgg_code),
+    status          VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    start_at        TIMESTAMP,
+    end_at          TIMESTAMP,
+    created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMP   NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE meetup_hash_tag (
+    id              BIGSERIAL PRIMARY KEY,
+    meetup_id       UUID NOT NULL REFERENCES meetup(id) ON DELETE CASCADE,
+    name            VARCHAR(100) NOT NULL
+);
