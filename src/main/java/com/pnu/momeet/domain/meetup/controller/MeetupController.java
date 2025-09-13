@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupGeoSearchRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupPageRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
+import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
 import com.pnu.momeet.domain.meetup.service.MeetupService;
 import jakarta.validation.Valid;
@@ -45,7 +46,7 @@ public class MeetupController {
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/{meetupId}")
-    public ResponseEntity<MeetupResponse> meetupResponse(
+    public ResponseEntity<MeetupDetail> meetupResponse(
             @PathVariable UUID meetupId
     ) {
         return ResponseEntity.ok(meetupService.findById(meetupId));
@@ -53,15 +54,15 @@ public class MeetupController {
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/me")
-    public ResponseEntity<MeetupResponse> meetupSelf(
+    public ResponseEntity<MeetupDetail> meetupSelf(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(meetupService.findByMemberId(userDetails.getMemberId()));
+        return ResponseEntity.ok(meetupService.findOwnedMeetupByMemberID(userDetails.getMemberId()));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PostMapping
-    public ResponseEntity<MeetupResponse> createMeetup(
+    public ResponseEntity<MeetupDetail> createMeetup(
             @Valid @RequestBody  MeetupCreateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
             ) {
@@ -72,7 +73,7 @@ public class MeetupController {
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PutMapping("/me")
-    public ResponseEntity<MeetupResponse> updateMeetup(
+    public ResponseEntity<MeetupDetail> updateMeetup(
             @Valid @RequestBody  MeetupUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
