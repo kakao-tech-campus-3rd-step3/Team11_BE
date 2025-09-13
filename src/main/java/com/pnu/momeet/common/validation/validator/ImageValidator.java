@@ -1,5 +1,6 @@
 package com.pnu.momeet.common.validation.validator;
 
+import com.pnu.momeet.common.config.MultipartProperties;
 import com.pnu.momeet.common.validation.annotation.ValidImage;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -8,13 +9,13 @@ import java.io.InputStream;
 import java.util.Locale;
 import java.util.Set;
 import javax.imageio.ImageIO;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
+@RequiredArgsConstructor
 public class ImageValidator implements ConstraintValidator<ValidImage, MultipartFile> {
 
-    @Value("${spring.servlet.multipart.max-file-size}")
-    private static long MAX_FILE_SIZE;
+    private final MultipartProperties multipartProperties;
     private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "gif", "webp");
 
     @Override
@@ -24,7 +25,7 @@ public class ImageValidator implements ConstraintValidator<ValidImage, Multipart
         }
 
         // 1. 파일 크기 검증
-        if (file.getSize() > MAX_FILE_SIZE) {
+        if (file.getSize() > multipartProperties.getMaxFileSize().toBytes()) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("파일 크기는 5MB를 초과할 수 없습니다.")
                 .addConstraintViolation();
