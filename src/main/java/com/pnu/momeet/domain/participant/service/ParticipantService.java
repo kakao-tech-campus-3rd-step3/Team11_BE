@@ -60,9 +60,7 @@ public class ParticipantService {
             throw new IllegalStateException("모임에 참여할 수 없는 상태입니다. 현재 상태: "
                     + meetup.getStatus().getDescription());
         }
-        long currentParticipants = participantRepository.countByMeetupId(meetupId);
-
-        if (currentParticipants >= meetup.getCapacity()) {
+        if (meetup.getParticipantCount() >= meetup.getCapacity()) {
             throw new IllegalStateException("모임 정원이 초과되었습니다.");
         }
 
@@ -72,6 +70,9 @@ public class ParticipantService {
                 .profile(profile)
                 .lastActiveAt(LocalDateTime.now())
                 .build();
+
+        meetup.addParticipant(createdParticipant); // 양방향 연관관계 설정
+        meetup.setParticipantCount(meetup.getParticipantCount() + 1);
 
         return ParticipantEntityMapper.toDto(
                 participantRepository.save(createdParticipant)
@@ -108,6 +109,9 @@ public class ParticipantService {
             newHost.setRole(MeetupRole.HOST);
             meetup.setOwner(participants.get(0).getProfile()); // 모임의 owner도 변경
         }
+
+        meetup.setParticipantCount(meetup.getParticipantCount() - 1);
+        meetup.removeParticipant(participant); // 양방향 연관관계 설정 해제
 
         participantRepository.deleteById(participant.getId());
     }

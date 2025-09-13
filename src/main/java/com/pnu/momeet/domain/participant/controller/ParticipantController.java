@@ -47,7 +47,7 @@ public class ParticipantController {
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @PostMapping("/grant/{participantId}")
+    @PatchMapping("/{participantId}/grant")
     public ResponseEntity<ParticipantResponse> grantRole(
             @PathVariable UUID meetupId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -59,7 +59,7 @@ public class ParticipantController {
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @PostMapping("/kick/{participantId}")
+    @DeleteMapping("/{participantId}")
     public ResponseEntity<Void> kickParticipant(
             @PathVariable UUID meetupId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
