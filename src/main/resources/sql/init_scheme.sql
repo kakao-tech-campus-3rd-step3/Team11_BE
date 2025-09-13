@@ -108,6 +108,7 @@ CREATE TABLE meetup_participant (
     meetup_id       UUID NOT NULL REFERENCES meetup(id) ON DELETE CASCADE,
     profile_id      UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
     role            VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
+    is_active       BOOLEAN NOT NULL DEFAULT FALSE,
     is_rated        BOOLEAN NOT NULL DEFAULT FALSE,
     last_active_at  TIMESTAMP,
     created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),

@@ -71,6 +71,7 @@ public class ParticipantService {
                 .meetup(meetup)
                 .role(role)
                 .profile(profile)
+                .isActive(false)
                 .isRated(false)
                 .lastActiveAt(LocalDateTime.now())
                 .build();

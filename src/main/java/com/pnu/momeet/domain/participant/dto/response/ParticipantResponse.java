@@ -8,6 +8,7 @@ public record ParticipantResponse(
         Long id,
         ProfileResponse profile,
         String role,
+        Boolean isActive,
         Boolean isRated,
         LocalDateTime lastActiveAt,
         LocalDateTime createdAt

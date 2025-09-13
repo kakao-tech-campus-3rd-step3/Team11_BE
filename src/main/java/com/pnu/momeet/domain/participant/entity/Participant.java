@@ -47,6 +47,11 @@ public class Participant extends SimpleCreationEntity {
 
     @NotNull
     @ColumnDefault("false")
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = false;
+
+    @NotNull
+    @ColumnDefault("false")
     @Column(name = "is_rated", nullable = false)
     private Boolean isRated = false;
 
@@ -58,12 +63,14 @@ public class Participant extends SimpleCreationEntity {
             Meetup meetup,
             Profile profile,
             MeetupRole role,
+            Boolean isActive,
             Boolean isRated,
             LocalDateTime lastActiveAt
     ) {
         this.meetup = meetup;
         this.profile = profile;
         this.role = role;
+        this.isActive = isActive;
         this.isRated = isRated;
         this.lastActiveAt = lastActiveAt;
     }

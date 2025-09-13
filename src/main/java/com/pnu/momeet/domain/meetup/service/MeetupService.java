@@ -149,6 +149,7 @@ public class MeetupService {
                 .meetup(createdMeetup)
                 .profile(profile)
                 .role(MeetupRole.HOST)
+                .isActive(false)
                 .isRated(false)
                 .lastActiveAt(LocalDateTime.now())
                 .build();

@@ -12,6 +12,7 @@ public class ParticipantEntityMapper {
                 participant.getId(),
                 ProfileEntityMapper.toResponseDto(participant.getProfile()),
                 participant.getRole().name(),
+                participant.getIsActive(),
                 participant.getIsRated(),
                 participant.getLastActiveAt(),
                 participant.getCreatedAt()
