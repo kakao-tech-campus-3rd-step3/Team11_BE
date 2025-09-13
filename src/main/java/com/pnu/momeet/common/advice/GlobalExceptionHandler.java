@@ -97,6 +97,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
     }
 
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ProblemDetail> handleSecurityException(SecurityException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+        problemDetail.setTitle("권한 없음 오류");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
+    }
+
     @ExceptionHandler(DuplicateKeyException.class)
     public ResponseEntity<ProblemDetail> handleDuplicateKeyException(DuplicateKeyException e) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "중복된 키 오류: " + e.getMessage());
