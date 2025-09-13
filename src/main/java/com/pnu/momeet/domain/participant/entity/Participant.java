@@ -6,7 +6,6 @@ import com.pnu.momeet.domain.participant.enums.MeetupRole;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,7 +39,6 @@ public class Participant extends SimpleCreationEntity {
     @JoinColumn(name = "profile_id", nullable = false)
     private Profile profile;
 
-    @Size(max = 20)
     @NotNull
     @ColumnDefault("'MEMBER'")
     @Column(name = "role", nullable = false, length = 20)

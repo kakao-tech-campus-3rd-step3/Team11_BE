@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.common.entity.BaseEntity;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
+import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import jakarta.persistence.*;
@@ -37,11 +38,15 @@ public class Meetup extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private SubCategory subCategory;
 
-    @OneToMany(mappedBy = "meetup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "meetup", fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MeetupHashTag> hashTags = new ArrayList<>();
 
     @Column(name = "description", columnDefinition = "TEXT", nullable = false)
     private String description;
+
+    @Column(name = "participant_count", nullable = false)
+    private Integer participantCount = 1;
 
     @Column(name = "capacity", nullable = false)
     private Integer capacity = 10;
@@ -66,13 +71,16 @@ public class Meetup extends BaseEntity {
     @Column(name = "end_at")
     private LocalDateTime endAt;
 
+    @OneToMany(mappedBy = "meetup", fetch = FetchType.LAZY,
+            cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
+    private List<Participant> participants = new ArrayList<>();
+
     @Builder
     public Meetup(
             Profile owner,
             String name,
             MainCategory category,
             SubCategory subCategory,
-            List<String> hashTags,
             String description,
             Integer capacity,
             Double scoreLimit,
@@ -85,7 +93,6 @@ public class Meetup extends BaseEntity {
         this.name = name;
         this.category = category;
         this.subCategory = subCategory;
-        setHashTags(hashTags);
         this.description = description;
         this.capacity = capacity;
         this.scoreLimit = scoreLimit;
@@ -100,5 +107,15 @@ public class Meetup extends BaseEntity {
         for (String tag : hashTags) {
             this.hashTags.add(new MeetupHashTag(tag, this));
         }
+    }
+
+    public void addParticipant(Participant participant) {
+        this.participants.add(participant);
+        participant.setMeetup(this);
+    }
+
+    public void removeParticipant(Participant participant) {
+        this.participants.remove(participant);
+        participant.setMeetup(null);
     }
 }
