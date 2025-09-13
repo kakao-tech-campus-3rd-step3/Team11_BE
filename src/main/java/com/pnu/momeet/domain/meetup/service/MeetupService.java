@@ -19,6 +19,7 @@ import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.enums.MeetupRole;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.service.SigunguService;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
@@ -109,6 +110,11 @@ public class MeetupService {
                 .orElseThrow(() -> new NoSuchElementException("해당 회원이 소유한 모임이 존재하지 않습니다: " + memberId));
     }
 
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID meetupId) {
+        return meetupRepository.existsById(meetupId);
+    }
+
     @Transactional
     public MeetupDetail createMeetup(MeetupCreateRequest request, UUID memberId) {
         validateCategories(request.category(), request.subCategory());
@@ -124,23 +130,29 @@ public class MeetupService {
         ));
         Meetup meetup = MeetupDtoMapper.toEntity(request);
         Profile profile = profileService.getProfileEntityByMemberId(memberId);
+        Sigungu sigungu = sigunguService.findEntityByPointIn(locationPoint);
 
         if (profile.getTemperature().doubleValue() < meetup.getScoreLimit()) {
             throw new CustomValidationException(Map.of(
                     "scoreLimit", List.of("회원님의 모임 참여 점수가 모임의 제한 점수보다 낮습니다.")
             ));
         }
-        meetup.setOwner(profileService.getProfileEntityByMemberId(memberId));
+        meetup.setOwner(profile);
         meetup.setLocationPoint(locationPoint);
-        meetup.setSigungu(sigunguService.findEntityByPointIn(locationPoint));
+        meetup.setSigungu(sigungu);
         Meetup createdMeetup = meetupRepository.save(meetup);
 
         // 영속 이후에 해시태그 설정 및 호스트 참가자 추가
         createdMeetup.setHashTags(request.hashTags());
-        createdMeetup.addParticipant(
-                new Participant(createdMeetup, profile, MeetupRole.HOST, false, LocalDateTime.now())
-        );
-
+        
+        Participant hostParticipant = Participant.builder()
+                .meetup(createdMeetup)
+                .profile(profile)
+                .role(MeetupRole.HOST)
+                .isRated(false)
+                .lastActiveAt(LocalDateTime.now())
+                .build();
+        createdMeetup.addParticipant(hostParticipant);
         // fetch join을 사용하기 위해 다시 조회
         return findById(createdMeetup.getId());
     }

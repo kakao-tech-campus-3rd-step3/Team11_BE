@@ -28,6 +28,9 @@ public class ParticipantService {
 
     @Transactional(readOnly = true)
     public List<ParticipantResponse> getParticipantsByMeetupId(UUID meetupId) {
+        if (!meetupService.existsById(meetupId)) {
+            throw new NoSuchElementException("해당 모임이 존재하지 않습니다.");
+        }
         return participantRepository.findAllByMeetupId(meetupId)
                 .stream()
                 .map(ParticipantEntityMapper::toDto)
@@ -57,17 +60,18 @@ public class ParticipantService {
         Meetup meetup = meetupService.findEntityById(meetupId);
 
         if (meetup.getStatus() != MeetupStatus.OPEN) {
-            throw new IllegalStateException("모임에 참여할 수 없는 상태입니다. 현재 상태: "
+            throw new IllegalArgumentException("모임에 참여할 수 없는 상태입니다. 현재 상태: "
                     + meetup.getStatus().getDescription());
         }
         if (meetup.getParticipantCount() >= meetup.getCapacity()) {
-            throw new IllegalStateException("모임 정원이 초과되었습니다.");
+            throw new IllegalArgumentException("모임 정원이 초과되었습니다.");
         }
 
         Participant createdParticipant = Participant.builder()
                 .meetup(meetup)
                 .role(role)
                 .profile(profile)
+                .isRated(false)
                 .lastActiveAt(LocalDateTime.now())
                 .build();
 
@@ -91,7 +95,7 @@ public class ParticipantService {
 
         Participant participant = getEntityByProfileIDAndMeetupID(profile.getId(), meetupId);
         if (meetup.getStatus() != MeetupStatus.OPEN) {
-            throw new IllegalStateException("모임에서 나갈 수 없는 상태입니다. 현재 상태: "
+            throw new IllegalArgumentException("모임에서 나갈 수 없는 상태입니다. 현재 상태: "
                     + meetup.getStatus().getDescription());
         }
 
@@ -99,7 +103,7 @@ public class ParticipantService {
                 .findTopTwoByOrderByTemperatureDesc(meetupId);
 
         if (participants.size() <= 1) {
-            throw new IllegalStateException("참가자가 1명 이하인 모임에서 나갈 수 없습니다. 모임을 삭제하세요.");
+            throw new IllegalArgumentException("참가자가 1명 이하인 모임에서 나갈 수 없습니다. 모임을 삭제하세요.");
         }
 
         // 호스트가 나갈 경우, 두 번째로 점수가 높은 참가자가 호스트가 됨
@@ -120,10 +124,10 @@ public class ParticipantService {
     public void kickParticipant(UUID meetupId, UUID memberId, Long targetParticipantId) {
         Participant requester = getEntityByMemberIdAndMeetupId(memberId, meetupId);
         if (requester.getRole() != MeetupRole.HOST) {
-            throw new IllegalStateException("호스트만 참가자를 강퇴할 수 있습니다.");
+            throw new SecurityException("호스트만 참가자를 강퇴할 수 있습니다.");
         }
         if (requester.getId().equals(targetParticipantId)) {
-            throw new IllegalStateException("스스로를 강퇴할 수 없습니다.");
+            throw new IllegalArgumentException("스스로를 강퇴할 수 없습니다.");
         }
         if (!participantRepository.existsByIdAndMeetupId(targetParticipantId, meetupId)) {
             throw new NoSuchElementException("해당 참가자가 모임에 존재하지 않습니다.");
@@ -136,20 +140,13 @@ public class ParticipantService {
     public ParticipantResponse grantHostRole(UUID meetupId, UUID memberId, Long targetParticipantId) {
         Participant requester = getEntityByMemberIdAndMeetupId(memberId, meetupId);
         if (requester.getRole() != MeetupRole.HOST) {
-            throw new IllegalStateException("호스트만 호스트 권한을 양도할 수 있습니다.");
+            throw new SecurityException("호스트만 호스트 권한을 양도할 수 있습니다.");
         }
         if (requester.getId().equals(targetParticipantId)) {
             throw new IllegalStateException("스스로에게 호스트 권한을 양도할 수 없습니다.");
         }
-        Participant targetParticipant = participantRepository.findById(targetParticipantId)
+        Participant targetParticipant = participantRepository.findByIdAndMeetupId(targetParticipantId, meetupId)
                 .orElseThrow(() -> new NoSuchElementException("해당 참가자가 모임에 존재하지 않습니다."));
-
-        if (!targetParticipant.getMeetup().getId().equals(meetupId)) {
-            throw new IllegalStateException("해당 참가자가 이 모임의 참가자가 아닙니다.");
-        }
-        if (targetParticipant.getRole() == MeetupRole.HOST) {
-            throw new IllegalStateException("이미 호스트인 참가자에게 호스트 권한을 양도할 수 없습니다.");
-        }
 
         // 기존 호스트를 MEMBER로 변경
         requester.setRole(MeetupRole.MEMBER);

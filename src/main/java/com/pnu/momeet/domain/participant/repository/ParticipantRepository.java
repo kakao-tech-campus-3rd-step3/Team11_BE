@@ -22,6 +22,7 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
     """)
     List<Participant> findTopTwoByOrderByTemperatureDesc(UUID meetupId);
 
+    Optional<Participant> findByIdAndMeetupId(Long id, UUID meetupId);
     Optional<Participant> findByProfileIdAndMeetupId(UUID profileId, UUID meetupId);
 
     boolean existsByMeetupIdAndProfileId(UUID meetup_id, UUID profile_id);

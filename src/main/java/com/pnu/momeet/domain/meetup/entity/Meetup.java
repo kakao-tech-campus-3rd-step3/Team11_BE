@@ -72,7 +72,8 @@ public class Meetup extends BaseEntity {
     private LocalDateTime endAt;
 
     @OneToMany(mappedBy = "meetup", fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
+            cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, 
+            orphanRemoval = true)
     private List<Participant> participants = new ArrayList<>();
 
     @Builder
