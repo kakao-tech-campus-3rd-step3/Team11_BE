@@ -33,6 +33,4 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
         WHERE p.meetup.id = :meetupId AND p.profile.memberId = :memberId
     """)
     Optional<Participant> findByMemberIdAndMeetupId(UUID memberId, UUID meetupId);
-
-    Long countByMeetupId(UUID meetupId);
 }
