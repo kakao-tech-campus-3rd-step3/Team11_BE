@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.common.entity.BaseEntity;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
+import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import jakarta.persistence.*;
@@ -20,9 +21,17 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NamedEntityGraph(
+    name = "Meetup.withDetails",
+    attributeNodes = {
+            @NamedAttributeNode("participants"),
+            @NamedAttributeNode("owner"),
+            @NamedAttributeNode("sigungu")
+    }
+)
 public class Meetup extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id", nullable = false)
     private Profile owner;
 
@@ -66,6 +75,9 @@ public class Meetup extends BaseEntity {
     @Column(name = "end_at")
     private LocalDateTime endAt;
 
+    @OneToMany(mappedBy = "meetup", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
+    private List<Participant> participants = new ArrayList<>();
+
     @Builder
     public Meetup(
             Profile owner,
@@ -100,5 +112,10 @@ public class Meetup extends BaseEntity {
         for (String tag : hashTags) {
             this.hashTags.add(new MeetupHashTag(tag, this));
         }
+    }
+
+    public void addParticipant(Participant participant) {
+        this.participants.add(participant);
+        participant.setMeetup(this);
     }
 }
