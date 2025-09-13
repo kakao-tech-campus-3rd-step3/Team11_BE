@@ -34,7 +34,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                 "테스트용 보드게임 모임입니다.",
                 List.of("보드게임", "친목"),
                 6,
-                36.5,
+                35.0,
                 3,
                 location
         );
@@ -183,7 +183,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 3,
                     "location", location
                 ),
@@ -194,7 +194,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 3,
                     "location", location
                 ),
@@ -205,7 +205,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 1, // 최소 인원 미만
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 3,
                     "location", location
                 ),
@@ -216,7 +216,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 100, // 최대 인원 초과 (99명 초과)
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 3,
                     "location", location
                 ),
@@ -227,7 +227,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 0, // 지속 시간 최소값 미만
                     "location", location
                 ),
@@ -238,7 +238,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 25, // 지속 시간 최대값 초과
                     "location", location
                 ),
@@ -249,7 +249,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of("태그1", "태그2", "태그3", "태그4", "태그5", "태그6", "태그7", "태그8", "태그9", "태그10", "태그11"), // 해시태그 11개 (10개 초과)
                     "capacity", 5,
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 3,
                     "location", location
                 ),
@@ -271,7 +271,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 3,
                     "location", location
                 ),
@@ -282,7 +282,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 3,
                     "location", location
                 )
@@ -318,7 +318,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 3,
                     "location", location
                 ),
@@ -329,7 +329,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 3,
                     "location", location
                 ),
@@ -340,7 +340,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5,
+                    "scoreLimit", 35.0,
                     "durationHours", 3,
                     "location", location
                 )
@@ -375,7 +375,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                 "설명",
                 List.of(),
                 5,
-                36.5,
+                35.0,
                 3,
                 location
         );

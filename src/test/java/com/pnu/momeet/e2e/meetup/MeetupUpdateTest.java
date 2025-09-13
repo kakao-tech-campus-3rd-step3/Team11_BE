@@ -35,7 +35,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                 "수정할 예정인 모임입니다.",
                 List.of("보드게임"),
                 6,
-                36.5,
+                35.0,
                 3,
                 location
         );
@@ -155,7 +155,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5
+                    "scoreLimit", 35.0
                 ),
                 Map.of(
                     "name", "A".repeat(61), // 너무 긴 이름 (60자 초과)
@@ -164,7 +164,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5
+                    "scoreLimit", 35.0
                 ),
                 Map.of(
                     "name", "테스트 모임",
@@ -173,7 +173,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 1, // 최소 인원 미만
-                    "scoreLimit", 36.5
+                    "scoreLimit", 35.0
                 ),
                 Map.of(
                     "name", "테스트 모임",
@@ -182,7 +182,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 101, // 최대 인원 초과 (100명 초과)
-                    "scoreLimit", 36.5
+                    "scoreLimit", 35.0
                 ),
                 Map.of(
                     "name", "테스트 모임",
@@ -191,7 +191,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", tooManyHashTags, // 너무 많은 해시태그
                     "capacity", 5,
-                    "scoreLimit", 36.5
+                    "scoreLimit", 35.0
                 ),
                 Map.of(
                     "name", "테스트 모임",
@@ -209,7 +209,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5
+                    "scoreLimit", 35.0
                 ),
                 Map.of(
                     "name", "테스트 모임",
@@ -218,7 +218,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5
+                    "scoreLimit", 35.0
                 )
         ).forEach(body ->
             RestAssured
@@ -248,7 +248,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5
+                    "scoreLimit", 35.0
                 ),
                 Map.of(
                     "name", "테스트 모임",
@@ -257,7 +257,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5
+                    "scoreLimit", 35.0
                 ),
                 Map.of(
                     "name", "테스트 모임",
@@ -266,7 +266,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
-                    "scoreLimit", 36.5
+                    "scoreLimit", 35.0
                 )
         ).forEach(body ->
             RestAssured
@@ -295,7 +295,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                 "설명",
                 List.of(),
                 5,
-                36.5,
+                35.0,
                 null
         );
 
@@ -323,7 +323,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                 "설명",
                 List.of(),
                 5,
-                36.5,
+                35.0,
                 null
         );
 
@@ -354,7 +354,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
                 "설명",
                 List.of(),
                 5,
-                36.5,
+                35.0,
                 null
         );
 

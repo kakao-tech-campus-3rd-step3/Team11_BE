@@ -32,7 +32,7 @@ class MeetupSelfTest extends BaseMeetupTest {
                 "본인 모임 조회 테스트용 모임입니다.",
                 List.of("보드게임"),
                 6,
-                36.5,
+                35.0,
                 3,
                 location
         );
@@ -66,7 +66,7 @@ class MeetupSelfTest extends BaseMeetupTest {
                     "subCategory", equalTo("BOARD_GAME"),
                     "description", equalTo("본인 모임 조회 테스트용 모임입니다."),
                     "capacity", equalTo(6),
-                    "scoreLimit", equalTo(36.5f),
+                    "scoreLimit", equalTo(35.0f),
                     "status", equalTo("OPEN"),
                     "location", notNullValue(),
                     "sigungu", notNullValue(),

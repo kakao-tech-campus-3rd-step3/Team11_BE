@@ -2,14 +2,13 @@ package com.pnu.momeet.e2e.meetup;
 
 import com.pnu.momeet.domain.meetup.dto.request.LocationRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
-import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
 import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
@@ -32,23 +31,15 @@ class MeetupReadTest extends BaseMeetupTest {
                 "테스트용 보드게임 모임입니다.",
                 List.of("보드게임", "친목"),
                 6,
-                36.5,
+                35.,
                 3,
                 location
         );
 
-        var response = RestAssured
-            .given()
-                .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
-                .contentType(ContentType.JSON)
-                .body(request)
-            .when()
-                .post()
-            .then()
-                .statusCode(201)
-                .extract()
-                .as(MeetupResponse.class);
-
+        var response = meetupService.createMeetup(
+                request,
+                users.get(ALICE_EMAIL).id()
+        );
         toBeDeleted.add(response.id());
         return response.id();
     }
@@ -73,7 +64,7 @@ class MeetupReadTest extends BaseMeetupTest {
                     "subCategory", equalTo("BOARD_GAME"),
                     "description", equalTo("테스트용 보드게임 모임입니다."),
                     "capacity", equalTo(6),
-                    "scoreLimit", equalTo(36.5f),
+                    "scoreLimit", equalTo(35.0f),
                     "status", equalTo("OPEN"),
                     "location", notNullValue(),
                     "sigungu", notNullValue(),
@@ -141,9 +132,11 @@ class MeetupReadTest extends BaseMeetupTest {
         RestAssured
             .given()
                 .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
-                .queryParam("latitude", 35.23203443995263)
-                .queryParam("longitude", 129.08262659183725)
-                .queryParam("radiusKm", 10.0)
+                .queryParams(Map.of(
+                    "latitude", 35.23203443995263,
+                    "longitude", 129.08262659183725,
+                    "radius", 10.0
+                ))
             .when()
                 .get("/geo")
             .then()

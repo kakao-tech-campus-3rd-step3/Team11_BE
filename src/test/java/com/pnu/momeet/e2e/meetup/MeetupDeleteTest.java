@@ -31,7 +31,7 @@ class MeetupDeleteTest extends BaseMeetupTest {
                 "삭제할 예정인 모임입니다.",
                 List.of("보드게임"),
                 6,
-                36.5,
+                35.0,
                 3,
                 location
         );

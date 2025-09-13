@@ -28,6 +28,7 @@ public record MeetupCreateRequest(
         Integer capacity,
 
         @Min(value = 0, message = "점수 제한은 0 이상이어야 합니다")
+        @Max(value = 35 , message = "점수 제한은 35.0 이하이어야 합니다")
         Double scoreLimit,
 
         @NotNull(message = "마감 시간은 필수입니다")
