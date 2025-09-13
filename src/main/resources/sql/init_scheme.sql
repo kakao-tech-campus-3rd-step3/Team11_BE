@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS profile CASCADE;
 DROP TABLE IF EXISTS member CASCADE;
 DROP TABLE IF EXISTS meetup CASCADE;
 DROP TABLE IF EXISTS meetup_hash_tag CASCADE;
+DROP TABLE IF EXISTS meetup_participant CASCADE;
 
 CREATE TABLE member (
     id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -101,3 +102,16 @@ CREATE TABLE meetup_hash_tag (
     created_at      TIMESTAMP   NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE meetup_participant (
+    id              BIGSERIAL PRIMARY KEY,
+    meetup_id       UUID NOT NULL REFERENCES meetup(id) ON DELETE CASCADE,
+    profile_id      UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    role            VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
+    is_rated        BOOLEAN NOT NULL DEFAULT FALSE,
+    last_active_at  TIMESTAMP,
+    created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
+    UNIQUE(meetup_id, profile_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_meetup_participant_meetup ON meetup_participant (meetup_id);
+CREATE INDEX IF NOT EXISTS idx_meetup_participant_profile ON meetup_participant (profile_id);
