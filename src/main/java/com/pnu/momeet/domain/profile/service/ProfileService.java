@@ -8,7 +8,6 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
-import jakarta.validation.Valid;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,12 @@ public class ProfileService {
         Profile profile = profileRepository.findByMemberId(memberId)
             .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
         return ProfileEntityMapper.toResponseDto(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public Profile getProfileEntityByMemberId(UUID memberId) {
+        return profileRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
     }
 
     @Transactional(readOnly = true)

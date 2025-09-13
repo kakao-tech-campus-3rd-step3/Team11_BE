@@ -27,11 +27,11 @@ VALUES (
 INSERT INTO public_test.profile (
     member_id, nickname, age, gender, image_url, description, base_location
 ) VALUES (
-        (SELECT id FROM public_test.member WHERE email = 'user@test.com'),
-         '테스트유저',
-         25,
-         'MALE',
-         'https://cdn.example.com/profiles/user.png',
-         '테스트 환경용 기본 프로필',
-         '부산 금정구'
-     );
+             (SELECT id FROM public_test.member WHERE email = 'user@test.com'),
+             '테스트유저',
+             25,
+             'MALE',
+             'https://cdn.example.com/profiles/user.png',
+             '테스트 환경용 기본 프로필',
+             '부산 금정구'
+         );

@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.common.dto;
+package com.pnu.momeet.domain.common.dto.request;
 
 import jakarta.validation.constraints.Min;
 import lombok.Getter;

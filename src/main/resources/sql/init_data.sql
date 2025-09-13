@@ -71,3 +71,37 @@ VALUES (
         '풋살·등산 러버 🏔️',
         '부산 남구'
        );
+
+INSERT INTO meetup(owner_id, name, category, sub_category,description,capacity,score_limit,location_point,address,sgg_code,status,end_at)
+VALUES (
+        (SELECT id FROM profile WHERE member_id = (SELECT id FROM member WHERE email = 'alice@test.com')),
+        '부산대 근처 보드게임 카페에서 보드게임 같이 해요!',
+        'GAME',
+        'BOARD_GAME',
+        '부산대 근처 보드게임 카페에서 매주 일요일 오후 2시에 보드게임 같이 할 사람 구해요! 초보자도 환영합니다.',
+        8,
+        36,
+        ST_SetSRID(ST_MakePoint(129.08262659183725, 35.23203443995263), 4326)::geography,
+        '부산광역시 금정구 부산대학로 63번길 2',
+        26410,
+        'OPEN',
+        now() + interval '8 hours'
+);
+
+INSERT INTO meetup(owner_id, name, category, sub_category,description,capacity,score_limit,location_point,address,sgg_code,status,end_at)
+VALUES (
+        (SELECT id FROM profile WHERE member_id = (SELECT id FROM member WHERE email = 'chris@test.com')),
+        '부산대 농구장에서 같이 농구해요!',
+        'SPORTS',
+        'BASKETBALL',
+        '매주 토요일 오후 3시에 부산대 농구장에서 같이 농구할 사람 구해요! 초보자도 환영합니다.',
+        10,
+        36,
+        ST_SetSRID(ST_MakePoint(129.08262659183725, 35.23203443995263), 4326)::geography,
+        '부산광역시 금정구 부산대학로 63번길 2',
+        26410,
+        'OPEN',
+        now() + interval '10 hours'
+);
+
+

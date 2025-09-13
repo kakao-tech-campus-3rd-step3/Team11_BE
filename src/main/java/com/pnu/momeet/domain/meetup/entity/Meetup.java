@@ -1,104 +1,104 @@
 package com.pnu.momeet.domain.meetup.entity;
 
+
 import com.pnu.momeet.domain.common.entity.BaseEntity;
-import com.pnu.momeet.domain.member.entity.Member;
-import com.pnu.momeet.domain.meetup.enums.MeetupCategory;
+import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
+import com.pnu.momeet.domain.meetup.enums.SubCategory;
+import com.pnu.momeet.domain.profile.entity.Profile;
+import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "meetup")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Meetup extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
-    private Member owner;
+    private Profile owner;
 
     @Column(name = "name", nullable = false, length = 60)
     private String name;
 
+    @Column(nullable = false, length = 30)
     @Enumerated(EnumType.STRING)
-    @Column(name = "category", nullable = false, length = 30)
-    private MeetupCategory category;
+    private MainCategory category;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(nullable = false, length = 30)
+    @Enumerated(EnumType.STRING)
+    private SubCategory subCategory;
+
+    @OneToMany(mappedBy = "meetup", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MeetupHashTag> hashTags = new ArrayList<>();
+
+    @Column(name = "description", columnDefinition = "TEXT", nullable = false)
     private String description;
-
-    @Column(name = "tags", columnDefinition = "TEXT[]")
-    private String[] tags;
-
-    @Column(name = "hash_tags", columnDefinition = "TEXT[]")
-    private String[] hashTags;
 
     @Column(name = "capacity", nullable = false)
     private Integer capacity = 10;
 
-    @Column(name = "score_limit")
-    private Integer scoreLimit;
+    @Column(name = "score_limit", nullable = false)
+    private Double scoreLimit;
 
     @Column(name = "location_point", nullable = false, columnDefinition = "geography(Point, 4326)")
     private Point locationPoint;
 
-    @Column(name = "location_text", columnDefinition = "TEXT")
-    private String locationText;
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String address;
 
-    @Enumerated(EnumType.STRING)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sgg_code", nullable = false)
+    private Sigungu sigungu;
+
     @Column(name = "status", nullable = false, length = 20)
+    @Enumerated(EnumType.STRING)
     private MeetupStatus status = MeetupStatus.OPEN;
-
-    @Column(name = "start_at")
-    private LocalDateTime startAt;
 
     @Column(name = "end_at")
     private LocalDateTime endAt;
 
-    public Meetup(Member owner, String name, MeetupCategory category, String description,
-                  String[] tags, String[] hashTags, Integer capacity, Integer scoreLimit, Point locationPoint,
-                  String locationText, LocalDateTime startAt, LocalDateTime endAt) {
+    @Builder
+    public Meetup(
+            Profile owner,
+            String name,
+            MainCategory category,
+            SubCategory subCategory,
+            List<String> hashTags,
+            String description,
+            Integer capacity,
+            Double scoreLimit,
+            Point locationPoint,
+            String address,
+            Sigungu sigungu,
+            LocalDateTime endAt
+    ) {
         this.owner = owner;
         this.name = name;
         this.category = category;
+        this.subCategory = subCategory;
+        setHashTags(hashTags);
         this.description = description;
-        this.tags = tags;
-        this.hashTags = hashTags;
-        this.capacity = capacity != null ? capacity : 10;
-        this.scoreLimit = scoreLimit;
-        this.locationPoint = locationPoint;
-        this.locationText = locationText;
-        this.status = MeetupStatus.OPEN;
-        this.startAt = startAt;
-        this.endAt = endAt;
-    }
-
-    public void updateMeetup(String name, MeetupCategory category, String description,
-                            String[] tags, String[] hashTags, Integer capacity, Integer scoreLimit,
-                            Point locationPoint, String locationText, MeetupStatus status,
-                            LocalDateTime startAt, LocalDateTime endAt) {
-        this.name = name;
-        this.category = category;
-        this.description = description;
-        this.tags = tags;
-        this.hashTags = hashTags;
         this.capacity = capacity;
         this.scoreLimit = scoreLimit;
         this.locationPoint = locationPoint;
-        this.locationText = locationText;
-        this.status = status;
-        this.startAt = startAt;
+        this.address = address;
+        this.sigungu = sigungu;
         this.endAt = endAt;
     }
 
-    public void changeStatus(MeetupStatus status) {
-        this.status = status;
+    public void setHashTags(List<String> hashTags) {
+        this.hashTags.clear();
+        for (String tag : hashTags) {
+            this.hashTags.add(new MeetupHashTag(tag, this));
+        }
     }
 }

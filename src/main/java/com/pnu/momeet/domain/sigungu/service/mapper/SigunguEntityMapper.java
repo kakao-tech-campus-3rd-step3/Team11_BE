@@ -1,6 +1,6 @@
 package com.pnu.momeet.domain.sigungu.service.mapper;
 
-import com.pnu.momeet.domain.sigungu.dto.response.BaseLocationResponse;
+import com.pnu.momeet.domain.common.dto.response.LocationResponse;
 import com.pnu.momeet.domain.sigungu.dto.response.SigunguResponse;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import org.locationtech.jts.geom.Point;
@@ -18,9 +18,10 @@ public class SigunguEntityMapper {
                 sigungu.getSidoCode(),
                 sigungu.getSigunguName(),
                 sigungu.getId(),
-                new BaseLocationResponse(
+                new LocationResponse(
                         baseLocation.getX(),
-                        baseLocation.getY()
+                        baseLocation.getY(),
+                        sigungu.getSidoName() + " " + sigungu.getSigunguName()
                 ),
                 sigungu.getCreatedAt(),
                 sigungu.getUpdatedAt()

@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.sigungu.service;
 
 import com.pnu.momeet.domain.sigungu.dto.response.SigunguResponse;
+import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.repository.SigunguRepository;
 import com.pnu.momeet.domain.sigungu.service.mapper.SigunguEntityMapper;
 import lombok.RequiredArgsConstructor;
@@ -22,20 +23,32 @@ public class SigunguService {
 
     @Transactional(readOnly = true)
     public SigunguResponse findById(Long id) {
-        var sigungu =  sigunguRepository.findById(id).orElseThrow(
+        return SigunguEntityMapper.toDto(findEntityById(id));
+    }
+
+    @Transactional(readOnly = true)
+    public Sigungu findEntityById(Long id) {
+        return sigunguRepository.findById(id).orElseThrow(
             () -> new NoSuchElementException("해당 id의 시군구가 존재하지 않습니다. id=" + id)
         );
-        return SigunguEntityMapper.toDto(sigungu);
+    }
+
+    @Transactional(readOnly = true)
+    public Sigungu findEntityByPointIn(Point point) {
+        return sigunguRepository.findByPointIn(point).orElseThrow(
+                () -> new NoSuchElementException("해당 좌표의 시군구가 존재하지 않습니다. point=" + point)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public SigunguResponse findByPointIn(Point point) {
+        return SigunguEntityMapper.toDto(findEntityByPointIn(point));
     }
 
     @Transactional(readOnly = true)
     public SigunguResponse findByPointIn(double latitude, double longitude) {
         Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
-
-        var sigungu =  sigunguRepository.findByPointIn(point).orElseThrow(
-            () -> new NoSuchElementException("해당 좌표의 시군구가 존재하지 않습니다. point=" + point)
-        );
-        return SigunguEntityMapper.toDto(sigungu);
+        return findByPointIn(point);
     }
 
     @Transactional(readOnly = true)

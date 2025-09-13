@@ -1,6 +1,7 @@
 package com.pnu.momeet.common.advice;
 
 import com.pnu.momeet.common.exception.BannedAccountException;
+import com.pnu.momeet.common.exception.CustomValidationException;
 import com.pnu.momeet.common.exception.StorageException;
 import com.pnu.momeet.common.exception.UnMatchedPasswordException;
 import org.springframework.dao.DuplicateKeyException;
@@ -73,6 +74,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(problemDetail);
     }
 
+    @ExceptionHandler(CustomValidationException.class)
+    public ResponseEntity<ProblemDetail> handleCustomValidationException(CustomValidationException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+        problemDetail.setTitle("유효성 검사 실패");
+        problemDetail.setProperty("validationErrors", e.getFieldErrors());
+        return ResponseEntity.badRequest().body(problemDetail);
+    }
+
     @ExceptionHandler(UnMatchedPasswordException.class)
     public ResponseEntity<ProblemDetail> handleUnMatchedPasswordException(UnMatchedPasswordException ignored) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
@@ -85,6 +94,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleBannedAccountException(BannedAccountException e) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
         problemDetail.setTitle("차단된 계정 오류");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
+    }
+
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<ProblemDetail> handleSecurityException(SecurityException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+        problemDetail.setTitle("권한 없음 오류");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
     }
 
