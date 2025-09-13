@@ -74,7 +74,7 @@ public class MeetupController {
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<MeetupResponse> createMeetup(
-            @RequestBody @Valid MeetupCreateRequest request,
+            @Valid @RequestBody  MeetupCreateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
             ) {
         validateCategories(request.category(), request.subCategory());
@@ -86,7 +86,7 @@ public class MeetupController {
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PutMapping("/me")
     public ResponseEntity<MeetupResponse> updateMeetup(
-            @RequestBody @Valid MeetupUpdateRequest request,
+            @Valid @RequestBody  MeetupUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         validateCategories(request.category(), request.subCategory());

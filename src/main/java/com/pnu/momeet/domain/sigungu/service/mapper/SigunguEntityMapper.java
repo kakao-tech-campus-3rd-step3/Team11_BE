@@ -20,7 +20,8 @@ public class SigunguEntityMapper {
                 sigungu.getId(),
                 new LocationResponse(
                         baseLocation.getX(),
-                        baseLocation.getY()
+                        baseLocation.getY(),
+                        sigungu.getSidoName() + " " + sigungu.getSigunguName()
                 ),
                 sigungu.getCreatedAt(),
                 sigungu.getUpdatedAt()
