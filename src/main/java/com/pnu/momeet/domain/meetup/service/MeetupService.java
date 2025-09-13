@@ -41,6 +41,16 @@ public class MeetupService {
     private final ProfileService profileService;
     private final SigunguService sigunguService;
 
+    private void validateCategories(String mainCategory, String subCategory) {
+        if (mainCategory != null && subCategory != null) {
+            if (!SubCategory.valueOf(subCategory).getMainCategory().name().equals(mainCategory)) {
+                throw new CustomValidationException(Map.of(
+                        "subCategory", List.of("서브 카테고리가 메인 카테고리에 속하지 않습니다.")
+                ));
+            }
+        }
+    }
+
     @Transactional(readOnly = true)
     public List<MeetupResponse> findAllByLocation(
             MeetupGeoSearchRequest request
@@ -118,6 +128,8 @@ public class MeetupService {
 
     @Transactional
     public MeetupResponse createMeetup(MeetupCreateRequest request, UUID memberId) {
+        validateCategories(request.category(), request.subCategory());
+
         Point locationPoint = geometryFactory.createPoint(new Coordinate(
                 request.location().longitude(),
                 request.location().latitude()
@@ -149,6 +161,7 @@ public class MeetupService {
     @Transactional
     public MeetupResponse updateMeetupByMemberId(MeetupUpdateRequest request, UUID memberId) {
         Meetup meetup = findEntityByMemberId(memberId);
+        validateCategories(request.category(), request.subCategory());
         
         if (!meetup.getOwner().getMemberId().equals(memberId)) {
             throw new SecurityException("모임을 수정할 권한이 없습니다.");

@@ -1,13 +1,11 @@
 package com.pnu.momeet.domain.meetup.controller;
 
-import com.pnu.momeet.common.exception.CustomValidationException;
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupGeoSearchRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupPageRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
-import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.meetup.service.MeetupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -29,15 +26,6 @@ public class MeetupController {
 
     private final MeetupService meetupService;
 
-    private void validateCategories(String mainCategory, String subCategory) {
-        if (mainCategory != null && subCategory != null) {
-            if (!SubCategory.valueOf(subCategory).getMainCategory().name().equals(mainCategory)) {
-                throw new CustomValidationException(Map.of(
-                        "subCategory", List.of("서브 카테고리가 메인 카테고리에 속하지 않습니다.")
-                ));
-            }
-        }
-    }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping
@@ -77,7 +65,6 @@ public class MeetupController {
             @Valid @RequestBody  MeetupCreateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
             ) {
-        validateCategories(request.category(), request.subCategory());
         var createdMeetup = meetupService.createMeetup(request, userDetails.getMemberId());
         return ResponseEntity.created(URI.create("/api/meetups/" + createdMeetup.id()))
                 .body(createdMeetup);
@@ -89,7 +76,6 @@ public class MeetupController {
             @Valid @RequestBody  MeetupUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        validateCategories(request.category(), request.subCategory());
         return ResponseEntity.ok(
                 meetupService.updateMeetupByMemberId(request, userDetails.getMemberId())
         );
