@@ -26,7 +26,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 public class S3StorageService {
 
     private final S3Client s3Client;
-    @Value("${cloud.aws.s3.bucket}")
+    @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
 
     public String uploadImage(MultipartFile multipartFile, String prefix) {
