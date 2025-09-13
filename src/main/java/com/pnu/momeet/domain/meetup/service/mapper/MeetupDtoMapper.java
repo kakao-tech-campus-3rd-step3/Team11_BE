@@ -33,7 +33,6 @@ public class MeetupDtoMapper {
                 .name(request.name())
                 .category(category)
                 .subCategory(subCategory)
-                .hashTags(List.of())
                 .description(request.description())
                 .capacity(request.capacity())
                 .scoreLimit(request.scoreLimit())

@@ -5,14 +5,18 @@ import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupGeoSearchRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupPageRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
+import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
+import com.pnu.momeet.domain.meetup.repository.MeetupDslRepository;
 import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupDtoMapper;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
+import com.pnu.momeet.domain.participant.entity.Participant;
+import com.pnu.momeet.domain.participant.enums.MeetupRole;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileService;
 import com.pnu.momeet.domain.sigungu.service.SigunguService;
@@ -26,10 +30,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Service
@@ -37,7 +39,10 @@ import java.util.function.Consumer;
 public class MeetupService {
 
     private final GeometryFactory geometryFactory;
+
     private final MeetupRepository meetupRepository;
+    private final MeetupDslRepository meetupDslRepository;
+
     private final ProfileService profileService;
     private final SigunguService sigunguService;
 
@@ -55,39 +60,16 @@ public class MeetupService {
     public List<MeetupResponse> findAllByLocation(
             MeetupGeoSearchRequest request
     ) {
-        Point location = geometryFactory.createPoint(new Coordinate(request.longitude(), request.latitude()));
-        MainCategory mainCategory = request.category() != null ? MainCategory.valueOf(request.category()) : null;
-        SubCategory subCategory = request.subCategory() != null ? SubCategory.valueOf(request.subCategory()) : null;
-
-        if (mainCategory != null && subCategory != null) {
-            if (subCategory.getMainCategory() != mainCategory) {
-                return List.of(); // 카테고리 불일치 시 빈 리스트 반환
-            }
-        }
-        List<Meetup> responses;
-
-        if (subCategory != null && request.search() != null) {
-            responses = meetupRepository.findAllByDistanceAndSubCategoryAndKeyword(
-                    location, request.radius(), subCategory.name(), request.search());
-        } else if (mainCategory != null && request.search() != null) {
-            responses = meetupRepository.findAllByDistanceAndCategoryAndKeyword(
-                    location, request.radius(), mainCategory.name(), request.search());
-        } else if (subCategory != null) {
-            responses = meetupRepository.findAllByDistanceAndSubCategory(
-                    location, request.radius(), subCategory.name());
-        } else if (mainCategory != null) {
-            responses = meetupRepository.findAllByDistanceAndCategory(
-                    location, request.radius(), mainCategory.name());
-        } else if (request.search() != null) {
-            responses = meetupRepository.findAllByDistanceAndKeyword(
-                    location, request.radius(), request.search());
-        } else {
-            responses = meetupRepository.findAllByDistance(location, request.radius());
-        }
-
-        return responses.stream()
-                .map(MeetupEntityMapper::toDto)
-                .toList();
+        return meetupDslRepository.findAllByDistanceAndPredicates(
+            geometryFactory.createPoint(new Coordinate(request.longitude(), request.latitude())),
+            request.radius(),
+            Optional.ofNullable(request.category()).map(MainCategory::valueOf),
+            Optional.ofNullable(request.subCategory()).map(SubCategory::valueOf),
+            Optional.ofNullable(request.search())
+        )
+            .stream()
+            .map(MeetupEntityMapper::toResponse)
+            .toList();
     }
 
     @Transactional(readOnly = true)
@@ -98,7 +80,7 @@ public class MeetupService {
         Specification<Meetup> specification = MeetupDtoMapper.toSpecification(request);
 
         return meetupRepository.findAll(specification, pageRequest)
-                .map(MeetupEntityMapper::toDto);
+                .map(MeetupEntityMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -108,28 +90,34 @@ public class MeetupService {
     }
 
     @Transactional(readOnly = true)
-    public MeetupResponse findById(UUID meetupId) {
-        Meetup meetup = findEntityById(meetupId);
-        return MeetupEntityMapper.toDto(meetup);
-    }
-
-    @Transactional(readOnly = true)
-    public Meetup findEntityByMemberId(UUID memberId) {
-        Profile profile = profileService.getProfileEntityByMemberId(memberId);
-        return meetupRepository.findByOwner(profile)
+    public Meetup findOwnedEntityByMemberId(UUID memberId) {
+        return meetupDslRepository.findOwnedMeetupByMemberId(memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 회원이 소유한 모임이 존재하지 않습니다: " + memberId));
     }
 
     @Transactional(readOnly = true)
-    public MeetupResponse findByMemberId(UUID memberId) {
-        Meetup meetup = findEntityByMemberId(memberId);
-        return MeetupEntityMapper.toDto(meetup);
+    public MeetupDetail findById(UUID meetupId) {
+        return meetupDslRepository.findByIdWithDetails(meetupId)
+                .map(MeetupEntityMapper::toDetail)
+                .orElseThrow(() -> new NoSuchElementException("해당 ID의 모임이 존재하지 않습니다: " + meetupId));
+    }
+
+    @Transactional(readOnly = true)
+    public MeetupDetail findOwnedMeetupByMemberID(UUID memberId) {
+        return meetupDslRepository.findOwnedMeetupByMemberIdWithDetails(memberId)
+                .map(MeetupEntityMapper::toDetail)
+                .orElseThrow(() -> new NoSuchElementException("해당 회원이 소유한 모임이 존재하지 않습니다: " + memberId));
     }
 
     @Transactional
-    public MeetupResponse createMeetup(MeetupCreateRequest request, UUID memberId) {
+    public MeetupDetail createMeetup(MeetupCreateRequest request, UUID memberId) {
         validateCategories(request.category(), request.subCategory());
 
+        if (meetupDslRepository.existsByOwnerIdAndStatusIn(memberId, List.of(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS))) {
+            throw new CustomValidationException(Map.of(
+                    "owner", List.of("이미 진행 중이거나 모집 중인 모임이 있습니다. 하나의 모임만 생성할 수 있습니다.")
+            ));
+        }
         Point locationPoint = geometryFactory.createPoint(new Coordinate(
                 request.location().longitude(),
                 request.location().latitude()
@@ -142,25 +130,31 @@ public class MeetupService {
                     "scoreLimit", List.of("회원님의 모임 참여 점수가 모임의 제한 점수보다 낮습니다.")
             ));
         }
-
         meetup.setOwner(profileService.getProfileEntityByMemberId(memberId));
         meetup.setLocationPoint(locationPoint);
         meetup.setSigungu(sigunguService.findEntityByPointIn(locationPoint));
         Meetup createdMeetup = meetupRepository.save(meetup);
-        createdMeetup.setHashTags(request.hashTags()); // 해시태그는 모임 ID가 있어야 설정 가능
-        return MeetupEntityMapper.toDto(createdMeetup);
+
+        // 영속 이후에 해시태그 설정 및 호스트 참가자 추가
+        createdMeetup.setHashTags(request.hashTags());
+        createdMeetup.addParticipant(
+                new Participant(createdMeetup, profile, MeetupRole.HOST, false, LocalDateTime.now())
+        );
+
+        // fetch join을 사용하기 위해 다시 조회
+        return findById(createdMeetup.getId());
     }
 
     @Transactional
-    Meetup updateMeetupEntityById(UUID meetupId, Consumer<Meetup> updater) {
+    public Meetup updateMeetupEntityById(UUID meetupId, Consumer<Meetup> updater) {
         Meetup meetup = findEntityById(meetupId);
         updater.accept(meetup);
         return meetup;
     }
 
     @Transactional
-    public MeetupResponse updateMeetupByMemberId(MeetupUpdateRequest request, UUID memberId) {
-        Meetup meetup = findEntityByMemberId(memberId);
+    public MeetupDetail updateMeetupByMemberId(MeetupUpdateRequest request, UUID memberId) {
+        Meetup meetup = findOwnedEntityByMemberId(memberId);
         validateCategories(request.category(), request.subCategory());
         
         if (!meetup.getOwner().getMemberId().equals(memberId)) {
@@ -180,7 +174,9 @@ public class MeetupService {
             updatedMeetup.setLocationPoint(locationPoint);
             updatedMeetup.setSigungu(sigunguService.findEntityByPointIn(locationPoint));
         }
-        return MeetupEntityMapper.toDto(updatedMeetup);
+
+        // fetch join을 사용하기 위해 다시 조회
+        return findById(updatedMeetup.getId());
     }
 
     @Transactional
@@ -191,7 +187,7 @@ public class MeetupService {
 
     @Transactional
     public void deleteMeetup(UUID memberId) {
-        Meetup meetup = findEntityByMemberId(memberId);
+        Meetup meetup = findOwnedEntityByMemberId(memberId);
         if (meetup.getStatus() == MeetupStatus.IN_PROGRESS) {
             throw new IllegalStateException("진행 중인 모임은 삭제할 수 없습니다.");
         }
