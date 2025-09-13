@@ -78,6 +78,7 @@ CREATE TABLE meetup (
     category        VARCHAR(30) NOT NULL,
     sub_category    VARCHAR(30) NOT NULL,
     description     TEXT        NOT NULL,
+    participant_count INTEGER     NOT NULL DEFAULT 1,
     capacity        INTEGER     NOT NULL DEFAULT 10,
     score_limit     DOUBLE PRECISION NOT NULL DEFAULT 36.5,
     location_point  geography(Point, 4326) NOT NULL,
