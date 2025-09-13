@@ -3,7 +3,6 @@ package com.pnu.momeet.e2e.meetup;
 import com.pnu.momeet.domain.meetup.dto.request.LocationRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
-import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
@@ -12,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.Matchers.*;
@@ -21,7 +19,7 @@ import static org.hamcrest.Matchers.*;
 @DisplayName("E2E : Meetup 수정 테스트")
 class MeetupUpdateTest extends BaseMeetupTest {
 
-    private UUID createTestMeetup() {
+    private void createTestMeetup() {
         LocationRequest location = LocationRequest.of(
                 35.23203443995263,
                 129.08262659183725,
@@ -40,20 +38,8 @@ class MeetupUpdateTest extends BaseMeetupTest {
                 location
         );
 
-        var response = RestAssured
-            .given()
-                .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
-                .contentType(ContentType.JSON)
-                .body(request)
-            .when()
-                .post()
-            .then()
-                .statusCode(201)
-                .extract()
-                .as(MeetupResponse.class);
-
+        var response = meetupService.createMeetup(request, users.get(ALICE_EMAIL).id());
         toBeDeleted.add(response.id());
-        return response.id();
     }
 
     @Test

@@ -2,10 +2,8 @@ package com.pnu.momeet.e2e.meetup;
 
 import com.pnu.momeet.domain.meetup.dto.request.LocationRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
-import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -23,7 +21,6 @@ class MeetupDeleteTest extends BaseMeetupTest {
                 129.08262659183725,
                 "부산광역시 금정구 부산대학로 63번길 2"
         );
-
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "삭제 테스트 모임",
                 "GAME",
@@ -35,18 +32,7 @@ class MeetupDeleteTest extends BaseMeetupTest {
                 3,
                 location
         );
-
-        var response = RestAssured
-            .given()
-                .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
-                .contentType(ContentType.JSON)
-                .body(request)
-            .when()
-                .post()
-            .then()
-                .statusCode(201)
-                .extract()
-                .as(MeetupResponse.class);
+        var response = meetupService.createMeetup(request, users.get(ALICE_EMAIL).id());
 
         // 삭제 테스트에서는 자동 정리 목록에 추가하지 않음 (직접 삭제 테스트하므로)
         return response.id();
