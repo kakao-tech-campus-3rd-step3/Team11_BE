@@ -1,6 +1,5 @@
 package com.pnu.momeet.common.security.details;
 
-import com.pnu.momeet.domain.member.mapper.EntityMapper;
 import com.pnu.momeet.domain.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,7 +16,7 @@ public class CustomUserDetailService implements UserDetailsService {
 
     @Override
     public CustomUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var memberInfo = EntityMapper.toMemberInfo(memberService.findMemberById(UUID.fromString(username)));
+        var memberInfo = memberService.findMemberInfoById(UUID.fromString(username));
         return new CustomUserDetails(memberInfo);
     }
 }

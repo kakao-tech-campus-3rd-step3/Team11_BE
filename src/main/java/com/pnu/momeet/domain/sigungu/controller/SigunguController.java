@@ -1,11 +1,9 @@
 package com.pnu.momeet.domain.sigungu.controller;
 
-import com.pnu.momeet.domain.sigungu.dto.PointWithInRequest;
-import com.pnu.momeet.domain.sigungu.dto.SigunguPageRequest;
-import com.pnu.momeet.domain.sigungu.dto.SigunguResponse;
-import com.pnu.momeet.domain.sigungu.entity.Sigungu;
-import com.pnu.momeet.domain.sigungu.mapper.DtoMapper;
-import com.pnu.momeet.domain.sigungu.mapper.EntityMapper;
+import com.pnu.momeet.domain.sigungu.dto.request.PointWithInRequest;
+import com.pnu.momeet.domain.sigungu.dto.request.SigunguPageRequest;
+import com.pnu.momeet.domain.sigungu.dto.response.SigunguResponse;
+import com.pnu.momeet.domain.sigungu.service.mapper.SigunguDtoMapper;
 import com.pnu.momeet.domain.sigungu.service.SigunguService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,16 +23,16 @@ public class SigunguController {
     public ResponseEntity<Page<SigunguResponse>> sigunguList(
         @Valid @ModelAttribute SigunguPageRequest request
     ) {
-        Page<Sigungu> sigunguPage;
+        Page<SigunguResponse> sigunguPage;
         if (request.getSidoCode() == null) {
-            sigunguPage = sigunguService.findAll(DtoMapper.toPageRequest(request));
+            sigunguPage = sigunguService.findAll(SigunguDtoMapper.toPageRequest(request));
         } else {
             sigunguPage = sigunguService.findAllBySidoCode(
                     request.getSidoCode(),
-                    DtoMapper.toPageRequest(request)
+                    SigunguDtoMapper.toPageRequest(request)
             );
         }
-        return ResponseEntity.ok(sigunguPage.map(EntityMapper::toDto));
+        return ResponseEntity.ok(sigunguPage);
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
@@ -42,8 +40,8 @@ public class SigunguController {
     public ResponseEntity<SigunguResponse> sigunguInfo(
         @PathVariable Long id
     ) {
-        Sigungu sigungu = sigunguService.findById(id);
-        return ResponseEntity.ok(EntityMapper.toDto(sigungu));
+        var sigunguResponse = sigunguService.findById(id);
+        return ResponseEntity.ok(sigunguResponse);
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
@@ -51,7 +49,7 @@ public class SigunguController {
     public ResponseEntity<SigunguResponse> sigunguInfoByLocation(
         @Valid @ModelAttribute PointWithInRequest request
     ) {
-        Sigungu sigungu = sigunguService.findByPointIn(request.latitude(), request.longitude());
-        return ResponseEntity.ok(EntityMapper.toDto(sigungu));
+        var sigunguResponse = sigunguService.findByPointIn(request.latitude(), request.longitude());
+        return ResponseEntity.ok(sigunguResponse);
     }
 }

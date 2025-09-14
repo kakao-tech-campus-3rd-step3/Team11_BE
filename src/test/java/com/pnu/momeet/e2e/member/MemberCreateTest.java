@@ -1,7 +1,7 @@
 package com.pnu.momeet.e2e.member;
 
-import com.pnu.momeet.domain.member.dto.MemberCreateRequest;
-import com.pnu.momeet.domain.member.dto.MemberResponse;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -55,7 +55,7 @@ public class MemberCreateTest extends BaseMemberTest {
     }
 
     @Test
-    @DisplayName("멤버 생성 실패 테스트 - 400 Bad Request - 이메일 중복")
+    @DisplayName("멤버 생성 실패 테스트 - 409 Conflict - 이메일 중복")
     public void create_member_fail_by_duplicate_email() {
         MemberCreateRequest request = new MemberCreateRequest(
                 TEST_USER_EMAIL,
@@ -71,7 +71,7 @@ public class MemberCreateTest extends BaseMemberTest {
                 .post()
             .then()
                 .log().all()
-                .statusCode(400);
+                .statusCode(409);
     }
 
     @Test

@@ -17,9 +17,6 @@ jobs:
       DB_USERNAME: ${{ secrets.DB_USERNAME }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      ACCESS_TOKEN_EXPIRATION_SECONDS: 3600
-      REFRESH_TOKEN_EXPIRATION_SECONDS: 604800
-      JWT_ISSUER: momeet
 
     steps:
       - uses: actions/checkout@v3
@@ -88,9 +85,6 @@ jobs:
             export DB_USERNAME='${{ secrets.DB_USERNAME }}'
             export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
             export JWT_SECRET='${{ secrets.JWT_SECRET }}'
-            export ACCESS_TOKEN_EXPIRATION_SECONDS=3600
-            export REFRESH_TOKEN_EXPIRATION_SECONDS=604800
-            export JWT_ISSUER='momeet'
           
             echo "Starting deployment script..."
             # 스크립트를 실행합니다. 스크립트 내부에서 백그라운드 실행 및 로그 기록을 처리합니다.

@@ -1,6 +1,6 @@
 package com.pnu.momeet.e2e.member;
 
-import com.pnu.momeet.common.model.TokenPair;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.service.MemberService;
@@ -16,7 +16,7 @@ import java.util.*;
 @Tag("member")
 public abstract class BaseMemberTest extends BaseE2ETest {
 
-    protected Map<Role, TokenPair> testTokens;
+    protected Map<Role, TokenResponse> testTokens;
     protected List<UUID> toBeDeleted;
 
     @Autowired
@@ -44,11 +44,11 @@ public abstract class BaseMemberTest extends BaseE2ETest {
         }
     }
 
-    protected TokenPair getToken() {
+    protected TokenResponse getToken() {
         return getToken(Role.ROLE_ADMIN);
     }
 
-    protected TokenPair getToken(Role role) {
+    protected TokenResponse getToken(Role role) {
         return testTokens.get(role);
     }
 }

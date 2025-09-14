@@ -2,7 +2,8 @@ package com.pnu.momeet.e2e.auth;
 
 import com.pnu.momeet.common.model.TokenInfo;
 import com.pnu.momeet.common.security.JwtTokenProvider;
-import com.pnu.momeet.domain.auth.dto.TokenResponse;
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
+import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.service.MemberService;
@@ -28,8 +29,8 @@ public abstract class BaseAuthTest extends BaseE2ETest {
     @Autowired
     protected JwtTokenProvider jwtTokenProvider;
 
-    protected Member testMember;
-    protected List<Member> toBeDeleted;
+    protected MemberResponse testMember;
+    protected List<MemberResponse> toBeDeleted;
 
     protected String testPassword = "testAuth123@";
 
@@ -38,26 +39,25 @@ public abstract class BaseAuthTest extends BaseE2ETest {
         super.setup();
         RestAssured.basePath = "/api/auth";
         toBeDeleted = new ArrayList<>();
-        testMember = new Member("testAuth@test.com", testPassword, List.of(Role.ROLE_USER));
-        testMember = memberService.saveMember(testMember);
+        testMember = memberService.saveMember(new Member("testAuth@test.com", testPassword, List.of(Role.ROLE_USER)));
         toBeDeleted.add(testMember);
     }
 
     @AfterEach
     protected void tearDown() {
         if (toBeDeleted != null && !toBeDeleted.isEmpty()) {
-            toBeDeleted.forEach(member -> memberService.deleteMemberById(member.getId()));
+            toBeDeleted.forEach(member -> memberService.deleteMemberById(member.id()));
             toBeDeleted.clear();
         }
     }
 
-    protected void testTokenPair(TokenResponse response, Member member) {
+    protected void testTokenPair(TokenResponse response, MemberResponse member) {
         TokenInfo accessTokenInfo = jwtTokenProvider.parseToken(response.accessToken());
-        assertThat(accessTokenInfo.subject()).isEqualTo(member.getId().toString());
+        assertThat(accessTokenInfo.subject()).isEqualTo(member.id().toString());
         assertThat(accessTokenInfo.expiresAt()).isAfter(LocalDateTime.now());
 
         TokenInfo refreshTokenInfo = jwtTokenProvider.parseToken(response.refreshToken());
-        assertThat(refreshTokenInfo.subject()).isEqualTo(member.getId().toString());
+        assertThat(refreshTokenInfo.subject()).isEqualTo(member.id().toString());
         assertThat(refreshTokenInfo.expiresAt()).isAfter(LocalDateTime.now());
     }
 }
