@@ -6,6 +6,7 @@ import com.pnu.momeet.domain.meetup.service.MeetupService;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.enums.MeetupRole;
+import com.pnu.momeet.domain.participant.repository.ParticipantDslRepository;
 import com.pnu.momeet.domain.participant.repository.ParticipantRepository;
 import com.pnu.momeet.domain.participant.service.mapper.ParticipantEntityMapper;
 import com.pnu.momeet.domain.profile.entity.Profile;
@@ -23,6 +24,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ParticipantService {
     private final ParticipantRepository participantRepository;
+    private final ParticipantDslRepository participantDslRepository;
     private final MeetupService meetupService;
     private final ProfileService profileService;
 
@@ -47,6 +49,11 @@ public class ParticipantService {
     public Participant getEntityByMemberIdAndMeetupId(UUID memberId, UUID meetupId) {
         return participantRepository.findByMemberIdAndMeetupId(memberId, meetupId)
                 .orElseThrow(() -> new NoSuchElementException("참가자를 찾을 수 없습니다."));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Participant> getJoiningParticipantsByMemberId(UUID memberId) {
+        return participantDslRepository.findJoiningParticipantsByMemberId(memberId);
     }
 
     @Transactional
@@ -114,9 +121,8 @@ public class ParticipantService {
             newHost.setRole(MeetupRole.HOST);
             meetup.setOwner(newHost.getProfile()); // 모임의 owner도 변경
         }
-
         meetup.setParticipantCount(meetup.getParticipantCount() - 1);
-        meetup.removeParticipant(participant); // 양방향 연관관계 설정 해제
+        meetup.removeParticipant(participant);
 
         participantRepository.deleteById(participant.getId());
     }
@@ -133,7 +139,7 @@ public class ParticipantService {
         if (!participantRepository.existsByIdAndMeetupId(targetParticipantId, meetupId)) {
             throw new NoSuchElementException("해당 참가자가 모임에 존재하지 않습니다.");
         }
-        updateLastActiveAt(meetupId, memberId);
+        requester.setLastActiveAt(LocalDateTime.now());
         participantRepository.deleteById(targetParticipantId);
     }
 
@@ -156,15 +162,11 @@ public class ParticipantService {
         // 모임의 owner도 변경
         Meetup meetup = targetParticipant.getMeetup();
         meetup.setOwner(targetParticipant.getProfile());
-        // 활동 시간 업데이트
-        updateLastActiveAt(meetupId, memberId);
+
+        requester.setLastActiveAt(LocalDateTime.now());
 
         return ParticipantEntityMapper.toDto(targetParticipant);
     }
 
-    @Transactional
-    public void updateLastActiveAt(UUID meetupId, UUID memberId) {
-        Participant participant = getEntityByMemberIdAndMeetupId(memberId, meetupId);
-        participant.setLastActiveAt(LocalDateTime.now());
-    }
+
 }
