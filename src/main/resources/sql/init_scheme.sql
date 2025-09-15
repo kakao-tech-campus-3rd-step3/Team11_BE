@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS member CASCADE;
 DROP TABLE IF EXISTS meetup CASCADE;
 DROP TABLE IF EXISTS meetup_hash_tag CASCADE;
 DROP TABLE IF EXISTS meetup_participant CASCADE;
+DROP TABLE IF EXISTS evaluation CASCADE;
 
 CREATE TABLE member (
     id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
