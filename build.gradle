@@ -99,10 +99,6 @@ sourceSets {
     main.java.srcDirs += [ querydslDir ]
 }
 
-clean.doLast {
-    file(querydslDir).deleteDir()
-}
-
 tasks.named('test') {
     useJUnitPlatform()
 }
