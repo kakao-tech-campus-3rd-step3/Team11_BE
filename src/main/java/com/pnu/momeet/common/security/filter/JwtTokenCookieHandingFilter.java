@@ -10,7 +10,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -49,7 +48,6 @@ public class JwtTokenCookieHandingFilter  extends OncePerRequestFilter {
                     TokenResponse tokenPair = emailAuthService.refreshTokens(refreshToken.get());
                     tokenCookieManager.saveAccessTokenToCookie(response, tokenPair.accessToken());
                     tokenCookieManager.saveRefreshTokenToCookie(response, tokenPair.refreshToken());
-                    // 새로 발급된 Access Token을 request attribute에 저장하여 이후 필터에서 사용 가능하도록 함
                     request.setAttribute(tokenCookieManager.getAccessTokenCookieName(), tokenPair.accessToken());
                     filterChain.doFilter(request, response);
                     return;
