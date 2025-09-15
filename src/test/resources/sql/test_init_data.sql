@@ -11,6 +11,19 @@ VALUES (
     'ROLE_ADMIN'
 );
 
+-- Admin용 프로필 생성
+INSERT INTO public_test.profile (
+    member_id, nickname, age, gender, image_url, description, base_location
+) VALUES (
+    (SELECT id FROM public_test.member WHERE email = 'admin@test.com'),
+    '관리자',
+    30,
+    'MALE',
+    'https://cdn.example.com/profiles/admin.png',
+    '테스트 환경용 관리자 프로필',
+    '부산 해운대구'
+);
+
 -- password: testpass1212!
 INSERT INTO public_test.member (email, password)
 VALUES (

@@ -88,6 +88,15 @@ VALUES (
         now() + interval '8 hours'
 );
 
+INSERT INTO meetup_participant (meetup_id, profile_id, role, last_active_at)
+VALUES (
+        (SELECT id FROM meetup WHERE owner_id = (SELECT id FROM profile WHERE member_id = (SELECT id FROM member WHERE email = 'alice@test.com'))),
+        (SELECT id FROM profile WHERE member_id = (SELECT id FROM member WHERE email = 'alice@test.com')),
+        'HOST',
+        now()
+);
+
+
 INSERT INTO meetup(owner_id, name, category, sub_category,description,capacity,score_limit,location_point,address,sgg_code,status,end_at)
 VALUES (
         (SELECT id FROM profile WHERE member_id = (SELECT id FROM member WHERE email = 'chris@test.com')),
@@ -104,4 +113,10 @@ VALUES (
         now() + interval '10 hours'
 );
 
-
+INSERT INTO meetup_participant (meetup_id, profile_id, role, last_active_at)
+VALUES (
+        (SELECT id FROM meetup WHERE owner_id = (SELECT id FROM profile WHERE member_id = (SELECT id FROM member WHERE email = 'chris@test.com'))),
+        (SELECT id FROM profile WHERE member_id = (SELECT id FROM member WHERE email = 'chris@test.com')),
+        'HOST',
+        now()
+);

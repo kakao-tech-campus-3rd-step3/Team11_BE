@@ -2,7 +2,7 @@ package com.pnu.momeet.e2e.meetup;
 
 import com.pnu.momeet.domain.meetup.dto.request.LocationRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
-import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
+import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
@@ -66,7 +66,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "endAt", notNullValue()
                 )
                 .extract()
-                .as(MeetupResponse.class);
+                .as(MeetupDetail.class);
 
         // 삭제할 모임 목록에 추가
         toBeDeleted.add(res.id());
@@ -114,7 +114,7 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "status", equalTo("OPEN")
                 )
                 .extract()
-                .as(MeetupResponse.class);
+                .as(MeetupDetail.class);
 
         toBeDeleted.add(res.id());
     }

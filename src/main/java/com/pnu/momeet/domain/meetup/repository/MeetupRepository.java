@@ -1,75 +1,19 @@
 package com.pnu.momeet.domain.meetup.repository;
 
 import com.pnu.momeet.domain.meetup.entity.Meetup;
-import com.pnu.momeet.domain.profile.entity.Profile;
-import org.locationtech.jts.geom.Point;
+import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface MeetupRepository extends JpaRepository<Meetup, UUID>, JpaSpecificationExecutor<Meetup> {
-
-    @Query(value = """
-            SELECT * FROM meetup m
-            WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
-            AND m.status = 'OPEN'
-    """, nativeQuery = true)
-    List<Meetup> findAllByDistance(Point location, double radius);
-
-    @Query(value = """
-            SELECT * FROM meetup m
-            WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
-            AND m.status = 'OPEN'
-            AND m.category = :category
-    """, nativeQuery = true)
-    List<Meetup> findAllByDistanceAndCategory (Point location, double radius, String category);
-
-    @Query(value = """
-            SELECT * FROM meetup m
-            WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
-            AND m.status = 'OPEN'
-            AND m.sub_category = :subCategory
-    """, nativeQuery = true)
-    List<Meetup> findAllByDistanceAndSubCategory(Point location, double radius, String subCategory);
-
-    @Query(value = """
-            SELECT * FROM meetup m
-            WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
-            AND m.status = 'OPEN'
-            AND (
-                LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                LOWER(m.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
-            )
-    """, nativeQuery = true)
-    List<Meetup> findAllByDistanceAndKeyword(Point location, double radius, String keyword);
-
-    @Query(value = """
-            SELECT * FROM meetup m
-            WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
-            AND m.status = 'OPEN'
-            AND m.category = :category
-            AND (
-                LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                LOWER(m.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
-            )
-    """, nativeQuery = true)
-    List<Meetup> findAllByDistanceAndCategoryAndKeyword(Point location, double radius, String category, String keyword);
-
-    @Query(value = """
-            SELECT * FROM meetup m
-            WHERE st_dwithin(m.location_point, :location, :radius * 1000) = true
-            AND m.status = 'OPEN'
-            AND m.sub_category = :subCategory
-            AND (
-                LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                LOWER(m.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
-            )
-    """, nativeQuery = true)
-    List<Meetup> findAllByDistanceAndSubCategoryAndKeyword(Point location, double radius, String subCategory, String keyword);
-
-    Optional<Meetup> findByOwner(Profile profile);
+    @EntityGraph(attributePaths = {"hashTags"})
+    Page<Meetup> findAll(Specification<Meetup> spec, Pageable pageable);
 }
