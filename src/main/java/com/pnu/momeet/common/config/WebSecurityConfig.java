@@ -2,10 +2,12 @@ package com.pnu.momeet.common.config;
 
 import com.pnu.momeet.common.security.details.CustomUserDetailService;
 import com.pnu.momeet.common.security.filter.JwtAuthenticationFilter;
+import com.pnu.momeet.common.security.filter.JwtTokenCookieHandingFilter;
 import com.pnu.momeet.common.security.handler.CustomAccessDeniedHandler;
 import com.pnu.momeet.common.security.handler.CustomAuthenticationEntryPoint;
-import com.pnu.momeet.common.security.JwtTokenProvider;
+import com.pnu.momeet.common.security.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -26,6 +28,8 @@ public class WebSecurityConfig {
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final JwtTokenProvider tokenProvider;
+    private final JwtTokenCookieHandingFilter jwtTokenCookieHandingFilter;
+    @Value("${jwt.access-token.name_in_cookie}") String accessTokenCookieName;
 
     private final static String[] WHITE_LIST_PATTERNS = {
             "/api/auth/login",
@@ -44,7 +48,8 @@ public class WebSecurityConfig {
                 tokenProvider,
                 userDetailService,
                 authenticationEntryPoint,
-                WHITE_LIST_PATTERNS
+                WHITE_LIST_PATTERNS,
+                accessTokenCookieName
         );
     }
 
@@ -75,6 +80,7 @@ public class WebSecurityConfig {
                 )
                 // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 전에 추가
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtTokenCookieHandingFilter, JwtAuthenticationFilter.class)
 
                 // 예외 처리 설정
                 .exceptionHandling(handling ->

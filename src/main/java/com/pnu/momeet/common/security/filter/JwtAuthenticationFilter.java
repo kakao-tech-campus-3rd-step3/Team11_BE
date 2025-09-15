@@ -5,7 +5,7 @@ import com.pnu.momeet.common.exception.ConcurrentLoginException;
 import com.pnu.momeet.common.exception.DisabledAccountException;
 import com.pnu.momeet.common.exception.InvalidJwtTokenException;
 import com.pnu.momeet.common.model.TokenInfo;
-import com.pnu.momeet.common.security.JwtTokenProvider;
+import com.pnu.momeet.common.security.util.JwtTokenProvider;
 import com.pnu.momeet.common.security.details.CustomUserDetailService;
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -31,6 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailService userDetailsService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final Pattern[] whitelistPatterns;
+    private final String accessTokenCookieName;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -39,7 +40,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             JwtTokenProvider jwtTokenProvider,
             CustomUserDetailService userDetailsService,
             AuthenticationEntryPoint authenticationEntryPoint,
-            String[] whitelistUrls
+            String[] whitelistUrls,
+            String accessTokenCookieName
     ) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userDetailsService = userDetailsService;
@@ -51,6 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .replace("*", "[^/]*"); // '*'를 '[^/]*'로 변경
             this.whitelistPatterns[i] = Pattern.compile(regex);
         }
+        this.accessTokenCookieName = accessTokenCookieName;
     }
 
     @Override
@@ -132,6 +135,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(BEARER_PREFIX.length());
+        }
+        Object tokenAttr = request.getAttribute(accessTokenCookieName);
+        if (tokenAttr instanceof String token && !token.isEmpty()) {
+            return token;
         }
         return null;
     }

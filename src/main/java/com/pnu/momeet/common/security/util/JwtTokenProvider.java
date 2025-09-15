@@ -1,4 +1,4 @@
-package com.pnu.momeet.common.security;
+package com.pnu.momeet.common.security.util;
 
 import com.pnu.momeet.common.model.TokenInfo;
 import io.jsonwebtoken.Claims;
@@ -23,8 +23,8 @@ public class JwtTokenProvider {
     public JwtTokenProvider(
         @Value("${jwt.secret}") String secret,
         @Value("${jwt.issuer}") String issuer,
-        @Value("${jwt.access-token.expiration}") Long accessTokenExpirationSeconds,
-        @Value("${jwt.refresh-token.expiration}") Long refreshTokenExpirationSeconds
+        @Value("${jwt.access-token.expiration_in_second}") Long accessTokenExpirationSeconds,
+        @Value("${jwt.refresh-token.expiration_in_second}") Long refreshTokenExpirationSeconds
     ) {
         this.secretKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(secret.getBytes());
         this.issuer = issuer;
