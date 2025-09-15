@@ -42,3 +42,7 @@ jwt:
     name_in_cookie: refresh_token
     expiration_in_second: 604800
   issuer: momeet
+
+ip-hash:
+  secret-key: ${IP_HASH_SECRET_KEY:default-secret}
+  method: SHA-256
