@@ -40,6 +40,7 @@ public class WebSecurityConfig {
             "/error",
             "/admin",  // 관리자 페이지 허용
             "/admin/**",
+            "/ws/chat/**"  // WebSocket 엔드포인트 허용
     };
 
     @Bean
