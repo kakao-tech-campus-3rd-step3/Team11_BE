@@ -112,7 +112,7 @@ public class ParticipantService {
                 && participant.getRole() == MeetupRole.HOST) {
             Participant newHost = participants.get(1);
             newHost.setRole(MeetupRole.HOST);
-            meetup.setOwner(participants.get(0).getProfile()); // 모임의 owner도 변경
+            meetup.setOwner(newHost.getProfile()); // 모임의 owner도 변경
         }
 
         meetup.setParticipantCount(meetup.getParticipantCount() - 1);
