@@ -4,7 +4,6 @@ import com.pnu.momeet.domain.meetup.entity.QMeetupHashTag;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
-import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.sigungu.entity.QSigungu;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -15,7 +14,6 @@ import com.pnu.momeet.domain.meetup.entity.QMeetup;
 import com.pnu.momeet.domain.profile.entity.QProfile;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Repository;
-import software.amazon.awssdk.services.s3.model.Owner;
 
 import java.util.List;
 import java.util.Optional;
