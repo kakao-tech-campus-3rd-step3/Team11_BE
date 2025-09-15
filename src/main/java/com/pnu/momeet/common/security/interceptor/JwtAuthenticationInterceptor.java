@@ -6,7 +6,12 @@ import com.pnu.momeet.common.security.details.CustomUserDetailService;
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,21 +24,29 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationInterceptor implements HandshakeInterceptor {
-    static final String ACCESS_TOKEN_KEY = "access_token";
 
+    private static final String BEARER_PREFIX = "Bearer ";
     private final JwtTokenProvider tokenProvider;
     private final CustomUserDetailService userDetailService;
+    @Value("${jwt.access-token.name-in-cookie}")
+    private String accessTokenCookieName;
+
 
     @Override
     public boolean beforeHandshake(
-            ServerHttpRequest request,
-            ServerHttpResponse response,
-            WebSocketHandler wsHandler,
-            Map<String, Object> attributes
+            @NonNull ServerHttpRequest request,
+            @NonNull ServerHttpResponse response,
+            @NonNull WebSocketHandler wsHandler,
+            @NonNull Map<String, Object> attributes
     ) throws Exception {
-        HttpServletRequest servletRequest = (HttpServletRequest) request;
         try {
-            TokenInfo info = tokenProvider.parseToken(extractToken(servletRequest));
+            HttpServletRequest servletRequest = null;
+            if (request instanceof ServletServerHttpRequest servletServerRequest) {
+                servletRequest = servletServerRequest.getServletRequest();
+            }
+
+            String token = extractToken(request, servletRequest);
+            TokenInfo info = tokenProvider.parseToken(token);
             CustomUserDetails userDetails = userDetailService.loadUserByUsername(info.subject());
             var auth = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
@@ -49,25 +62,30 @@ public class JwtAuthenticationInterceptor implements HandshakeInterceptor {
 
     @Override
     public void afterHandshake(
-            ServerHttpRequest request,
-            ServerHttpResponse response,
-            WebSocketHandler wsHandler,
-    Exception exception) {
-
+            @NonNull ServerHttpRequest request,
+            @NonNull ServerHttpResponse response,
+            @NonNull WebSocketHandler wsHandler,
+            @Nullable Exception exception) {
     }
 
-    private String extractToken(HttpServletRequest request) {
-        String token = request.getParameter(ACCESS_TOKEN_KEY);
-        if (token != null && !token.isEmpty()) {
-            return token;
-        }
-        if (request.getCookies() != null) {
-            for (var cookie : request.getCookies()) {
-                if (ACCESS_TOKEN_KEY.equals(cookie.getName())) {
+    private String extractToken(ServerHttpRequest request, HttpServletRequest servletRequest) {
+        // 1) Cookie (via servlet request if available)
+        if (servletRequest != null && servletRequest.getCookies() != null) {
+            for (var cookie : servletRequest.getCookies()) {
+                if (cookie.getName().equals(accessTokenCookieName)) {
                     return cookie.getValue();
                 }
             }
         }
+        // 2) Authorization header (Bearer)
+        String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (authHeader == null && servletRequest != null) {
+            authHeader = servletRequest.getHeader(HttpHeaders.AUTHORIZATION);
+        }
+        if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+            return authHeader.substring(7);
+        }
+
         return null;
     }
 
