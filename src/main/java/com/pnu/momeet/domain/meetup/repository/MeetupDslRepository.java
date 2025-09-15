@@ -90,18 +90,17 @@ public class MeetupDslRepository {
     public boolean existsByOwnerIdAndStatusIn(UUID memberId, List<MeetupStatus> statuses) {
         QMeetup meetup = QMeetup.meetup;
 
-        Long count =  jpaQueryFactory
-                .select(meetup.count())
+        Integer result = jpaQueryFactory
+                .selectOne()
                 .from(meetup)
                 .where(
                     meetup.owner.memberId.eq(memberId)
-                    .and(
-                        meetup.status.in(statuses)
-                    )
+                    .and(meetup.status.in(statuses))
                 )
-                .fetchOne();
+                .limit(1)
+                .fetchFirst();
 
-        return count != null && count > 0;
+        return result != null;
     }
 
     public Optional<Meetup> findByIdWithDetails(UUID meetupId) {
