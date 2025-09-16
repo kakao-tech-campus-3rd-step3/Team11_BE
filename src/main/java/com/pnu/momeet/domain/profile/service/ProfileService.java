@@ -37,6 +37,12 @@ public class ProfileService {
     }
 
     @Transactional(readOnly = true)
+    public Profile getProfileEntityByProfileId(UUID profileId) {
+        return profileRepository.findById(profileId)
+            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
+    }
+
+    @Transactional(readOnly = true)
     public ProfileResponse getProfileById(UUID profileId) {
         Profile profile = profileRepository.findById(profileId)
             .orElseThrow(() -> new NoSuchElementException(

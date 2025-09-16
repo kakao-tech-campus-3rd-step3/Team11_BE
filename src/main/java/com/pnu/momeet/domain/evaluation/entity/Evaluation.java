@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -41,4 +42,14 @@ public class Evaluation extends BaseCreatedEntity {
 
     @Column(name = "ip_hash", nullable = false, length = 128)
     private String ipHash;
+
+    public static Evaluation create(
+        UUID meetupId,
+        UUID evaluatorProfileId,
+        UUID targetProfileId,
+        Rating rating,
+        String ipHash
+    ) {
+        return new Evaluation(meetupId, evaluatorProfileId, targetProfileId, rating, ipHash);
+    }
 }
