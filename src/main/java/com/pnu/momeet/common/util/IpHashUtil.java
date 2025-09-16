@@ -8,13 +8,15 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+@Component
 public class IpHashUtil {
 
-    @Value("${ip.hash.secret-key}")
+    @Value("${ip-hash.secret-key}")
     private String SECRET_KEY;
 
-    @Value("${ip.hash.method}")
+    @Value("${ip-hash.method}")
     private String HASH_METHOD;
 
     // TODO [운영 단계 보강]
