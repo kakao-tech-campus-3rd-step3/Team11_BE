@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.*;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalRestExceptionHandler {
 
     private Map<String, List<String>> extractValidationErrors(MethodArgumentNotValidException e) {
         // 필드 에러 처리
