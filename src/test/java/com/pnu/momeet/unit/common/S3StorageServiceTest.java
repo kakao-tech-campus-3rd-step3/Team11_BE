@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.pnu.momeet.common.exception.StorageException;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -126,7 +127,7 @@ class S3StorageServiceTest {
     }
 
     @Test
-    @DisplayName("실패 - S3 예외 발생 시 IllegalStateException 변환")
+    @DisplayName("실패 - S3 예외 발생 시 StorageException 변환")
     void fail_s3_exception() {
         // given
         byte[] bytes = pngBytes(1, 1);
@@ -139,7 +140,7 @@ class S3StorageServiceTest {
 
         // expect
         assertThatThrownBy(() -> sut.uploadImage(file, "profiles"))
-            .isInstanceOf(IllegalStateException.class)
+            .isInstanceOf(StorageException.class)
             .hasMessageContaining("파일 저장 중 오류");
     }
 
