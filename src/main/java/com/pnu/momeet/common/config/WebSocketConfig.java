@@ -49,7 +49,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // 애플리케이션 목적지 prefix
         registry.setApplicationDestinationPrefixes("/app");
 
-        // 사용자�� 목적지 prefix
+        // 사용자별 목적지 prefix
         registry.setUserDestinationPrefix("/user");
     }
 }
