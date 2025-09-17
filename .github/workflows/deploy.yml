@@ -4,7 +4,7 @@ on:
   push:
     branches: ['main', 'develop']
   pull_request:
-    branches: ['main', 'develop'] # 개발 설정을 위해 임시 추가
+    branches: ['main']
 
 permissions:
   contents: read
