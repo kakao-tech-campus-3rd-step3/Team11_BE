@@ -1,16 +1,23 @@
 package com.pnu.momeet.domain.evaluation.service;
 
+import com.pnu.momeet.common.mapper.facade.EvaluatableProfileMapper;
 import com.pnu.momeet.domain.evaluation.dto.request.EvaluationCreateRequest;
 import com.pnu.momeet.domain.evaluation.dto.response.EvaluationResponse;
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 import com.pnu.momeet.domain.evaluation.service.mapper.EvaluationEntityMapper;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
+import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
+import com.pnu.momeet.domain.participant.service.ParticipantService;
+import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileService;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +30,7 @@ public class EvaluationService {
 
     private final EvaluationRepository evaluationRepository;
     private final ProfileService profileService;
+    private final ParticipantService participantService;
 
     private static final Duration EVALUATION_COOLTIME = Duration.ofHours(24);
 
@@ -93,5 +101,31 @@ public class EvaluationService {
         );
 
         return meetup.getParticipantCount() - 1 - evaluatedCount;
+    }
+
+    @Transactional(readOnly = true)
+    public List<EvaluatableProfileResponse> getEvaluatableUsers(UUID meetupId, UUID evaluatorProfileId) {
+        // 1. 모임 참가자 조회
+        List<ParticipantResponse> participants = participantService.getParticipantsByMeetupId(meetupId);
+
+        // 2. 자기 자신 제외
+        List<ParticipantResponse> targetParticipants = participants.stream()
+            .filter(p -> !p.profile().id().equals(evaluatorProfileId))
+            .toList();
+
+        // 3. 기존 평가 기록 불러오기
+        Map<UUID, Evaluation> existingEvaluations = evaluationRepository
+            .findByMeetupIdAndEvaluatorProfileId(meetupId, evaluatorProfileId)
+            .stream()
+            .collect(Collectors.toMap(Evaluation::getTargetProfileId, e -> e));
+
+        // 4. 응답 변환
+        return targetParticipants.stream()
+            .map(participantResponse -> EvaluatableProfileMapper
+                .toEvaluatableProfileResponse(
+                    participantResponse,
+                    existingEvaluations.get(participantResponse.profile().id())
+                ))
+            .toList();
     }
 }
