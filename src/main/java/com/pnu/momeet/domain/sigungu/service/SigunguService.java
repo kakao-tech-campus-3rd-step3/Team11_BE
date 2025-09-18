@@ -1,8 +1,10 @@
 package com.pnu.momeet.domain.sigungu.service;
 
+import com.pnu.momeet.domain.sigungu.dto.request.SigunguPageRequest;
 import com.pnu.momeet.domain.sigungu.dto.response.SigunguResponse;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.repository.SigunguRepository;
+import com.pnu.momeet.domain.sigungu.service.mapper.SigunguDtoMapper;
 import com.pnu.momeet.domain.sigungu.service.mapper.SigunguEntityMapper;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
@@ -61,5 +63,14 @@ public class SigunguService {
     public Page<SigunguResponse> findAllBySidoCode(Long sidoCode, Pageable pageable) {
         return sigunguRepository.findAllBySidoCode(sidoCode, pageable)
                 .map(SigunguEntityMapper::toDto);
+    }
+
+    public Page<SigunguResponse> findAllWithSidoCode(SigunguPageRequest request) {
+        if (request.getSidoCode() == null) {
+            return findAll(SigunguDtoMapper.toPageRequest(request));
+        }
+        return findAllBySidoCode(
+            request.getSidoCode(), 
+            SigunguDtoMapper.toPageRequest(request));
     }
 }
