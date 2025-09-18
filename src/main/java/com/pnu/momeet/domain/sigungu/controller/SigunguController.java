@@ -23,15 +23,7 @@ public class SigunguController {
     public ResponseEntity<Page<SigunguResponse>> sigunguList(
         @Valid @ModelAttribute SigunguPageRequest request
     ) {
-        Page<SigunguResponse> sigunguPage;
-        if (request.getSidoCode() == null) {
-            sigunguPage = sigunguService.findAll(SigunguDtoMapper.toPageRequest(request));
-        } else {
-            sigunguPage = sigunguService.findAllBySidoCode(
-                    request.getSidoCode(),
-                    SigunguDtoMapper.toPageRequest(request)
-            );
-        }
+        Page<SigunguResponse> sigunguPage = sigunguService.findAllWithSidoCode(request);
         return ResponseEntity.ok(sigunguPage);
     }
 
