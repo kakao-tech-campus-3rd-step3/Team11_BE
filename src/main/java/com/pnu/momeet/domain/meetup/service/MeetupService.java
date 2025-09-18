@@ -59,6 +59,11 @@ public class MeetupService {
     }
 
     @Transactional(readOnly = true)
+    public Meetup getReferenceById(UUID meetupId) {
+        return meetupRepository.getReferenceById(meetupId);
+    }
+
+    @Transactional(readOnly = true)
     public List<MeetupResponse> findAllByLocation(
             MeetupGeoSearchRequest request
     ) {

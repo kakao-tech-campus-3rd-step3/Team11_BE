@@ -6,7 +6,6 @@ DROP TABLE IF EXISTS member CASCADE;
 DROP TABLE IF EXISTS meetup CASCADE;
 DROP TABLE IF EXISTS meetup_hash_tag CASCADE;
 DROP TABLE IF EXISTS meetup_participant CASCADE;
-DROP TABLE IF EXISTS evaluation CASCADE;
 
 CREATE TABLE member (
     id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -118,6 +117,19 @@ CREATE TABLE meetup_participant (
 
 CREATE INDEX IF NOT EXISTS idx_meetup_participant_meetup ON meetup_participant (meetup_id);
 CREATE INDEX IF NOT EXISTS idx_meetup_participant_profile ON meetup_participant (profile_id);
+
+
+CREATE TABLE chat_message (
+    id              BIGSERIAL PRIMARY KEY,
+    meetup_id       UUID NOT NULL REFERENCES meetup(id) ON DELETE CASCADE,
+    sender_id       BIGINT REFERENCES meetup_participant(id) ON DELETE SET NULL,
+    profile_id      UUID NOT NULL REFERENCES profile(id) ON DELETE SET NULL,
+    message_type    VARCHAR(20) NOT NULL,  -- TEXT/IMAGE/SYSTEM
+    content         TEXT NOT NULL,
+    created_at      TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_chat_message_meetup ON chat_message (meetup_id);
+CREATE INDEX IF NOT EXISTS idx_chat_message_sender ON chat_message (sender_id);
 
 CREATE TABLE evaluation (
     id UUID PRIMARY KEY,
