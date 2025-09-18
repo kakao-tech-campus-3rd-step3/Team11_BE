@@ -113,7 +113,9 @@ public class MemberService {
 
     @Transactional
     public void deleteMemberById(UUID id) {
-        findMemberByIdInternal(id); // 존재하지 않는 회원 삭제 방지
+        if(!memberRepository.existsById(id)) { // 존재하지 않는 회원 삭제 방지
+            throw new NoSuchElementException("해당 Id의 사용자가 존재하지 않습니다. id=" + id);
+        }
         memberRepository.deleteById(id);
     }
 }
