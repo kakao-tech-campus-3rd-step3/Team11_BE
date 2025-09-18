@@ -27,4 +27,6 @@ public interface EvaluationRepository extends JpaRepository<Evaluation, UUID> {
         String ipHash,
         LocalDateTime createdAt
     );
+
+    long countByMeetupIdAndEvaluatorProfileId(UUID meetupId, UUID evaluatorProfileId);
 }

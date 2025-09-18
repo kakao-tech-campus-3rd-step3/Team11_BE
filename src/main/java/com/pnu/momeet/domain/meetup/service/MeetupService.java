@@ -27,6 +27,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -108,6 +109,11 @@ public class MeetupService {
         return meetupDslRepository.findOwnedMeetupByMemberIdWithDetails(memberId)
                 .map(MeetupEntityMapper::toDetail)
                 .orElseThrow(() -> new NoSuchElementException("해당 회원이 소유한 모임이 존재하지 않습니다: " + memberId));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Meetup> findEndedMeetupsByProfileId(UUID profileId, Pageable pageable) {
+        return meetupDslRepository.findEndedMeetupsByProfileId(profileId, pageable);
     }
 
     @Transactional(readOnly = true)

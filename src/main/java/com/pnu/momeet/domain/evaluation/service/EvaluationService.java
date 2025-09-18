@@ -1,14 +1,11 @@
 package com.pnu.momeet.domain.evaluation.service;
 
-import static com.pnu.momeet.domain.evaluation.enums.Rating.DISLIKE;
-import static com.pnu.momeet.domain.evaluation.enums.Rating.LIKE;
-
 import com.pnu.momeet.domain.evaluation.dto.request.EvaluationCreateRequest;
 import com.pnu.momeet.domain.evaluation.dto.response.EvaluationResponse;
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
-import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 import com.pnu.momeet.domain.evaluation.service.mapper.EvaluationEntityMapper;
+import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileService;
 import java.time.Duration;
@@ -87,5 +84,14 @@ public class EvaluationService {
         );
 
         return EvaluationEntityMapper.toResponseDto(evaluationRepository.save(newEvaluation));
+    }
+
+    @Transactional(readOnly = true)
+    public long calculateUnEvaluatedCount(Meetup meetup, UUID evaluatorProfileId) {
+        long evaluatedCount = evaluationRepository.countByMeetupIdAndEvaluatorProfileId(
+            meetup.getId(), evaluatorProfileId
+        );
+
+        return meetup.getParticipantCount() - 1 - evaluatedCount;
     }
 }

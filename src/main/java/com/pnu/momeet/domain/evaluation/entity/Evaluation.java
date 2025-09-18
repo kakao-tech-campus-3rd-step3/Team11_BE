@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Table(
     name = "evaluation",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uq_evaluation", columnNames = {"meetup_id", "evaluator_profile_id", "target_profile_id"})
+        @UniqueConstraint(name = "uq_evaluation", columnNames = {"meetup_id", "evaluator_profile_id", "target_profile_id", "ip_hash"})
     }
 )
 @Getter

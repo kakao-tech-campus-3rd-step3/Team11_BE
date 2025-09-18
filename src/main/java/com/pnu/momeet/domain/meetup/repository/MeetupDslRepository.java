@@ -4,6 +4,7 @@ import com.pnu.momeet.domain.meetup.entity.QMeetupHashTag;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
+import com.pnu.momeet.domain.participant.entity.QParticipant;
 import com.pnu.momeet.domain.sigungu.entity.QSigungu;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -12,7 +13,11 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.entity.QMeetup;
 import com.pnu.momeet.domain.profile.entity.QProfile;
+import java.time.LocalDateTime;
 import org.locationtech.jts.geom.Point;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,6 +26,7 @@ import java.util.UUID;
 
 @Repository
 public class MeetupDslRepository {
+    private static final int EVALUATION_VALID_DAYS = 3;
     private final JPAQueryFactory jpaQueryFactory;
     public MeetupDslRepository(JPAQueryFactory jpaQueryFactory) {
         this.jpaQueryFactory = jpaQueryFactory;
@@ -142,5 +148,36 @@ public class MeetupDslRepository {
                     )
                     .fetchOne()
         );
+    }
+
+    public Page<Meetup> findEndedMeetupsByProfileId(UUID profileId, Pageable pageable) {
+        QMeetup m = QMeetup.meetup;
+        QParticipant p = QParticipant.participant;
+
+        List<Meetup> content = jpaQueryFactory
+            .selectFrom(m)
+            .join(m.participants, p).fetchJoin()
+            .where(
+                m.status.eq(MeetupStatus.ENDED),
+                m.endAt.goe(LocalDateTime.now().minusDays(EVALUATION_VALID_DAYS)),
+                p.profile.id.eq(profileId)
+            )
+            .distinct()
+            .orderBy(m.endAt.desc())
+            .offset(pageable.getOffset())
+            .limit(pageable.getPageSize())
+            .fetch();
+
+        Long total = jpaQueryFactory
+            .select(m.countDistinct())
+            .from(m)
+            .join(m.participants, p)
+            .where(
+                m.status.eq(MeetupStatus.ENDED),
+                p.profile.id.eq(profileId)
+            )
+            .fetchOne();
+
+        return new PageImpl<>(content, pageable, total != null ? total : 0);
     }
 }
