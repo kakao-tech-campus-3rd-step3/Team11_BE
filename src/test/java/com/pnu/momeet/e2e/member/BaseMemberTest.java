@@ -3,7 +3,7 @@ package com.pnu.momeet.e2e.member;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.AfterEach;
@@ -23,7 +23,7 @@ public abstract class BaseMemberTest extends BaseE2ETest {
     protected EmailAuthService emailAuthService;
 
     @Autowired
-    protected MemberService memberService;
+    protected MemberDomainService memberService;
 
 
     @BeforeEach

@@ -3,10 +3,9 @@ package com.pnu.momeet.e2e.auth;
 import com.pnu.momeet.common.model.TokenInfo;
 import com.pnu.momeet.common.security.util.JwtTokenProvider;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
-import com.pnu.momeet.domain.member.entity.Member;
-import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.AfterEach;
@@ -24,7 +23,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public abstract class BaseAuthTest extends BaseE2ETest {
 
     @Autowired
-    protected MemberService memberService;
+    protected MemberDomainService memberService;
 
     @Autowired
     protected JwtTokenProvider jwtTokenProvider;
@@ -39,7 +38,8 @@ public abstract class BaseAuthTest extends BaseE2ETest {
         super.setup();
         RestAssured.basePath = "/api/auth";
         toBeDeleted = new ArrayList<>();
-        testMember = memberService.saveMember(new Member("testAuth@test.com", testPassword, List.of(Role.ROLE_USER)));
+        MemberCreateRequest request = new MemberCreateRequest("testAuth@test.com", testPassword, List.of("ROLE_USER"));
+        testMember = memberService.saveMember(request);
         toBeDeleted.add(testMember);
     }
 

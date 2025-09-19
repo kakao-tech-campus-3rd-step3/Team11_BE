@@ -4,7 +4,7 @@ import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.domain.profile.service.ProfileService;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
@@ -29,7 +29,7 @@ public abstract class BaseEvaluationTest extends BaseE2ETest {
     protected EmailAuthService emailAuthService;
 
     @Autowired
-    protected MemberService memberService;
+    protected MemberDomainService memberService;
 
     @Autowired
     protected ProfileService profileService;
@@ -47,7 +47,7 @@ public abstract class BaseEvaluationTest extends BaseE2ETest {
         testTokens.put(Role.ROLE_USER, emailAuthService.login(TEST_USER_EMAIL, TEST_USER_PASSWORD));
 
         // 테스트용 프로필 ID 설정
-        var testMember = memberService.findMemberByEmail(TEST_USER_EMAIL);
+        var testMember = memberService.getMemberByEmail(TEST_USER_EMAIL);
         test_user_profile_uuid = profileService.getMyProfile(testMember.id()).id();
     }
 

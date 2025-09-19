@@ -1,16 +1,13 @@
 package com.pnu.momeet.domain.auth.service;
 
-import com.pnu.momeet.common.exception.BannedAccountException;
 import com.pnu.momeet.common.security.util.JwtTokenProvider;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
-import com.pnu.momeet.domain.member.dto.response.MemberInfo;
-import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.member.service.MemberEntityService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.transaction.Transactional;
@@ -30,18 +27,18 @@ public class EmailAuthService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider tokenProvider;
-    private final MemberService memberService;
+    private final MemberEntityService memberService;
     private final PasswordEncoder passwordEncoder;
 
     private static final long IAT_BUFFER_SECONDS = 10;
 
     private TokenResponse generateTokenPair(UUID memberId) {
         // 토큰 발급 시점 기록 & 계정 활성화
-        memberService.updateMemberById(memberId, member -> {
-            member.setTokenIssuedAt(LocalDateTime.now().minusSeconds(IAT_BUFFER_SECONDS));
-            member.setEnabled(true);
+        Member member = memberService.getById(memberId);
+        memberService.updateMember(member, m -> {
+            m.setTokenIssuedAt(LocalDateTime.now().minusSeconds(IAT_BUFFER_SECONDS));
+            m.setEnabled(true);
         });
-
         // 액세스 토큰과 리프레시 토큰 발급
         String accessToken = tokenProvider.generateAccessToken(memberId);
         String refreshToken = tokenProvider.generateRefreshToken(memberId);
@@ -54,39 +51,32 @@ public class EmailAuthService {
 
     @Transactional
     public TokenResponse signUp(String email, String password) {
-        MemberResponse savedMember = memberService.saveMember(new Member(email, password, List.of(Role.ROLE_USER)));
-        return generateTokenPair(savedMember.id());
+        Member savedMember = memberService.createMember(
+                new Member(email, password, List.of(Role.ROLE_USER))
+        );
+        return generateTokenPair(savedMember.getId());
     }
 
     @Transactional
     public TokenResponse login(String email, String password) {
-
-        MemberInfo memberInfo;
+        Member member;
         try {
-            memberInfo = memberService.findMemberInfoByEmail(email);
+            member = memberService.getByEmail(email);
         } catch (NoSuchElementException e) {
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
-
-        if (memberInfo.provider() != Provider.EMAIL) {
+        if (member.getProvider() != Provider.EMAIL) {
             throw new AuthenticationException("지원하지 않은 경로로 로그인을 시도하였습니다.") {};
         }
-
-        if (!passwordEncoder.matches(password, memberInfo.password())) {
+        if (!passwordEncoder.matches(password, member.getPassword())) {
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
-
-        if (!memberInfo.isAccountNonLocked()) {
-            throw new BannedAccountException("잠긴 계정입니다. 관리자에게 문의하세요.") {};
-        }
-
-        return generateTokenPair(memberInfo.id());
+        return generateTokenPair(member.getId());
     }
 
     @Transactional
     public void logout(UUID memberId) {
         if (refreshTokenRepository.existsById(memberId)) {
-            memberService.disableMemberById(memberId);
             refreshTokenRepository.deleteById(memberId);
         }
     }
@@ -111,7 +101,6 @@ public class EmailAuthService {
         if (!savedToken.getValue().equals(refreshToken)) {
             throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") {};
         }
-
         return generateTokenPair(memberId);
     }
 }
