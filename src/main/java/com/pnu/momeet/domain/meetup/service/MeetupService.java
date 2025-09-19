@@ -20,7 +20,7 @@ import com.pnu.momeet.domain.participant.enums.MeetupRole;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileService;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
-import com.pnu.momeet.domain.sigungu.service.SigunguService;
+import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -46,7 +46,7 @@ public class MeetupService {
     private final MeetupDslRepository meetupDslRepository;
 
     private final ProfileService profileService;
-    private final SigunguService sigunguService;
+    private final SigunguEntityService sigunguService;
 
     private void validateCategories(String mainCategory, String subCategory) {
         if (mainCategory != null && subCategory != null) {
@@ -141,7 +141,7 @@ public class MeetupService {
         ));
         Meetup meetup = MeetupDtoMapper.toEntity(request);
         Profile profile = profileService.getProfileEntityByMemberId(memberId);
-        Sigungu sigungu = sigunguService.findEntityByPointIn(locationPoint);
+        Sigungu sigungu = sigunguService.getByPointIn(locationPoint);
 
         if (profile.getTemperature().doubleValue() < meetup.getScoreLimit()) {
             throw new CustomValidationException(Map.of(
@@ -196,7 +196,7 @@ public class MeetupService {
                     request.location().latitude()
             ));
             updatedMeetup.setLocationPoint(locationPoint);
-            updatedMeetup.setSigungu(sigunguService.findEntityByPointIn(locationPoint));
+            updatedMeetup.setSigungu(sigunguService.getByPointIn(locationPoint));
         }
 
         // fetch join을 사용하기 위해 다시 조회
