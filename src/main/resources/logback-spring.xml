@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<configuration>
+    <springProperty scope="context" name="LOG_PATH" source="log.log-path"/>
+    <!-- 시스템 전반의 로그 레벨 설정 -->
+    <springProperty scope="context" name="ROOT_LOG_LEVEL" source="log.level.root"/>
+    <!-- 개발중인 앱의 로그 레벨 설정 -->
+    <springProperty scope="context" name="APP_LOG_LEVEL" source="log.level.app"/>
+
+    <property name="CONSOLE_LOG_PATTERN" value="%boldGreen(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %-5level %cyan(%logger{36}) - %msg%n"/>
+    <!-- 파일기반 로그를 더 간략하게 -->
+    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/application.log</file>
+        <!-- 로그 기록시 바로바로 파일에 기록 -->
+        <immediateFlush>true</immediateFlush>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!--최대 90일 로그 보관-->
+            <maxHistory>90</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.springframework" level="${ROOT_LOG_LEVEL}"/>
+    <logger name="com.momeet" level="${APP_LOG_LEVEL}"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>

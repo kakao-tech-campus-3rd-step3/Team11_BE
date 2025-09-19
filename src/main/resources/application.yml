@@ -46,3 +46,9 @@ jwt:
 ip-hash:
   secret-key: ${IP_HASH_SECRET_KEY:default-secret}
   method: SHA-256
+
+log:
+  log-path: './logs'
+  level:
+    root: INFO
+    app: DEBUG
