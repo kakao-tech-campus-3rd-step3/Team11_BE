@@ -12,6 +12,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailAuthService {
@@ -54,7 +56,9 @@ public class EmailAuthService {
         Member savedMember = memberService.createMember(
                 new Member(email, password, List.of(Role.ROLE_USER))
         );
-        return generateTokenPair(savedMember.getId());
+        var response =  generateTokenPair(savedMember.getId());
+        log.info("회원가입 성공: {}", email);
+        return response;
     }
 
     @Transactional
@@ -63,22 +67,29 @@ public class EmailAuthService {
         try {
             member = memberService.getByEmail(email);
         } catch (NoSuchElementException e) {
+            log.warn("로그인 실패: 존재하지 않는 이메일 - {}", email);
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
         if (member.getProvider() != Provider.EMAIL) {
+            log.warn("로그인 실패: 지원하지 않는 경로 - {} - {}", member.getProvider(), email);
             throw new AuthenticationException("지원하지 않은 경로로 로그인을 시도하였습니다.") {};
         }
         if (!passwordEncoder.matches(password, member.getPassword())) {
+            log.warn("로그인 실패: 비밀번호 불일치 - {}", email);
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
-        return generateTokenPair(member.getId());
+        var response =  generateTokenPair(member.getId());
+        log.info("로그인 성공: {}", email);
+        return response;
     }
 
     @Transactional
     public void logout(UUID memberId) {
         if (refreshTokenRepository.existsById(memberId)) {
             refreshTokenRepository.deleteById(memberId);
+            log.info("로그아웃 성공: {}", memberId);
         }
+        log.warn("로그아웃 시도: 존재하지 않는 회원 - {}", memberId);
     }
 
     @Transactional
@@ -88,19 +99,26 @@ public class EmailAuthService {
             Claims payload = tokenProvider.getPayload(refreshToken);
             memberId = UUID.fromString(payload.getSubject());
         } catch (ExpiredJwtException e) {
+            log.warn("리프레시 토큰 만료: {}", refreshToken);
             throw new AuthenticationException("리프레시 토큰이 만료되었습니다. 다시 로그인 해주세요.") {
             };
         } catch (Exception e) {
+            log.warn("리프레시 토큰 파싱 실패: {}", refreshToken);
             throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") {
             };
         }
 
-        RefreshToken savedToken = refreshTokenRepository.findById(memberId).orElseThrow(
-                () -> new AuthenticationException("로그아웃된 사용자입니다. 다시 로그인 해주세요.") {});
-
-        if (!savedToken.getValue().equals(refreshToken)) {
+        var savedToken = refreshTokenRepository.findById(memberId);
+        if (savedToken.isEmpty()) {
+            log.warn("리프레시 토큰 없음: {}", memberId);
+            throw new AuthenticationException("로그아웃된 사용자입니다. 다시 로그인 해주세요.") {};
+        }
+        if (!savedToken.get().getValue().equals(refreshToken)) {
+            log.warn("리프레시 토큰 불일치: {}", memberId);
             throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") {};
         }
-        return generateTokenPair(memberId);
+        var response =  generateTokenPair(memberId);
+        log.info("토큰 재발급 성공: {}", memberId);
+        return response;
     }
 }
