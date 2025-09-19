@@ -2,6 +2,7 @@ package com.pnu.momeet.common.advice;
 
 import com.pnu.momeet.common.exception.BannedAccountException;
 import com.pnu.momeet.common.exception.CustomValidationException;
+import com.pnu.momeet.common.exception.IpHashGenerationException;
 import com.pnu.momeet.common.exception.StorageException;
 import com.pnu.momeet.common.exception.UnMatchedPasswordException;
 import org.springframework.dao.DuplicateKeyException;
@@ -115,6 +116,13 @@ public class GlobalRestExceptionHandler {
     public ResponseEntity<ProblemDetail> handleStorageException(StorageException e) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         problemDetail.setTitle("서버 저장소 오류");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+    }
+
+    @ExceptionHandler(IpHashGenerationException.class)
+    public ResponseEntity<ProblemDetail> handleIpHashGenerationException(IpHashGenerationException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        problemDetail.setTitle("IP 해시 오류");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
     }
 }

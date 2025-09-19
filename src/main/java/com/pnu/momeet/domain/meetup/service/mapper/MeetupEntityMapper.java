@@ -3,6 +3,7 @@ package com.pnu.momeet.domain.meetup.service.mapper;
 import com.pnu.momeet.domain.common.dto.response.LocationResponse;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
+import com.pnu.momeet.domain.meetup.dto.response.UnEvaluatedMeetupDto;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.entity.MeetupHashTag;
 import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
@@ -75,6 +76,20 @@ public class MeetupEntityMapper {
                 meetup.getEndAt(),
                 meetup.getCreatedAt(),
                 meetup.getUpdatedAt()
+        );
+    }
+
+    public static UnEvaluatedMeetupDto unEvaluatedMeetupDto(Meetup meetup, long unEvaluatedCount) {
+        return new UnEvaluatedMeetupDto(
+            meetup.getId(),
+            meetup.getName(),
+            meetup.getCategory().name(),
+            meetup.getSubCategory().name(),
+            meetup.getCreatedAt(),
+            meetup.getEndAt(),
+            meetup.getParticipantCount(),
+            meetup.getCapacity(),
+            unEvaluatedCount
         );
     }
 }
