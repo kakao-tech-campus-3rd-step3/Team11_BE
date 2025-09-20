@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.profile.entity;
 
+import com.pnu.momeet.domain.common.entity.BaseCreatedEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,23 +24,14 @@ import lombok.NoArgsConstructor;
     })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class ProfileBadge {
+public class ProfileBadge extends BaseCreatedEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @Column(name = "profile_id", nullable = false)
+    private UUID profileId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "profile_id", nullable = false)
-    private Profile profile;
+    @Column(name = "badge_id", nullable = false)
+    private UUID badgeId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "badge_id", nullable = false)
-    private Badge badge;
-
-    @Column(nullable = false)
-    private LocalDateTime grantedAt;
-
-    @Column(nullable = false)
-    private boolean isRepresentative = false;
+    @Column(name = "is_representative", nullable = false)
+    private boolean representative = false;
 }
