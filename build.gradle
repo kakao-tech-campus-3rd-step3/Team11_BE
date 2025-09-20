@@ -39,42 +39,64 @@ ext {
     AWS_VERSION = '3.4.0'
     JTS_VERSION = '1.20.0'
     HIBERNATE_SPATIAL_VERSION = '7.1.0.Final'
+    QUERY_DSL_VERSION = '5.1.0'
 }
 
 dependencies {
+    // Spring Boot 스타터
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+    // Spring Security 및 JWT
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation "me.paulschwarz:spring-dotenv:${DOTENV_VERSION}"
     implementation "io.jsonwebtoken:jjwt-api:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${JJWT_VERSION}"
 
-    implementation "io.awspring.cloud:spring-cloud-aws-starter-s3:${AWS_VERSION}"
-
+    // Thymeleaf 템플릿 엔진
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 
+    // AWS SDK
+    implementation "io.awspring.cloud:spring-cloud-aws-starter-s3:${AWS_VERSION}"
+
+    // 데이터베이스 관련
+    runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation "com.querydsl:querydsl-jpa:${QUERY_DSL_VERSION}:jakarta"
+    annotationProcessor "com.querydsl:querydsl-apt:${QUERY_DSL_VERSION}:jakarta"
 
-    runtimeOnly 'com.h2database:h2'
-    runtimeOnly 'org.postgresql:postgresql'
-
+    // spatial 지원
     implementation "org.locationtech.jts:jts-core:${JTS_VERSION}"
     implementation "org.hibernate:hibernate-spatial:${HIBERNATE_SPATIAL_VERSION}"
-    implementation "org.orbisgis:h2gis:2.2.3"
+    implementation "com.querydsl:querydsl-spatial:${QUERY_DSL_VERSION}"
 
+    // 개발 편의성 도구
     compileOnly 'org.projectlombok:lombok'
+    implementation "me.paulschwarz:spring-dotenv:${DOTENV_VERSION}"
     annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
+    // 테스트 관련
     testImplementation "io.rest-assured:rest-assured:${RESTASSURED_VERSION}"
     testImplementation "io.rest-assured:json-path:${RESTASSURED_VERSION}"
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+
+def querydslDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
+
+tasks.withType(JavaCompile).configureEach {
+    options.generatedSourceOutputDirectory.set(querydslDir)
+}
+
+sourceSets {
+    main.java.srcDirs += [ querydslDir ]
 }
 
 tasks.named('test') {

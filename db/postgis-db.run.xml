@@ -1,0 +1,20 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="postgis-db" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+    <deployment type="dockerfile">
+      <settings>
+        <option name="imageTag" value="custom-postgis-db" />
+        <option name="containerName" value="postgis-db" />
+        <option name="portBindings">
+          <list>
+            <DockerPortBindingImpl>
+              <option name="containerPort" value="5432" />
+              <option name="hostPort" value="5433" />
+            </DockerPortBindingImpl>
+          </list>
+        </option>
+        <option name="sourceFilePath" value="db/dockerfile" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>

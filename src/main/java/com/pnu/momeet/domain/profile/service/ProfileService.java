@@ -8,7 +8,6 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
-import jakarta.validation.Valid;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
+    
+    private static final String PROFILE_IMAGE_PREFIX = "/profiles";
 
     private final ProfileRepository profileRepository;
     private final S3StorageService s3StorageService;
@@ -29,6 +30,18 @@ public class ProfileService {
         Profile profile = profileRepository.findByMemberId(memberId)
             .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
         return ProfileEntityMapper.toResponseDto(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public Profile getProfileEntityByMemberId(UUID memberId) {
+        return profileRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
+    }
+
+    @Transactional(readOnly = true)
+    public Profile getProfileEntityByProfileId(UUID profileId) {
+        return profileRepository.findById(profileId)
+            .orElseThrow(() -> new NoSuchElementException("프로필이 존재하지 않습니다."));
     }
 
     @Transactional(readOnly = true)
@@ -52,7 +65,7 @@ public class ProfileService {
         String profileImageUrl = null;
 
         if (request.image() != null) {
-            profileImageUrl = s3StorageService.uploadImage(request.image(), "/profiles");
+            profileImageUrl = s3StorageService.uploadImage(request.image(), PROFILE_IMAGE_PREFIX);
         }
 
         Profile newProfile = Profile.create(
@@ -85,7 +98,7 @@ public class ProfileService {
                 s3StorageService.deleteImage(profile.getImageUrl());
             }
             // 2. 새 이미지 업로드 및 URL 업데이트
-            String newImageUrl = s3StorageService.uploadImage(request.image(), "/profiles");
+            String newImageUrl = s3StorageService.uploadImage(request.image(), PROFILE_IMAGE_PREFIX);
             profile.updateImageUrl(newImageUrl);
         }
 

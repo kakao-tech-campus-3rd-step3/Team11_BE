@@ -1,6 +1,8 @@
 package com.pnu.momeet.common.security.details;
 
 import com.pnu.momeet.domain.member.dto.response.MemberInfo;
+
+import java.security.Principal;
 import java.util.UUID;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
-public class CustomUserDetails implements UserDetails {
+public class CustomUserDetails implements UserDetails, Principal {
 
     private final MemberInfo memberInfo;
 
@@ -34,6 +36,11 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
+        return memberInfo.id().toString();
+    }
+
+    @Override
+    public String getName() {
         return memberInfo.id().toString();
     }
 

@@ -12,11 +12,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      DB_URL: ${{ secrets.DB_URL }}
-      DB_USERNAME: ${{ secrets.DB_USERNAME }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
       - uses: actions/checkout@v3
@@ -85,6 +80,10 @@ jobs:
             export DB_USERNAME='${{ secrets.DB_USERNAME }}'
             export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
             export JWT_SECRET='${{ secrets.JWT_SECRET }}'
+            export AWS_IAM_ACCESS_KEY='${{ secrets.AWS_IAM_ACCESS_KEY }}'
+            export AWS_IAM_SECRET_KEY='${{ secrets.AWS_IAM_SECRET_KEY }}'
+            export AWS_S3_BUCKET_NAME='${{ secrets.AWS_S3_BUCKET_NAME }}'
+            export IP_HASH_SECRET_KEY='${{ secrets.IP_HASH_SECRET_KEY }}'
           
             echo "Starting deployment script..."
             # 스크립트를 실행합니다. 스크립트 내부에서 백그라운드 실행 및 로그 기록을 처리합니다.

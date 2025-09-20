@@ -38,7 +38,6 @@ public class Sigungu {
     @Column(name = "sgg_name", nullable = false)
     private String sigunguName;
 
-
     @Column(name="geom", columnDefinition = "geometry(Polygon, 4326)")
     private Polygon area;
 

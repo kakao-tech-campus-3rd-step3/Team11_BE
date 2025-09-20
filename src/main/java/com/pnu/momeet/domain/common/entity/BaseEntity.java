@@ -1,7 +1,9 @@
 package com.pnu.momeet.domain.common.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -14,6 +16,7 @@ import java.util.UUID;
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BaseEntity {
 
     @Id
@@ -26,8 +29,4 @@ public class BaseEntity {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
-    protected BaseEntity() {
-
-    }
 }
