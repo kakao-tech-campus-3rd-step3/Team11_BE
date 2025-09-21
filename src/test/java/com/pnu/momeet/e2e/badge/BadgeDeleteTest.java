@@ -1,28 +1,46 @@
 package com.pnu.momeet.e2e.badge;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import java.lang.reflect.Field;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.ReflectionUtils;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 
 class BadgeDeleteTest extends BaseBadgeTest {
 
     @Autowired
     private BadgeRepository badgeRepository;
 
+    @Autowired
+    private S3StorageService s3StorageService;
+
     private UUID badgeIdToDelete;
+    private String oldIconUrl;
+
+    @TestConfiguration
+    static class MockS3Config {
+        @Bean
+        @Primary
+        S3StorageService s3StorageService() {
+            return Mockito.mock(S3StorageService.class);
+        }
+    }
 
     @BeforeEach
     void prepareBadge() {
@@ -33,14 +51,8 @@ class BadgeDeleteTest extends BaseBadgeTest {
             "https://cdn.example.com/badges/d.png"
         );
         badge = badgeRepository.save(badge);
-        // 저장된 엔티티의 id 확보
-        try {
-            Field idField = ReflectionUtils.findField(Badge.class, "id");
-            ReflectionUtils.makeAccessible(idField);
-            badgeIdToDelete = (UUID) idField.get(badge);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        badgeIdToDelete = badge.getId();
+        oldIconUrl = badge.getIconUrl();
         badgesToBeDeleted.add(badgeIdToDelete);
     }
 
@@ -57,6 +69,8 @@ class BadgeDeleteTest extends BaseBadgeTest {
             .delete("/badges/{badgeId}", badgeIdToDelete)
             .then()
             .statusCode(204);
+
+        verify(s3StorageService, times(1)).deleteImage(eq(oldIconUrl));
     }
 
     @Test
