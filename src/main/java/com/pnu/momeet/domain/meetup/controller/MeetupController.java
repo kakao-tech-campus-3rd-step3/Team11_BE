@@ -1,13 +1,18 @@
 package com.pnu.momeet.domain.meetup.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
-import com.pnu.momeet.domain.meetup.dto.MeetupCreateRequest;
-import com.pnu.momeet.domain.meetup.dto.MeetupDetailResponse;
-import com.pnu.momeet.domain.meetup.dto.MeetupResponse;
-import com.pnu.momeet.domain.meetup.dto.MeetupUpdateRequest;
+import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
+import com.pnu.momeet.domain.meetup.dto.request.MeetupGeoSearchRequest;
+import com.pnu.momeet.domain.meetup.dto.request.MeetupPageRequest;
+import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
+import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
+import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
+import com.pnu.momeet.domain.meetup.service.MeetupEvaluationFacade;
 import com.pnu.momeet.domain.meetup.service.MeetupService;
+import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,53 +28,87 @@ import java.util.UUID;
 public class MeetupController {
 
     private final MeetupService meetupService;
+    private final MeetupEvaluationFacade meetupEvaluationFacade;
 
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping
-    public ResponseEntity<List<MeetupResponse>> getAllMeetups(
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String search
+    public Page<MeetupResponse> meetupPage(
+            @Valid  @ModelAttribute MeetupPageRequest request
     ) {
-        List<MeetupResponse> response = meetupService.getAllMeetups(category, status, search);
-        return ResponseEntity.ok(response);
+        return meetupService.findAllBySpecification(request);
     }
 
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping("/geo")
+    public ResponseEntity<List<MeetupResponse>> meetupGeoSearch(
+            @Valid @ModelAttribute MeetupGeoSearchRequest request
+            ) {
+        return ResponseEntity.ok(meetupService.findAllByLocation(request));
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/{meetupId}")
-    public ResponseEntity<MeetupDetailResponse> getMeetupById(@PathVariable UUID meetupId) {
-        MeetupDetailResponse response = meetupService.getMeetupById(meetupId);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<MeetupDetail> meetupResponse(
+            @PathVariable UUID meetupId
+    ) {
+        return ResponseEntity.ok(meetupService.findById(meetupId));
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping("/me")
+    public ResponseEntity<MeetupDetail> meetupSelf(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(meetupService.findOwnedMeetupByMemberID(userDetails.getMemberId()));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PostMapping
-    public ResponseEntity<MeetupResponse> createMeetup(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody MeetupCreateRequest request
-    ) {
-        MeetupResponse response = meetupService.createMeetup(userDetails.getMemberId(), request);
-        return ResponseEntity
-                .created(URI.create("/api/meetups/" + response.getId()))
-                .body(response);
+    public ResponseEntity<MeetupDetail> createMeetup(
+            @Valid @RequestBody  MeetupCreateRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            ) {
+        var createdMeetup = meetupService.createMeetup(request, userDetails.getMemberId());
+        return ResponseEntity.created(URI.create("/api/meetups/" + createdMeetup.id()))
+                .body(createdMeetup);
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @PutMapping("/{meetupId}")
-    public ResponseEntity<MeetupResponse> updateMeetup(
-            @PathVariable UUID meetupId,
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody MeetupUpdateRequest request
-    ) {
-        MeetupResponse response = meetupService.updateMeetup(meetupId, userDetails.getMemberId(), request);
-        return ResponseEntity.ok(response);
-    }
-
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @DeleteMapping("/{meetupId}")
-    public ResponseEntity<Void> deleteMeetup(
-            @PathVariable UUID meetupId,
+    @PutMapping("/me")
+    public ResponseEntity<MeetupDetail> updateMeetup(
+            @Valid @RequestBody  MeetupUpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        meetupService.deleteMeetup(meetupId, userDetails.getMemberId());
+        return ResponseEntity.ok(
+                meetupService.updateMeetupByMemberId(request, userDetails.getMemberId())
+        );
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMeetup(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        meetupService.deleteMeetup(userDetails.getMemberId());
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/{meetupId}")
+    public ResponseEntity<Void> adminDeleteMeetup(
+            @PathVariable UUID meetupId
+    ) {
+        meetupService.deleteMeetupAdmin(meetupId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{meetupId}/evaluatable-users")
+    public ResponseEntity<List<EvaluatableProfileResponse>> getEvaluatableUsers(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable UUID meetupId
+    ) {
+        return ResponseEntity.ok(
+            meetupEvaluationFacade.getEvaluatableUsers(meetupId, userDetails.getMemberId())
+        );
     }
 }

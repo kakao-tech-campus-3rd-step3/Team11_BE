@@ -7,6 +7,16 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
 
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_IAM_ACCESS_KEY}
+        secret-key: ${AWS_IAM_SECRET_KEY}
+      s3:
+        bucket: ${AWS_S3_BUCKET_NAME}
+      region:
+        static: ap-northeast-2
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -18,7 +28,6 @@ spring:
     hibernate:
       ddl-auto: update
     defer-datasource-initialization: true
-
   sql:
     init:
       mode: always
@@ -27,17 +36,13 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   access-token:
-    expiration: 3600
+    name_in_cookie: access_token
+    expiration_in_second: 3600
   refresh-token:
-    expiration: 604800
+    name_in_cookie: refresh_token
+    expiration_in_second: 604800
   issuer: momeet
 
-cloud:
-  aws:
-    credentials:
-      access-key: ${AWS_IAM_ACCESS_KEY}
-      secret-key: ${AWS_IAM_SECRET_KEY}
-    s3:
-      bucket: ${AWS_S3_BUCKET_NAME}
-    region:
-      static: ap-northeast-2
+ip-hash:
+  secret-key: ${IP_HASH_SECRET_KEY:default-secret}
+  method: SHA-256

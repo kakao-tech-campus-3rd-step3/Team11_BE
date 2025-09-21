@@ -1,7 +1,7 @@
 package com.pnu.momeet.unit.auth;
 
 
-import com.pnu.momeet.common.security.JwtTokenProvider;
+import com.pnu.momeet.common.security.util.JwtTokenProvider;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
