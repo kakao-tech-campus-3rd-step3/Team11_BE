@@ -98,5 +98,6 @@ public class BadgeService {
         Badge badge = badgeRepository.findById(badgeId)
             .orElseThrow(() -> new NoSuchElementException("존재하지 않는 배지입니다."));
         badgeRepository.delete(badge);
+        s3StorageService.deleteImage(badge.getIconUrl());
     }
 }
