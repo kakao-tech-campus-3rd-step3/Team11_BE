@@ -92,4 +92,11 @@ public class BadgeService {
 
         return BadgeDtoMapper.toUpdateResponseDto(badge);
     }
+
+    @Transactional
+    public void deleteBadge(UUID badgeId) {
+        Badge badge = badgeRepository.findById(badgeId)
+            .orElseThrow(() -> new NoSuchElementException("존재하지 않는 배지입니다."));
+        badgeRepository.delete(badge);
+    }
 }

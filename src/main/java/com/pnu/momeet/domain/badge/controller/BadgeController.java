@@ -14,9 +14,11 @@ import java.net.URI;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.Mapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -70,5 +73,14 @@ public class BadgeController {
     ) {
         BadgeUpdateResponse saved = badgeService.updateBadge(badgeId, request);
         return ResponseEntity.ok(saved);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/badges/{badgeId}")
+    public void deleteBadge(
+        @PathVariable UUID badgeId
+    ) {
+        badgeService.deleteBadge(badgeId);
     }
 }

@@ -386,4 +386,38 @@ class BadgeServiceTest {
         verify(s3StorageService, never()).uploadImage(any(), anyString());
         verify(s3StorageService, never()).deleteImage(anyString());
     }
+
+    @Test
+    @DisplayName("성공 - 배지 삭제 시 Repository.delete 호출")
+    void deleteBadge_success() {
+        // given
+        UUID id = UUID.randomUUID();
+        Badge badge = Badge.create(
+            "삭제대상",
+            "설명",
+            "https://cdn.example.com/badges/x.png"
+        );
+        given(badgeRepository.findById(id)).willReturn(Optional.of(badge));
+
+        // when
+        badgeService.deleteBadge(id);
+
+        // then
+        verify(badgeRepository).delete(badge);
+    }
+
+    @Test
+    @DisplayName("실패 - 대상 배지 없음이면 NoSuchElementException")
+    void deleteBadge_notFound() {
+        // given
+        UUID id = UUID.randomUUID();
+        given(badgeRepository.findById(id)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> badgeService.deleteBadge(id))
+            .isInstanceOf(NoSuchElementException.class)
+            .hasMessageContaining("존재하지 않는 배지입니다.");
+
+        verify(badgeRepository, never()).delete(any());
+    }
 }
