@@ -26,6 +26,14 @@ public class BadgeService {
     public Page<BadgeResponse> getMyBadges(UUID memberId, BadgePageRequest badgePageRequest) {
         PageRequest pageRequest = BadgeDtoMapper.toPageRequest(badgePageRequest);
         Profile profile = profileService.getProfileEntityByMemberId(memberId);
-        return badgeDslRepository.findMyBadges(profile.getId(), pageRequest);
+        return badgeDslRepository.findBadgesByProfileId(profile.getId(), pageRequest);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BadgeResponse> getUserBadges(UUID profileId, BadgePageRequest request) {
+        PageRequest pageRequest = BadgeDtoMapper.toPageRequest(request);
+        // 프로필 존재 검증
+        profileService.getProfileEntityByProfileId(profileId);
+        return badgeDslRepository.findBadgesByProfileId(profileId, pageRequest);
     }
 }
