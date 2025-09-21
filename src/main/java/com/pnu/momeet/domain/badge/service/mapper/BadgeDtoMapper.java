@@ -2,6 +2,7 @@ package com.pnu.momeet.domain.badge.service.mapper;
 
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
+import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.common.mapper.PageMapper;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +25,17 @@ public final class BadgeDtoMapper {
             badge.getDescription(),
             badge.getIconUrl(),
             badge.getCreatedAt()
+        );
+    }
+
+    public static BadgeUpdateResponse toUpdateResponseDto(Badge badge) {
+        return new BadgeUpdateResponse(
+            badge.getId(),
+            badge.getName(),
+            badge.getDescription(),
+            badge.getIconUrl(),
+            badge.getCreatedAt(),
+            badge.getUpdatedAt()
         );
     }
 }

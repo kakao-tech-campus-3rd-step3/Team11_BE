@@ -4,6 +4,7 @@ import com.pnu.momeet.domain.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,5 +28,14 @@ public class Badge extends BaseEntity {
 
     public static Badge create(String name, String description, String iconUrl) {
         return new Badge(name, description, iconUrl);
+    }
+
+    public void updateIconUrl(String newImageUrl) {
+        this.iconUrl = newImageUrl;
+    }
+
+    public void updateBadge(String name, String description) {
+        if (name != null) this.name = name;
+        if (description != null) this.description = description;
     }
 }
