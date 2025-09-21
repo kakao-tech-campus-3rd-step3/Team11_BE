@@ -23,7 +23,7 @@ public class BadgeDslRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
 
-    public Page<BadgeResponse> findMyBadges(UUID profileId, Pageable pageable) {
+    public Page<BadgeResponse> findBadgesByProfileId(UUID profileId, Pageable pageable) {
         QProfileBadge pb = QProfileBadge.profileBadge;
         QBadge b = QBadge.badge;
 

@@ -86,7 +86,7 @@ class BadgeServiceTest {
         Page<BadgeResponse> fakePage = new PageImpl<>(rows, PageRequest.of(0,5), 2);
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        given(badgeDslRepository.findMyBadges(eq(profileId), any(Pageable.class)))
+        given(badgeDslRepository.findBadgesByProfileId(eq(profileId), any(Pageable.class)))
             .willReturn(fakePage);
 
         // when
@@ -98,7 +98,7 @@ class BadgeServiceTest {
 
         verify(profileService).getProfileEntityByMemberId(memberId);
 
-        verify(badgeDslRepository).findMyBadges(eq(profileId), pageableCaptor.capture());
+        verify(badgeDslRepository).findBadgesByProfileId(eq(profileId), pageableCaptor.capture());
         Pageable used = pageableCaptor.getValue();
         assertThat(used.getPageNumber()).isEqualTo(0);
         assertThat(used.getPageSize()).isEqualTo(5);
@@ -121,6 +121,100 @@ class BadgeServiceTest {
             () -> badgeService.getMyBadges(memberId, req));
 
         verify(profileService).getProfileEntityByMemberId(memberId);
-        verify(badgeDslRepository, never()).findMyBadges(any(), any());
+        verify(badgeDslRepository, never()).findBadgesByProfileId(any(), any());
+    }
+
+    @Test
+    @DisplayName("특정 사용자 배지 조회 성공 - 프로필 존재 검증 후 Repository 위임 및 페이지 변환 검증")
+    void getUserBadges_success() {
+        // given
+        UUID profileId = UUID.randomUUID();
+
+        // 존재 검증만 통과하면 되므로, 반환값은 내용이 중요치 않음
+        UUID dummyMemberId = UUID.randomUUID();
+        Profile dummy = Profile.create(
+            dummyMemberId,
+            "닉",
+            20,
+            Gender.FEMALE,
+            null,
+            "소개",
+            "부산"
+        );
+        given(profileService.getProfileEntityByProfileId(profileId)).willReturn(dummy);
+
+        BadgePageRequest req = new BadgePageRequest();
+        req.setPage(1);
+        req.setSize(3);
+        req.setSort("representative,DESC,createdAt,DESC");
+
+        List<BadgeResponse> rows = List.of(
+            new BadgeResponse(
+                UUID.randomUUID(),
+                "배지A",
+                "설명A",
+                "https://icon/a.png",
+                LocalDateTime.now().minusHours(5),
+                true
+            ),
+            new BadgeResponse(
+                UUID.randomUUID(),
+                "배지B",
+                "설명B",
+                "https://icon/b.png",
+                LocalDateTime.now().minusDays(1),
+                false
+            ),
+            new BadgeResponse(
+                UUID.randomUUID(),
+                "배지C",
+                "설명C",
+                "https://icon/c.png",
+                LocalDateTime.now().minusDays(2),
+                false
+            )
+        );
+        Page<BadgeResponse> fakePage = new PageImpl<>(
+            rows, PageRequest.of(1, 3), 7
+        );
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        given(badgeDslRepository.findBadgesByProfileId(eq(profileId), any(Pageable.class)))
+            .willReturn(fakePage);
+
+        // when
+        Page<BadgeResponse> result = badgeService.getUserBadges(profileId, req);
+
+        // then
+        assertThat(result.getTotalElements()).isEqualTo(7);
+        assertThat(result.getContent()).hasSize(3);
+
+        verify(profileService).getProfileEntityByProfileId(profileId);
+        verify(badgeDslRepository).findBadgesByProfileId(eq(profileId), pageableCaptor.capture());
+
+        Pageable used = pageableCaptor.getValue();
+        assertThat(used.getPageNumber()).isEqualTo(1);
+        assertThat(used.getPageSize()).isEqualTo(3);
+        assertThat(used.getSort().isSorted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("특정 사용자 배지 조회 실패 - 프로필 미존재 시 NoSuchElementException 전파")
+    void getUserBadges_fail_profileNotFound() {
+        // given
+        UUID profileId = UUID.randomUUID();
+        BadgePageRequest req = new BadgePageRequest();
+        req.setPage(0);
+        req.setSize(10);
+
+        given(profileService.getProfileEntityByProfileId(profileId))
+            .willThrow(new NoSuchElementException("프로필이 존재하지 않습니다."));
+
+        // when & then
+        assertThrows(NoSuchElementException.class,
+            () -> badgeService.getUserBadges(profileId, req));
+
+        verify(profileService).getProfileEntityByProfileId(profileId);
+        verify(badgeDslRepository, never()).findBadgesByProfileId(any(), any());
     }
 }
