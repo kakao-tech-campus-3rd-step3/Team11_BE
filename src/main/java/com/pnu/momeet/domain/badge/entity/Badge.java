@@ -1,13 +1,9 @@
-package com.pnu.momeet.domain.profile.entity;
+package com.pnu.momeet.domain.badge.entity;
 
 import com.pnu.momeet.domain.common.entity.BaseEntity;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

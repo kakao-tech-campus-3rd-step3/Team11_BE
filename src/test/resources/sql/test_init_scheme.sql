@@ -1,6 +1,8 @@
 CREATE SCHEMA IF NOT EXISTS public_test;
 
 -- 외래키 의존성 순서대로 DROP
+DROP TABLE IF EXISTS public_test.profile_badge CASCADE;
+DROP TABLE IF EXISTS public_test.badge CASCADE;
 DROP TABLE IF EXISTS public_test.meetup_participant CASCADE;
 DROP TABLE IF EXISTS public_test.meetup_hash_tag CASCADE;
 DROP TABLE IF EXISTS public_test.meetup CASCADE;
@@ -111,3 +113,28 @@ CREATE TABLE public_test.meetup_participant (
 
 CREATE INDEX IF NOT EXISTS idx_meetup_participant_meetup ON public_test.meetup_participant (meetup_id);
 CREATE INDEX IF NOT EXISTS idx_meetup_participant_profile ON public_test.meetup_participant (profile_id);
+
+CREATE TABLE public_test.badge (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        VARCHAR(20)  UNIQUE NOT NULL,
+    description VARCHAR(255),
+    icon_url    VARCHAR(255) NOT NULL,
+    created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE public_test.profile_badge (
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profile_id        UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
+    badge_id          UUID NOT NULL REFERENCES public_test.badge(id)   ON DELETE CASCADE,
+    created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+    is_representative BOOLEAN   NOT NULL DEFAULT FALSE,
+    CONSTRAINT uq_profile_badge UNIQUE(profile_id, badge_id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_one_rep_badge_per_profile
+    ON public_test.profile_badge(profile_id) WHERE is_representative = TRUE;
+CREATE INDEX IF NOT EXISTS idx_profile_badge_profile ON public_test.profile_badge(profile_id);
+CREATE INDEX IF NOT EXISTS idx_profile_badge_badge   ON public_test.profile_badge(badge_id);
+CREATE INDEX IF NOT EXISTS idx_profile_rep_only
+    ON public_test.profile_badge(profile_id) WHERE is_representative = TRUE;
