@@ -1,16 +1,24 @@
 package com.pnu.momeet.unit.badge;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
+import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
+import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeDslRepository;
+import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import com.pnu.momeet.domain.badge.service.BadgeService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
@@ -32,14 +40,24 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
 class BadgeServiceTest {
 
     @Mock
+    private BadgeRepository badgeRepository;
+
+    @Mock
     private BadgeDslRepository badgeDslRepository;
-    @Mock private ProfileService profileService;
+
+    @Mock
+    private ProfileService profileService;
+
+    @Mock
+    private S3StorageService s3StorageService;
 
     @InjectMocks
     private BadgeService badgeService;
@@ -216,5 +234,64 @@ class BadgeServiceTest {
 
         verify(profileService).getProfileEntityByProfileId(profileId);
         verify(badgeDslRepository, never()).findBadgesByProfileId(any(), any());
+    }
+
+    @Test
+    @DisplayName("성공 - 새 배지 생성 + S3 업로드 호출")
+    void create_success() {
+        // given
+        MockMultipartFile icon = new MockMultipartFile(
+            "iconImage",
+            "t.png",
+            "image/png",
+            new byte[]{1}
+        );
+        BadgeCreateRequest req = new BadgeCreateRequest(
+            "모임 병아리", "첫 참여 배지", icon
+        );
+
+        given(badgeRepository.existsByNameIgnoreCase("모임 병아리")).willReturn(false);
+        given(s3StorageService.uploadImage(eq(icon), any())).willReturn("https://cdn.example.com/badges/uuid.png");
+        willAnswer(invocation -> {
+            Badge b = invocation.getArgument(0);
+            // JPA가 해줄 일을 테스트에서 시뮬레이션
+            ReflectionTestUtils.setField(b, "id", java.util.UUID.randomUUID());
+            return b;
+        }).given(badgeRepository).save(any(Badge.class));
+
+        // when
+        BadgeCreateResponse resp = badgeService.createBadge(req);
+
+        // then
+        assertThat(resp.name()).isEqualTo("모임 병아리");
+        assertThat(resp.iconUrl()).contains("cdn.example.com/badges");
+        assertThat(resp.badgeId()).isNotNull();
+        // Repository.save 로 전달된 엔티티 필드 검증
+        ArgumentCaptor<Badge> captor = ArgumentCaptor.forClass(Badge.class);
+        verify(badgeRepository).save(captor.capture());
+        assertThat(captor.getValue().getName()).isEqualTo("모임 병아리");
+        assertThat(captor.getValue().getDescription()).isEqualTo("첫 참여 배지");
+        assertThat(captor.getValue().getIconUrl()).contains("cdn.example.com/badges");
+
+        verify(s3StorageService, times(1)).uploadImage(eq(icon), any());
+    }
+
+    @Test
+    @DisplayName("실패 - 이름 중복이면 IllegalArgumentException")
+    void create_fail_duplicateName() {
+        // given
+        MockMultipartFile icon = new MockMultipartFile("iconImage", "t.png", "image/png", new byte[]{1});
+        BadgeCreateRequest req = new BadgeCreateRequest("중복", "desc", icon);
+
+        given(badgeRepository.existsByNameIgnoreCase("중복")).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> badgeService.createBadge(req))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("이미 존재하는 배지 이름");
+
+        verify(badgeRepository).existsByNameIgnoreCase("중복");
+        verify(badgeRepository, never()).save(any());
+        verify(s3StorageService, never()).uploadImage(any(), any());
     }
 }

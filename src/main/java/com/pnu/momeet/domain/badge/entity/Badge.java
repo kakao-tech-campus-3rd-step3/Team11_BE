@@ -5,12 +5,14 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "badge")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class Badge extends BaseEntity {
 
@@ -22,4 +24,8 @@ public class Badge extends BaseEntity {
 
     @Column(name = "icon_url", nullable = false, length = 255)
     private String iconUrl;
+
+    public static Badge create(String name, String description, String iconUrl) {
+        return new Badge(name, description, iconUrl);
+    }
 }
