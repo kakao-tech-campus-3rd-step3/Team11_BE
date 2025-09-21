@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willAnswer;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -14,8 +16,10 @@ import static org.mockito.Mockito.verify;
 import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
+import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
 import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
+import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeDslRepository;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
@@ -26,6 +30,7 @@ import com.pnu.momeet.domain.profile.service.ProfileService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -293,5 +298,92 @@ class BadgeServiceTest {
         verify(badgeRepository).existsByNameIgnoreCase("중복");
         verify(badgeRepository, never()).save(any());
         verify(s3StorageService, never()).uploadImage(any(), any());
+    }
+
+    @Test
+    @DisplayName("성공 - 이름/설명 변경 + 아이콘 교체 시 S3 업로드/삭제 호출")
+    void update_success_withIconChange() {
+        // given
+        UUID id = UUID.randomUUID();
+        Badge badge = Badge.create("기존이름", "기존설명", "https://cdn.example.com/badges/old.png");
+        ReflectionTestUtils.setField(badge, "id", id);
+        ReflectionTestUtils.setField(badge, "createdAt", LocalDateTime.now().minusDays(2));
+        ReflectionTestUtils.setField(badge, "updatedAt", LocalDateTime.now().minusDays(1));
+
+        given(badgeRepository.findById(id)).willReturn(Optional.of(badge));
+        given(badgeRepository.existsByNameIgnoreCase("새이름")).willReturn(false);
+
+        MockMultipartFile newIcon = new MockMultipartFile("iconImage","t.png","image/png", new byte[]{1});
+        given(s3StorageService.uploadImage(eq(newIcon), anyString())).willReturn("https://cdn.example.com/badges/new.png");
+        willDoNothing().given(s3StorageService).deleteImage("https://cdn.example.com/badges/old.png");
+
+        BadgeUpdateRequest req = new BadgeUpdateRequest("새이름", "새설명", newIcon);
+
+        // when
+        BadgeUpdateResponse resp = badgeService.updateBadge(id, req);
+
+        // then
+        assertThat(resp.badgeId()).isEqualTo(id);
+        assertThat(resp.name()).isEqualTo("새이름");
+        assertThat(resp.description()).isEqualTo("새설명");
+        assertThat(resp.iconUrl()).isEqualTo("https://cdn.example.com/badges/new.png");
+
+        verify(s3StorageService, times(1)).uploadImage(eq(newIcon), anyString());
+        verify(s3StorageService, times(1)).deleteImage("https://cdn.example.com/badges/old.png");
+        verify(badgeRepository, never()).save(any()); // JPA dirty checking 가정
+    }
+
+    @Test
+    @DisplayName("성공 - 아이콘 미변경 시 S3 호출 없음, 텍스트만 변경")
+    void update_success_withoutIcon() {
+        UUID id = UUID.randomUUID();
+        Badge badge = Badge.create("기존이름", "기존설명", "https://cdn.example.com/badges/exist.png");
+        ReflectionTestUtils.setField(badge, "id", id);
+
+        given(badgeRepository.findById(id)).willReturn(Optional.of(badge));
+        given(badgeRepository.existsByNameIgnoreCase("문자수정")).willReturn(false);
+
+        BadgeUpdateRequest req = new BadgeUpdateRequest("문자수정", "설명수정", null);
+
+        BadgeUpdateResponse resp = badgeService.updateBadge(id, req);
+
+        assertThat(resp.name()).isEqualTo("문자수정");
+        assertThat(resp.description()).isEqualTo("설명수정");
+        assertThat(resp.iconUrl()).isEqualTo("https://cdn.example.com/badges/exist.png");
+
+        verify(s3StorageService, never()).uploadImage(any(), anyString());
+        verify(s3StorageService, never()).deleteImage(anyString());
+    }
+
+    @Test
+    @DisplayName("실패 - 대상 배지 없음이면 NoSuchElementException")
+    void update_fail_notFound() {
+        UUID id = UUID.randomUUID();
+        given(badgeRepository.findById(id)).willReturn(Optional.empty());
+
+        BadgeUpdateRequest req = new BadgeUpdateRequest("x", "y", null);
+
+        assertThatThrownBy(() -> badgeService.updateBadge(id, req))
+            .isInstanceOf(NoSuchElementException.class)
+            .hasMessageContaining("존재하지 않는 배지");
+    }
+
+    @Test
+    @DisplayName("실패 - 이름 중복이면 IllegalArgumentException")
+    void update_fail_duplicateName() {
+        UUID id = UUID.randomUUID();
+        Badge badge = Badge.create("원래이름", "기존설명", "https://cdn.example.com/badges/old.png");
+        given(badgeRepository.findById(id)).willReturn(Optional.of(badge));
+
+        given(badgeRepository.existsByNameIgnoreCase("중복이름")).willReturn(true);
+
+        BadgeUpdateRequest req = new BadgeUpdateRequest("중복이름", null, null);
+
+        assertThatThrownBy(() -> badgeService.updateBadge(id, req))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("이미 존재하는 배지 이름");
+
+        verify(s3StorageService, never()).uploadImage(any(), anyString());
+        verify(s3StorageService, never()).deleteImage(anyString());
     }
 }
