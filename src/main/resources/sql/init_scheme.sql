@@ -160,6 +160,9 @@ CREATE TABLE IF NOT EXISTS badge (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- 배지 이름 대소문자 무시 유니크
+CREATE UNIQUE INDEX IF NOT EXISTS uq_badge_name_ci ON badge (LOWER(btrim(name)));
+
 CREATE TABLE IF NOT EXISTS profile_badge (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     profile_id UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
