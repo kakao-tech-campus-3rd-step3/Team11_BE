@@ -14,7 +14,7 @@ import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 import com.pnu.momeet.domain.evaluation.service.EvaluationService;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
-import com.pnu.momeet.domain.participant.service.ParticipantService;
+import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
@@ -44,7 +44,7 @@ class EvaluationServiceTest extends BaseUnitTest {
     private ProfileService profileService;
 
     @Mock
-    private ParticipantService participantService;
+    private ParticipantDomainService participantService;
 
     @InjectMocks
     private EvaluationService evaluationService;

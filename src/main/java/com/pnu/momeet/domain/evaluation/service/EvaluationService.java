@@ -8,7 +8,7 @@ import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 import com.pnu.momeet.domain.evaluation.service.mapper.EvaluationEntityMapper;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
-import com.pnu.momeet.domain.participant.service.ParticipantService;
+import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileService;
@@ -30,7 +30,7 @@ public class EvaluationService {
 
     private final EvaluationRepository evaluationRepository;
     private final ProfileService profileService;
-    private final ParticipantService participantService;
+    private final ParticipantDomainService participantService;
 
     private static final Duration EVALUATION_COOLTIME = Duration.ofHours(24);
 

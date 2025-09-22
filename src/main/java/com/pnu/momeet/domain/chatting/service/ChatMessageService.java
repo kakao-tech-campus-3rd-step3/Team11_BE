@@ -11,7 +11,7 @@ import com.pnu.momeet.domain.common.dto.response.CursorInfo;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.service.MeetupService;
 import com.pnu.momeet.domain.participant.entity.Participant;
-import com.pnu.momeet.domain.participant.service.ParticipantService;
+import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ import java.util.UUID;
 public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatMessageDslRepository chatMessageDslRepository;
-    private final ParticipantService participantService;
+    private final ParticipantDomainService participantService;
     private final MeetupService meetupService;
 
     @Transactional

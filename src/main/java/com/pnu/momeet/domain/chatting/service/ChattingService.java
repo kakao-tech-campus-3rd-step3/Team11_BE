@@ -7,7 +7,7 @@ import com.pnu.momeet.domain.chatting.dto.response.MessageResponse;
 import com.pnu.momeet.domain.chatting.enums.ChatActionType;
 import com.pnu.momeet.domain.chatting.enums.ChatMessageType;
 import com.pnu.momeet.domain.participant.entity.Participant;
-import com.pnu.momeet.domain.participant.service.ParticipantService;
+import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -26,7 +26,7 @@ public class ChattingService {
     private final static String TOPIC_PREFIX = "/topic/meetups/";
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageService chatMessageService;
-    private final ParticipantService participantService;
+    private final ParticipantDomainService participantService;
 
     @Transactional
     public void sendMessage(UUID meetupId, UUID memberId, MessageRequest message) {
