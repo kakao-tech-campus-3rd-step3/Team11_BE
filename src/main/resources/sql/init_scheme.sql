@@ -138,7 +138,7 @@ CREATE TABLE evaluation (
     meetup_id UUID  NOT NULL,
     evaluator_profile_id UUID  NOT NULL,
     target_profile_id UUID  NOT NULL,
-    rating SMALLINT NOT NULL, -- 0=LIKE, 1=DISLIKE
+    rating VARCHAR(20) NOT NULL,
     ip_hash VARCHAR(128) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
