@@ -17,9 +17,9 @@ import java.util.UUID;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WebSocketEventListener {
+public class MeetupEventListener {
 
-    private static final String TOPIC_PREFIX = "/topic/meetups/";
+    private static final String MEETUP_TOPIC_PREFIX = "/topic/meetups/";
     private final ChattingService chattingService;
 
     @EventListener
@@ -34,14 +34,17 @@ public class WebSocketEventListener {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String destination = accessor.getDestination();
 
-        if (destination != null && destination.startsWith(TOPIC_PREFIX)) {
-            CustomUserDetails userDetails = (CustomUserDetails) accessor.getUser();
-            UUID meetupId = getMeetupIdFromDestination(destination);
-            UUID memberId = userDetails != null ? userDetails.getMemberId() : null;
-            if (meetupId == null || memberId == null) {
-                return;
+        if (destination != null) {
+            if (destination.startsWith((MEETUP_TOPIC_PREFIX))) {
+                log.debug("WebSocket 구독 - destination: {}", destination);
+                CustomUserDetails userDetails = (CustomUserDetails) accessor.getUser();
+                UUID meetupId = getMeetupIdFromDestination(destination);
+                if (meetupId == null || userDetails == null) {
+                    return;
+                }
+                UUID memberId = userDetails.getMemberId();
+                chattingService.connectToMeetup(meetupId, memberId);
             }
-            chattingService.connectToMeetup(meetupId, memberId);
         }
     }
 
@@ -50,14 +53,17 @@ public class WebSocketEventListener {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String destination = accessor.getDestination();
 
-        if (destination != null && destination.startsWith(TOPIC_PREFIX)) {
-            CustomUserDetails userDetails = (CustomUserDetails) accessor.getUser();
-            UUID meetupId = getMeetupIdFromDestination(destination);
-            UUID memberId = userDetails != null ? userDetails.getMemberId() : null;
-            if (meetupId == null || memberId == null) {
-                return;
+        if (destination != null) {
+            if (destination.startsWith(MEETUP_TOPIC_PREFIX)) {
+                log.debug("WebSocket 구독 해제 - destination: {}", destination);
+                CustomUserDetails userDetails = (CustomUserDetails) accessor.getUser();
+                UUID meetupId = getMeetupIdFromDestination(destination);
+                UUID memberId = userDetails != null ? userDetails.getMemberId() : null;
+                if (meetupId == null || memberId == null) {
+                    return;
+                }
+                chattingService.disconnectFromMeetup(meetupId, memberId);
             }
-            chattingService.disconnectFromMeetup(meetupId, memberId);
         }
     }
 
