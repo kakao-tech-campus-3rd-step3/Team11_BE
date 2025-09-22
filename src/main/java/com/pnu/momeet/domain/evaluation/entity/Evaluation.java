@@ -16,12 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(
-    name = "evaluation",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uq_evaluation", columnNames = {"meetup_id", "evaluator_profile_id", "target_profile_id", "ip_hash"})
-    }
-)
+@Table(name = "evaluation")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
