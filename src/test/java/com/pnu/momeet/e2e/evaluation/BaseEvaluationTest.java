@@ -40,7 +40,7 @@ public abstract class BaseEvaluationTest extends BaseE2ETest {
     @BeforeEach
     protected void setup() {
         super.setup();
-        RestAssured.basePath = "/api/evaluation";
+        RestAssured.basePath = "/api/evaluations";
         testTokens = new HashMap<>();
         evaluationsToBeDeleted = new ArrayList<>();
         testTokens.put(Role.ROLE_ADMIN, emailAuthService.login(TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD));
