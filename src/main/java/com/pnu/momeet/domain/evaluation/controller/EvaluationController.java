@@ -62,7 +62,7 @@ public class EvaluationController {
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @GetMapping("/me/unEvaluated-meetups")
+    @GetMapping("/me/unevaluated-meetups")
     public ResponseEntity<Page<UnEvaluatedMeetupDto>> getUnEvaluatedMeetups(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PageableDefault(size = 10) Pageable pageable
