@@ -9,10 +9,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class BadgePageRequest extends BasePageRequest {
+public class ProfileBadgePageRequest extends BasePageRequest {
 
     @AllowSortFields(
-        fields = {"createdAt","name"},
+        fields = {"representative","createdAt","name"},
         showFields = true
     )
     private String sort;

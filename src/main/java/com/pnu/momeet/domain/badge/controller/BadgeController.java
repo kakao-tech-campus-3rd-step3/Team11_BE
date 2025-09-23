@@ -3,11 +3,12 @@ package com.pnu.momeet.domain.badge.controller;
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
+import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
 import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
+import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
-import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.service.BadgeService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -20,12 +21,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.Mapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,18 +38,18 @@ public class BadgeController {
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/me/badges")
-    public Page<BadgeResponse> getMyBadges(
+    public Page<ProfileBadgeResponse> getMyBadges(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @Valid @ModelAttribute BadgePageRequest request
+        @Valid @ModelAttribute ProfileBadgePageRequest request
     ) {
         return badgeService.getMyBadges(userDetails.getMemberId(), request);
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/{profileId}/badges")
-    public Page<BadgeResponse> getUserBadges(
+    public Page<ProfileBadgeResponse> getUserBadges(
         @PathVariable UUID profileId,
-        @Valid @ModelAttribute BadgePageRequest request
+        @Valid @ModelAttribute ProfileBadgePageRequest request
     ) {
         return badgeService.getUserBadges(profileId, request);
     }
@@ -63,6 +62,14 @@ public class BadgeController {
         BadgeCreateResponse saved = badgeService.createBadge(request);
         URI location = URI.create("/api/profiles/badges/" + saved.badgeId());
         return ResponseEntity.created(location).body(saved);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/badges")
+    public Page<BadgeResponse> getBadges(
+        @Valid @ModelAttribute BadgePageRequest request
+    ) {
+        return badgeService.getBadges(request);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")

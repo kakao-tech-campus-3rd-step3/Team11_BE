@@ -12,13 +12,15 @@ import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
+import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
 import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
-import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
+import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeDslRepository;
@@ -45,6 +47,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -82,14 +85,14 @@ class BadgeServiceTest {
 
         given(profileService.getProfileEntityByMemberId(memberId)).willReturn(profile);
 
-        BadgePageRequest req = new BadgePageRequest();
+        ProfileBadgePageRequest req = new ProfileBadgePageRequest();
         req.setPage(0);
         req.setSize(5);
         req.setSort("representative,DESC,createdAt,DESC");
 
         // 레포가 반환할 페이크 페이지
-        List<BadgeResponse> rows = List.of(
-            new BadgeResponse(
+        List<ProfileBadgeResponse> rows = List.of(
+            new ProfileBadgeResponse(
                 UUID.randomUUID(),
                 "첫 배지",
                 "첫 배지",
@@ -97,7 +100,7 @@ class BadgeServiceTest {
                 LocalDateTime.now().minusDays(1),
                 true
             ),
-            new BadgeResponse(
+            new ProfileBadgeResponse(
                 UUID.randomUUID(),
                 "둘째 배지",
                 "둘째 배지",
@@ -106,14 +109,14 @@ class BadgeServiceTest {
                 false
             )
         );
-        Page<BadgeResponse> fakePage = new PageImpl<>(rows, PageRequest.of(0,5), 2);
+        Page<ProfileBadgeResponse> fakePage = new PageImpl<>(rows, PageRequest.of(0,5), 2);
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         given(badgeDslRepository.findBadgesByProfileId(eq(profileId), any(Pageable.class)))
             .willReturn(fakePage);
 
         // when
-        Page<BadgeResponse> result = badgeService.getMyBadges(memberId, req);
+        Page<ProfileBadgeResponse> result = badgeService.getMyBadges(memberId, req);
 
         // then
         assertThat(result.getTotalElements()).isEqualTo(2);
@@ -133,7 +136,7 @@ class BadgeServiceTest {
     void getMyBadges_fail_profileNotFound() {
         // given
         UUID memberId = UUID.randomUUID();
-        BadgePageRequest req = new BadgePageRequest();
+        ProfileBadgePageRequest req = new ProfileBadgePageRequest();
         req.setPage(0); req.setSize(10);
 
         given(profileService.getProfileEntityByMemberId(memberId))
@@ -166,13 +169,13 @@ class BadgeServiceTest {
         );
         given(profileService.getProfileEntityByProfileId(profileId)).willReturn(dummy);
 
-        BadgePageRequest req = new BadgePageRequest();
+        ProfileBadgePageRequest req = new ProfileBadgePageRequest();
         req.setPage(1);
         req.setSize(3);
         req.setSort("representative,DESC,createdAt,DESC");
 
-        List<BadgeResponse> rows = List.of(
-            new BadgeResponse(
+        List<ProfileBadgeResponse> rows = List.of(
+            new ProfileBadgeResponse(
                 UUID.randomUUID(),
                 "배지A",
                 "설명A",
@@ -180,7 +183,7 @@ class BadgeServiceTest {
                 LocalDateTime.now().minusHours(5),
                 true
             ),
-            new BadgeResponse(
+            new ProfileBadgeResponse(
                 UUID.randomUUID(),
                 "배지B",
                 "설명B",
@@ -188,7 +191,7 @@ class BadgeServiceTest {
                 LocalDateTime.now().minusDays(1),
                 false
             ),
-            new BadgeResponse(
+            new ProfileBadgeResponse(
                 UUID.randomUUID(),
                 "배지C",
                 "설명C",
@@ -197,7 +200,7 @@ class BadgeServiceTest {
                 false
             )
         );
-        Page<BadgeResponse> fakePage = new PageImpl<>(
+        Page<ProfileBadgeResponse> fakePage = new PageImpl<>(
             rows, PageRequest.of(1, 3), 7
         );
 
@@ -206,7 +209,7 @@ class BadgeServiceTest {
             .willReturn(fakePage);
 
         // when
-        Page<BadgeResponse> result = badgeService.getUserBadges(profileId, req);
+        Page<ProfileBadgeResponse> result = badgeService.getUserBadges(profileId, req);
 
         // then
         assertThat(result.getTotalElements()).isEqualTo(7);
@@ -226,7 +229,7 @@ class BadgeServiceTest {
     void getUserBadges_fail_profileNotFound() {
         // given
         UUID profileId = UUID.randomUUID();
-        BadgePageRequest req = new BadgePageRequest();
+        ProfileBadgePageRequest req = new ProfileBadgePageRequest();
         req.setPage(0);
         req.setSize(10);
 
@@ -419,5 +422,66 @@ class BadgeServiceTest {
             .hasMessageContaining("존재하지 않는 배지입니다.");
 
         verify(badgeRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("전체 배지 조회 - 기본 정렬(createdAt,desc) 적용")
+    void getAllBadges_defaultSort_applied() {
+        // given
+        BadgePageRequest req = new BadgePageRequest();
+        req.setPage(0);
+        req.setSize(10);
+        req.setSort(null); // 미지정 → 기본 정렬
+
+        // Repository는 빈 페이지만 반환(동작 검증은 Pageable 캡쳐로)
+        given(badgeRepository.findAll(any(Pageable.class)))
+            .willReturn(Page.empty());
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        // when
+        var result = badgeService.getBadges(req);
+
+        // then
+        assertThat(result).isNotNull();
+        verify(badgeRepository).findAll(pageableCaptor.capture());
+        Pageable used = pageableCaptor.getValue();
+        assertThat(used.getPageNumber()).isEqualTo(0);
+        assertThat(used.getPageSize()).isEqualTo(10);
+
+        // 기본 정렬: createdAt desc
+        Sort.Order order = used.getSort().getOrderFor("createdAt");
+        assertThat(order).isNotNull();
+        assertThat(order.getDirection()).isEqualTo(Sort.Direction.DESC);
+        // 허용 외 키는 포함되지 않음을 보장
+        assertThat(used.getSort().isSorted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("전체 배지 조회 - 허용 정렬(name,asc) 적용")
+    void getAllBadges_nameAsc_applied() {
+        // given
+        BadgePageRequest req = new BadgePageRequest();
+        req.setPage(1);
+        req.setSize(5);
+        req.setSort("name,asc");
+
+        given(badgeRepository.findAll(any(Pageable.class)))
+            .willReturn(Page.empty());
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+        // when
+        badgeService.getBadges(req);
+
+        // then
+        verify(badgeRepository).findAll(pageableCaptor.capture());
+        Pageable used = pageableCaptor.getValue();
+        assertThat(used.getPageNumber()).isEqualTo(1);
+        assertThat(used.getPageSize()).isEqualTo(5);
+
+        Sort.Order nameOrder = used.getSort().getOrderFor("name");
+        assertThat(nameOrder).isNotNull();
+        assertThat(nameOrder.getDirection()).isEqualTo(Sort.Direction.ASC);
     }
 }

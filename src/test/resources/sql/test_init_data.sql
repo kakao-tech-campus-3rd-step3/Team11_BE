@@ -97,27 +97,38 @@ INSERT INTO public_test.meetup_participant (
     now()
 );
 
-INSERT INTO public_test.badge (id, name, description, icon_url, created_at, updated_at) VALUES
-    (gen_random_uuid(),
-     '[TEST] 모임 새싹',
-     '테스트용: 첫 참여 배지',
-     'https://static.example.com/badges/test-first.png',
-     now(),
-     now()
-    ),
-    (gen_random_uuid(),
-     '[TEST] 모임 고수',
-     '테스트용: 10회 참여 배지',
-     'https://static.example.com/badges/test-10.png',
-     now(),
-     now()),
-    (gen_random_uuid(),
-     '[TEST] 호감 인기인',
-     '테스트용: 좋아요 5개',
-     'https://static.example.com/badges/test-like5.png',
-     now(),
-     now()
-    );
+INSERT INTO public_test.badge (
+    id, name, description, icon_url, created_at, updated_at
+) VALUES (
+    gen_random_uuid(),
+    '[TEST] 모임 새싹',
+    '테스트용: 첫 참여 배지',
+    'https://static.example.com/badges/test-first.png',
+    now(),
+    now()
+);
+
+INSERT INTO public_test.badge (
+    id, name, description, icon_url, created_at, updated_at
+) VALUES (
+    gen_random_uuid(),
+    '[TEST] 모임 고수',
+    '테스트용: 10회 참여 배지',
+    'https://static.example.com/badges/test-10.png',
+    now(),
+    now()
+);
+
+INSERT INTO public_test.badge (
+    id, name, description, icon_url, created_at, updated_at
+) VALUES (
+    gen_random_uuid(),
+    '[TEST] 호감 인기인',
+    '테스트용: 좋아요 5개',
+    'https://static.example.com/badges/test-like5.png',
+    now(),
+    now()
+);
 
 INSERT INTO public_test.profile_badge (id, profile_id, badge_id, created_at, is_representative)
 SELECT
