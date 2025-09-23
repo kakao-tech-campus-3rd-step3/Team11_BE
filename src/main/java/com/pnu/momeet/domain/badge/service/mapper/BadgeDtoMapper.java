@@ -13,21 +13,35 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 public final class BadgeDtoMapper {
+
+    // 전체 배지 조회용
+    public static final Set<String> ALL_BADGES_ALLOWED_SORTS =
+        Set.of("createdAt", "name");
+    public static final Sort ALL_BADGES_DEFAULT_SORT =
+        Sort.by(Sort.Order.desc("createdAt"));
+
+    // 프로필 배지 조회용
+    public static final Set<String> PROFILE_BADGES_ALLOWED_SORTS =
+        Set.of("representative", "createdAt", "name");
+    public static final Sort PROFILE_BADGES_DEFAULT_SORT =
+        Sort.by(Sort.Order.desc("representative"), Sort.Order.desc("createdAt"));
+
     private BadgeDtoMapper() {}
 
     public static PageRequest toProfileBadgePageRequest(ProfileBadgePageRequest request) {
-        return PageRequest.of(
-            request.getPage(),
-            request.getSize(),
-            PageMapper.toSort(request.getSort())
+        Sort sort = PageMapper.toSortOrDefault(
+            request.getSort(),
+            PROFILE_BADGES_ALLOWED_SORTS,      // 화이트리스트
+            PROFILE_BADGES_DEFAULT_SORT        // 기본 정렬
         );
+        return PageRequest.of(request.getPage(), request.getSize(), sort);
     }
 
     public static PageRequest toBadgePageRequest(BadgePageRequest request) {
         Sort sort = PageMapper.toSortOrDefault(
             request.getSort(),
-            Set.of("createdAt", "name"),                 // 화이트리스트
-            Sort.by(Sort.Order.desc("createdAt"))        // 기본 정렬
+            ALL_BADGES_ALLOWED_SORTS,      // 화이트리스트
+            ALL_BADGES_DEFAULT_SORT        // 기본 정렬
         );
         return PageRequest.of(request.getPage(), request.getSize(), sort);
     }
