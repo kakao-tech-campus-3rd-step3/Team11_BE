@@ -3,9 +3,11 @@ package com.pnu.momeet.domain.badge.service;
 import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
+import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
 import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
+import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeDslRepository;
@@ -36,15 +38,15 @@ public class BadgeService {
     private final S3StorageService s3StorageService;
 
     @Transactional(readOnly = true)
-    public Page<BadgeResponse> getMyBadges(UUID memberId, BadgePageRequest badgePageRequest) {
-        PageRequest pageRequest = BadgeDtoMapper.toPageRequest(badgePageRequest);
+    public Page<ProfileBadgeResponse> getMyBadges(UUID memberId, ProfileBadgePageRequest profileBadgePageRequest) {
+        PageRequest pageRequest = BadgeDtoMapper.toProfileBadgePageRequest(profileBadgePageRequest);
         Profile profile = profileService.getProfileEntityByMemberId(memberId);
         return badgeDslRepository.findBadgesByProfileId(profile.getId(), pageRequest);
     }
 
     @Transactional(readOnly = true)
-    public Page<BadgeResponse> getUserBadges(UUID profileId, BadgePageRequest request) {
-        PageRequest pageRequest = BadgeDtoMapper.toPageRequest(request);
+    public Page<ProfileBadgeResponse> getUserBadges(UUID profileId, ProfileBadgePageRequest request) {
+        PageRequest pageRequest = BadgeDtoMapper.toProfileBadgePageRequest(request);
         // 프로필 존재 검증
         profileService.getProfileEntityByProfileId(profileId);
         return badgeDslRepository.findBadgesByProfileId(profileId, pageRequest);
@@ -99,5 +101,12 @@ public class BadgeService {
             .orElseThrow(() -> new NoSuchElementException("존재하지 않는 배지입니다."));
         badgeRepository.delete(badge);
         s3StorageService.deleteImage(badge.getIconUrl());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<BadgeResponse> getBadges(BadgePageRequest request) {
+        PageRequest pageRequest = BadgeDtoMapper.toBadgePageRequest(request);
+        Page<Badge> badges = badgeRepository.findAll(pageRequest);
+        return badges.map(BadgeDtoMapper::toBadgeResponse);
     }
 }

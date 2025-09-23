@@ -1,6 +1,6 @@
 package com.pnu.momeet.domain.badge.repository;
 
-import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
+import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.entity.QBadge;
 import com.pnu.momeet.domain.badge.entity.QProfileBadge;
 import com.querydsl.core.types.Order;
@@ -23,13 +23,13 @@ public class BadgeDslRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
 
-    public Page<BadgeResponse> findBadgesByProfileId(UUID profileId, Pageable pageable) {
+    public Page<ProfileBadgeResponse> findBadgesByProfileId(UUID profileId, Pageable pageable) {
         QProfileBadge pb = QProfileBadge.profileBadge;
         QBadge b = QBadge.badge;
 
         var base = jpaQueryFactory
             .select(Projections.constructor(
-                BadgeResponse.class,
+                ProfileBadgeResponse.class,
                 b.id,
                 b.name,
                 b.description,
@@ -43,7 +43,7 @@ public class BadgeDslRepository {
 
         OrderSpecifier<?>[] orders = toOrderSpecifiers(pageable.getSort(), pb, b);
 
-        List<BadgeResponse> content = base
+        List<ProfileBadgeResponse> content = base
             .orderBy(orders.length == 0 ? defaultOrders(pb) : orders)
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
