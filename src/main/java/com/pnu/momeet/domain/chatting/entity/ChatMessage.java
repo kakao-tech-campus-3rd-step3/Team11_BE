@@ -37,7 +37,7 @@ public class ChatMessage extends SimpleCreationEntity {
     private ChatMessageType type = ChatMessageType.TEXT;
 
     @NotNull
-    @Column(name = "content", nullable = false, length = Integer.MAX_VALUE)
+    @Column(name = "content", nullable = false, length = 1200)
     private String content;
 
     public ChatMessage(Meetup meetup, Participant sender, Profile profile, ChatMessageType type, String content) {

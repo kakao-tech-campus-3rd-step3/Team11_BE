@@ -2,9 +2,8 @@ package com.pnu.momeet.e2e.auth;
 
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
-import com.pnu.momeet.domain.member.entity.Member;
-import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,9 +22,8 @@ public class AuthLogoutTest extends BaseAuthTest {
     @Override
     protected void setup() {
         super.setup();
-        MemberResponse loggedInMember = memberService.saveMember(
-                new Member("testLogout@test.com", testPassword, List.of(Role.ROLE_USER))
-        );
+        MemberCreateRequest request = new MemberCreateRequest("testLogout@test.com", testPassword, List.of("ROLE_USER"));
+        MemberResponse loggedInMember = memberService.saveMember(request);
         tokenRes = emailAuthService.login(loggedInMember.email(), testPassword);
 
         toBeDeleted.add(loggedInMember);

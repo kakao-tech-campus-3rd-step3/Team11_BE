@@ -5,16 +5,15 @@ import com.pnu.momeet.domain.evaluation.entity.Evaluation;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 import com.pnu.momeet.domain.meetup.dto.response.UnEvaluatedMeetupDto;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
-import com.pnu.momeet.domain.meetup.service.MeetupService;
+import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
-import com.pnu.momeet.domain.participant.service.ParticipantService;
+import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
-import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class EvaluationQueryService {
 
     private final EvaluationRepository evaluationRepository;
-    private final ParticipantService participantService;
-    private final ProfileService profileSerivice;
-    private final MeetupService meetupService;
+    private final ParticipantDomainService participantService;
+    private final ProfileDomainService profileService;
+    private final MeetupDomainService meetupService;
 
     public long calculateUnEvaluatedCount(Meetup meetup, UUID evaluatorProfileId) {
         long evaluatedCount = evaluationRepository.countByMeetupIdAndEvaluatorProfileId(
@@ -44,7 +43,7 @@ public class EvaluationQueryService {
     }
 
     public List<EvaluatableProfileResponse> getEvaluatableUsers(UUID meetupId, UUID evaluatorMemberId) {
-        Profile evaluatorProfile = profileSerivice.getProfileEntityByMemberId(evaluatorMemberId);
+        Profile evaluatorProfile = profileService.getProfileEntityByMemberId(evaluatorMemberId);
         // 1. 모임 참가자 조회
         List<ParticipantResponse> participants = participantService.getParticipantsByMeetupId(meetupId);
 
@@ -71,7 +70,7 @@ public class EvaluationQueryService {
 
     @Transactional(readOnly = true)
     public Page<UnEvaluatedMeetupDto> getUnEvaluatedMeetups(UUID memberId, Pageable pageable) {
-        Profile me = profileSerivice.getProfileEntityByMemberId(memberId);
+        Profile me = profileService.getProfileEntityByMemberId(memberId);
 
         Page<Meetup> meetups = meetupService.findEndedMeetupsByProfileId(me.getId(), pageable);
 

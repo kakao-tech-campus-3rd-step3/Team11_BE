@@ -1,9 +1,10 @@
 package com.pnu.momeet.domain.member.controller;
 
+import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.domain.member.dto.request.*;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.service.mapper.MemberDtoMapper;
-import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.member.service.MemberDomainService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,17 +21,16 @@ import java.util.UUID;
 @RequestMapping("/api/members")
 @RequiredArgsConstructor
 public class MemberController {
-    private final MemberService memberService;
-
-    //TODO: Member List 를 페이지네이션으로 반환하는 api 구현
-    //TODO: Swagger을 이용한 API 문서화
+    private final MemberDomainService memberService;
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<Page<MemberResponse>> memberList(
             @Valid @ModelAttribute MemberPageRequest request
     ) {
-        var members = memberService.findAllMembers(MemberDtoMapper.toPageRequest(request));
+        var members = memberService.getAllMembersByPagination(
+                MemberDtoMapper.toPageRequest(request)
+        );
         return ResponseEntity.ok(members);
     }
 
@@ -39,7 +39,7 @@ public class MemberController {
     public ResponseEntity<MemberResponse> memberInfo(
             @PathVariable UUID id
     ) {
-        return ResponseEntity.ok(memberService.findMemberById(id));
+        return ResponseEntity.ok(memberService.getMemberById(id));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
@@ -47,7 +47,7 @@ public class MemberController {
     public ResponseEntity<MemberResponse> memberSelf(
             @AuthenticationPrincipal UserDetails userDetails
             ) {
-        var member = memberService.findMemberById(UUID.fromString(userDetails.getUsername()));
+        var member = memberService.getMemberById(UUID.fromString(userDetails.getUsername()));
         return ResponseEntity.ok(member);
     }
 
@@ -56,7 +56,7 @@ public class MemberController {
     public ResponseEntity<MemberResponse> memberCreate(
             @Valid @RequestBody MemberCreateRequest request
             ) {
-        var savedMember = memberService.saveMember(MemberDtoMapper.toEntity(request));
+        var savedMember = memberService.saveMember(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedMember);
     }
 
@@ -67,9 +67,7 @@ public class MemberController {
             @Valid @RequestBody MemberEditRequest request
     ) {
         return ResponseEntity.ok(
-                memberService.updateMemberById(
-                        id, MemberDtoMapper.toConsumer(request)
-                ));
+                memberService.updateMemberById(id, request));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -85,14 +83,11 @@ public class MemberController {
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PutMapping("/me/password")
     public ResponseEntity<MemberResponse> memberSelfPasswordEdit(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody ChangePasswordRequest request
     ) {
         var updatedMember = memberService.validateAndUpdatePasswordById(
-                UUID.fromString(userDetails.getUsername()),
-                request.oldPassword(),
-                request.newPassword()
-        );
+                userDetails.getMemberId(), request);
         return ResponseEntity.ok(updatedMember);
     }
 

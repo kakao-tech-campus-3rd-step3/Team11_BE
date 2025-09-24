@@ -56,9 +56,6 @@ public class Profile extends BaseEntity {
     @Column(name = "dislikes", nullable = false)
     private int dislikes = 0;
 
-    @Column(name = "un_evaluated_meetup_id")
-    private Long unEvaluatedMeetupId;
-
     private Profile(
         UUID memberId,
         String nickname,

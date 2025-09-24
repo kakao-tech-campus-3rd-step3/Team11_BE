@@ -4,7 +4,7 @@ import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
 import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
-import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ProfileController {
 
-    private final ProfileService profileService;
+    private final ProfileDomainService profileService;
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/me")

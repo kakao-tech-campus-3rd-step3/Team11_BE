@@ -13,14 +13,14 @@ import com.pnu.momeet.domain.meetup.dto.response.UnEvaluatedMeetupDto;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
-import com.pnu.momeet.domain.meetup.service.MeetupService;
+import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
-import com.pnu.momeet.domain.participant.service.ParticipantService;
+import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
-import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.unit.BaseUnitTest;
 import java.lang.reflect.Constructor;
@@ -52,13 +52,13 @@ public class EvaluationQueryServiceTest extends BaseUnitTest {
     private EvaluationRepository evaluationRepository;
 
     @Mock
-    private ParticipantService participantService;
+    private ParticipantDomainService participantService;
 
     @Mock
-    private ProfileService profileService;
+    private ProfileDomainService profileService;
 
     @Mock
-    private MeetupService meetupService;
+    private MeetupDomainService meetupService;
 
     @InjectMocks
     private EvaluationQueryService evaluationQueryService;
@@ -97,7 +97,6 @@ public class EvaluationQueryServiceTest extends BaseUnitTest {
             BigDecimal.valueOf(36.5),
             10,
             2,
-            null,
             LocalDateTime.now(),
             LocalDateTime.now()
         );
@@ -127,7 +126,6 @@ public class EvaluationQueryServiceTest extends BaseUnitTest {
                         BigDecimal.valueOf(37.0),
                         5,
                         1,
-                        null,
                         LocalDateTime.now(),
                         LocalDateTime.now()
                     ),
@@ -194,7 +192,6 @@ public class EvaluationQueryServiceTest extends BaseUnitTest {
             BigDecimal.valueOf(36.5),
             10,
             2,
-            null,
             LocalDateTime.now(),
             LocalDateTime.now()
         );

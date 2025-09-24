@@ -46,3 +46,10 @@ jwt:
 ip-hash:
   secret-key: ${IP_HASH_SECRET_KEY:default-secret}
   method: SHA-256
+
+logging:
+  level:
+    root: INFO
+    com.pnu.momeet: DEBUG # 개발 환경에서만 DEBUG 레벨로 설정
+  file:
+    path: './logs'

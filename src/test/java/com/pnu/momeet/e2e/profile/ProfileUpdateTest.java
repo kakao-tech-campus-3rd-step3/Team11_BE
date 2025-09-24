@@ -11,13 +11,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.repository.MemberRepository;
-import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
-import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import io.restassured.RestAssured;
 import io.restassured.builder.MultiPartSpecBuilder;
 import io.restassured.http.ContentType;
@@ -64,7 +63,7 @@ public class ProfileUpdateTest extends BaseProfileTest {
         given(s3StorageService.uploadImage(any(), anyString())).willReturn(newImageUrl);
 
         // 한글 필드 인코딩 설정
-        MultiPartSpecification nicknamePart = new MultiPartSpecBuilder("수정된닉네임")
+        MultiPartSpecification nicknamePart = new MultiPartSpecBuilder("수정된닉네임성공")
             .controlName("nickname").charset(StandardCharsets.UTF_8).build();
         MultiPartSpecification descriptionPart = new MultiPartSpecBuilder("수정된 자기소개")
             .controlName("description").charset(StandardCharsets.UTF_8).build();
@@ -87,7 +86,7 @@ public class ProfileUpdateTest extends BaseProfileTest {
             .patch("/me")
             .then().log().all()
             .statusCode(HttpStatus.OK.value())
-            .body("nickname", equalTo("수정된닉네임"))
+            .body("nickname", equalTo("수정된닉네임성공"))
             .body("age", equalTo(30))
             .body("imageUrl", equalTo(newImageUrl));
 
@@ -144,12 +143,16 @@ public class ProfileUpdateTest extends BaseProfileTest {
     @Test
     @DisplayName("프로필 수정 실패 - 404 Not Found (수정할 프로필 없음)")
     void updateMyProfile_fail_profileNotFound() {
-        // admin 계정은 프로필이 없다고 가정
-        MultiPartSpecification nicknamePart = new MultiPartSpecBuilder("어드민")
+        var createdMember = memberService.saveMember(new MemberCreateRequest(
+                "updateFail@test.com", "updateFailPass1!", List.of("ROLE_USER")
+        ));
+        membersToBeDeleted.add(createdMember.id());
+        var tokenResponse = emailAuthService.login("updateFail@test.com", "updateFailPass1!");
+        MultiPartSpecification nicknamePart = new MultiPartSpecBuilder("테스트실패유저")
             .controlName("nickname").charset(StandardCharsets.UTF_8).build();
         RestAssured
             .given().log().all()
-            .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_ADMIN).accessToken())
+            .header(AUTH_HEADER, BEAR_PREFIX + tokenResponse.accessToken())
             .contentType(ContentType.MULTIPART)
             .multiPart(nicknamePart)
             .when()

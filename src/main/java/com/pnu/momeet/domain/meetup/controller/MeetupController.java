@@ -7,7 +7,7 @@ import com.pnu.momeet.domain.meetup.dto.request.MeetupPageRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
-import com.pnu.momeet.domain.meetup.service.MeetupService;
+import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -32,14 +32,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class MeetupController {
 
-    private final MeetupService meetupService;
+    private final MeetupDomainService meetupService;
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping
     public Page<MeetupResponse> meetupPage(
             @Valid  @ModelAttribute MeetupPageRequest request
     ) {
-        return meetupService.findAllBySpecification(request);
+        return meetupService.getAllBySpecification(request);
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
@@ -47,7 +47,7 @@ public class MeetupController {
     public ResponseEntity<List<MeetupResponse>> meetupGeoSearch(
             @Valid @ModelAttribute MeetupGeoSearchRequest request
             ) {
-        return ResponseEntity.ok(meetupService.findAllByLocation(request));
+        return ResponseEntity.ok(meetupService.getAllByLocation(request));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
@@ -55,7 +55,7 @@ public class MeetupController {
     public ResponseEntity<MeetupDetail> meetupResponse(
             @PathVariable UUID meetupId
     ) {
-        return ResponseEntity.ok(meetupService.findById(meetupId));
+        return ResponseEntity.ok(meetupService.getById(meetupId));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
@@ -63,7 +63,7 @@ public class MeetupController {
     public ResponseEntity<MeetupDetail> meetupSelf(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(meetupService.findOwnedMeetupByMemberID(userDetails.getMemberId()));
+        return ResponseEntity.ok(meetupService.getOwnedActiveMeetupByMemberID(userDetails.getMemberId()));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
