@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -51,25 +52,19 @@ public class EvaluationController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{meetupId}/evaluatable-users")
-    public ResponseEntity<List<EvaluatableProfileResponse>> getEvaluatableUsers(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
-        @PathVariable UUID meetupId
-    ) {
-        return ResponseEntity.ok(
-            evaluationQueryService.getEvaluatableUsers(meetupId, userDetails.getMemberId())
-        );
-    }
-
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @GetMapping("/me/unevaluated-meetups")
-    public ResponseEntity<Page<UnEvaluatedMeetupDto>> getUnEvaluatedMeetups(
+    @GetMapping("/me/meetups")
+    public ResponseEntity<Page<UnEvaluatedMeetupDto>> getMyMeetups(
         @AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestParam(name = "evaluated", defaultValue = "false") boolean evaluated,
         @PageableDefault(size = 10) Pageable pageable
     ) {
-        Page<UnEvaluatedMeetupDto> result =
-            evaluationQueryService.getUnEvaluatedMeetups(userDetails.getMemberId(), pageable);
-
-        return ResponseEntity.ok(result);
+        if (evaluated) {
+            // '이미 평가한 모임' 조회는 아직 지원하지 않음 -> 공통 예외 핸들러에서 400 매핑
+            throw new IllegalArgumentException("evaluated=true는 아직 지원하지 않습니다.");
+        }
+        return ResponseEntity.ok(
+            evaluationQueryService.getUnEvaluatedMeetups(userDetails.getMemberId(), pageable)
+        );
     }
 }
