@@ -6,6 +6,7 @@ import com.pnu.momeet.common.security.details.CustomUserDetailService;
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.ServerHttpRequest;
@@ -21,6 +22,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationInterceptor implements HandshakeInterceptor {
@@ -56,6 +58,7 @@ public class JwtAuthenticationInterceptor implements HandshakeInterceptor {
             attributes.put("SPRING.AUTHENTICATION", auth);
             return true;
         } catch (Exception e) {
+            log.warn("웹소켓 핸드셰이크 인증 실패: {}", e.getMessage());
             return false;
         }
     }
