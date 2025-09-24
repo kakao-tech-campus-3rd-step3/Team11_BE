@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class EvaluationService {
+public class EvaluationCommandService {
 
     private final EvaluationRepository evaluationRepository;
     private final ProfileService profileService;

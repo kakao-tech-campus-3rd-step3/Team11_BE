@@ -12,7 +12,7 @@ import com.pnu.momeet.domain.evaluation.dto.response.EvaluationResponse;
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
 import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
-import com.pnu.momeet.domain.evaluation.service.EvaluationService;
+import com.pnu.momeet.domain.evaluation.service.EvaluationCommandService;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
 import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
@@ -35,7 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-class EvaluationServiceTest extends BaseUnitTest {
+class EvaluationCommandServiceTest extends BaseUnitTest {
 
     @Mock
     private EvaluationRepository evaluationRepository;
@@ -47,7 +47,7 @@ class EvaluationServiceTest extends BaseUnitTest {
     private ParticipantDomainService participantService;
 
     @InjectMocks
-    private EvaluationService evaluationService;
+    private EvaluationCommandService evaluationService;
 
     @Test
     @DisplayName("평가 성공 - LIKE")
