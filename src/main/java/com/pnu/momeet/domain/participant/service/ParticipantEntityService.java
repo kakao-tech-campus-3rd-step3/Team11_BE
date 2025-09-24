@@ -37,6 +37,18 @@ public class ParticipantEntityService {
     }
 
     @Transactional(readOnly = true)
+    public Participant getByIdAndMeetupId(Long id, UUID meetupId) {
+        log.debug("특정 id와 모임 ID의 참가자 조회 시도. id={}, meetupId={}", id, meetupId);
+        var participant = participantRepository.findByIdAndMeetupId(id, meetupId);
+        if (participant.isEmpty()) {
+            log.warn("존재하지 않는 id와 모임 ID의 참가자 조회 시도. id={}, meetupId={}", id, meetupId);
+            throw new NoSuchElementException("참가자를 찾을 수 없습니다.");
+        }
+        log.debug("특정 id와 모임 ID의 참가자 조회 성공. id={}, meetupId={}", id, meetupId);
+        return participant.get();
+    }
+
+    @Transactional(readOnly = true)
     public List<Participant> getAllByProfileID(UUID profileId) {
         log.debug("프로필 ID로 참가자 조회 시도. profileId={}", profileId);
         var participants = participantRepository.findAllByProfileId(profileId);

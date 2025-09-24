@@ -41,12 +41,6 @@ public class ParticipantDomainService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public List<Participant> getJoiningParticipantsByMemberId(UUID memberId) {
-        UUID profileId = profileService.mapToProfileId(memberId);
-        return entityService.getAllByProfileID(profileId);
-    }
-
     @Transactional
     public ParticipantResponse joinMeetup(UUID meetupId, UUID memberId) {
         return joinMeetup(meetupId, memberId, MeetupRole.MEMBER);
@@ -101,6 +95,7 @@ public class ParticipantDomainService {
             throw new IllegalArgumentException("참가자가 2명 미만인 모임에서는 호스트가 나갈 수 없습니다.");
         }
         if (participant.getRole() == MeetupRole.HOST) {
+            log.info("호스트가 모임에서 나감 시도. meetupId={}, profileId={}", meetupId, profile.getId());
             Participant replacementHost = topTwoParticipants.getFirst().getId().equals(participant.getId())
                     ? topTwoParticipants.getSecond() // 호스트가 1등일 경우 2등이 호스트 됨
                     : topTwoParticipants.getFirst(); // 아닐 경우 온도가 가장 높은 참가자가 호스트 됨
@@ -108,11 +103,8 @@ public class ParticipantDomainService {
             entityService.updateParticipant(replacementHost, p -> p.setRole(MeetupRole.HOST));
             meetupService.updateMeetup(meetup, m -> m.setOwner(replacementHost.getProfile()));
         }
-
-        meetupService.updateMeetup(meetup, m -> {
-            m.removeParticipant(participant);
-            m.setParticipantCount(m.getParticipantCount() - 1);
-        });
+        meetupService.updateMeetup(meetup, m -> m.removeParticipant(participant));
+        log.info("모임 탈퇴 성공. meetupId={}, profileId={}", meetupId, profile.getId());
     }
 
     @Transactional
@@ -128,12 +120,14 @@ public class ParticipantDomainService {
             log.warn("스스로를 강퇴 시도. requesterId={}", requester.getId());
             throw new IllegalArgumentException("스스로를 강퇴할 수 없습니다.");
         }
-        if (!entityService.existsByIdAndMeetupId(targetParticipantId, meetupId)) {
-            log.warn("존재하지 않는 참가자를 강퇴 시도. targetParticipantId={}", targetParticipantId);
-            throw new NoSuchElementException("해당 참가자가 모임에 존재하지 않습니다.");
-        }
+        Participant targetParticipant = entityService.getByIdAndMeetupId(targetParticipantId, meetupId);
+
         entityService.updateParticipant(requester, p -> p.setLastActiveAt(LocalDateTime.now()));
-        entityService.deleteById(targetParticipantId);
+
+        meetupService.updateMeetup(meetupService.getById(meetupId), m ->
+                m.removeParticipant(targetParticipant)
+        );
+        log.info("참가자 강퇴 성공. byId={}, targetParticipantId={}", requester.getId(), targetParticipantId);
     }
 
     @Transactional
@@ -146,7 +140,7 @@ public class ParticipantDomainService {
         if (requester.getId().equals(targetParticipantId)) {
             throw new IllegalStateException("스스로에게 호스트 권한을 양도할 수 없습니다.");
         }
-        Participant targetParticipant = entityService.getById(targetParticipantId);
+        Participant targetParticipant = entityService.getByIdAndMeetupId(targetParticipantId, meetupId);
         // 기존 호스트를 MEMBER로 변경
         entityService.updateParticipant(requester, p -> {
             p.setRole(MeetupRole.MEMBER);
@@ -156,21 +150,7 @@ public class ParticipantDomainService {
         entityService.updateParticipant(targetParticipant, p -> p.setRole(MeetupRole.HOST));
         // 모임의 owner도 변경
         meetupService.updateMeetup(requester.getMeetup(), m -> m.setOwner(targetParticipant.getProfile()));
-
+        log.info("호스트 권한 양도 성공. fromId={}, toId={}", requester.getId(), targetParticipant.getId());
         return ParticipantEntityMapper.toDto(targetParticipant);
-    }
-
-
-    @Deprecated
-    @Transactional(readOnly = true)
-    public Participant getEntityByProfileIDAndMeetupID(UUID profileId, UUID meetupId) {
-        return entityService.getByProfileIDAndMeetupID(profileId, meetupId);
-    }
-
-    @Deprecated
-    @Transactional(readOnly = true)
-    public Participant getEntityByMemberIdAndMeetupId(UUID memberId, UUID meetupId) {
-        UUID profileId = profileService.mapToProfileId(memberId);
-        return entityService.getByProfileIDAndMeetupID(profileId, meetupId);
     }
 }
