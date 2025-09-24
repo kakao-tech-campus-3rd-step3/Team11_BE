@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @Slf4j
 @Service
@@ -23,7 +24,7 @@ public class ProfileEntityService {
         var profile = profileRepository.findByMemberId(memberId);
         if (profile.isEmpty()) {
             log.warn("존재하지 않는 memberId의 프로필 조회 시도. memberId={}", memberId);
-            throw new NoSuchElementException("해당 memberId의 프로필이 존재하지 않습니다. memberId=" + memberId);
+            throw new NoSuchElementException("프로필이 존재하지 않습니다.");
         }
         log.debug("특정 memberId의 프로필 조회 성공. memberId={}", memberId);
         return profile.get();
@@ -35,7 +36,7 @@ public class ProfileEntityService {
         var profile = profileRepository.findById(profileId);
         if (profile.isEmpty()) {
             log.warn("존재하지 않는 id의 프로필 조회 시도. id={}", profileId);
-            throw new NoSuchElementException("해당 Id의 프로필이 존재하지 않습니다. id=" + profileId);
+            throw new NoSuchElementException("ID에 해당하는 프로필을 찾을 수 없습니다: " + profileId);
         }
         log.debug("특정 id의 프로필 조회 성공. id={}", profileId);
         return profile.get();
@@ -56,6 +57,11 @@ public class ProfileEntityService {
         return profileRepository.existsByMemberId(memberId);
     }
 
+    @Transactional(readOnly = true)
+    public boolean existsByNicknameIgnoreCase(String nickname) {
+        return profileRepository.existsByNicknameIgnoreCase(nickname);
+    }
+
     @Transactional
     public Profile createProfile(Profile profile) {
         log.debug("프로필 생성 시도. memberId={}", profile.getMemberId());
@@ -70,8 +76,11 @@ public class ProfileEntityService {
     }
 
     @Transactional
-    public Profile saveProfile(Profile profile) {
-        return profileRepository.save(profile);
+    public Profile updateProfile(Profile profile, Consumer<Profile> updater) {
+        log.debug("프로필 수정 시도. id={}", profile.getId());
+        updater.accept(profile);
+        log.debug("프로필 수정 성공. id={}", profile.getId());
+        return profile;
     }
 
     @Transactional

@@ -11,7 +11,7 @@ import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
 import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
-import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,7 +31,7 @@ public class EvaluationQueryService {
 
     private final EvaluationRepository evaluationRepository;
     private final ParticipantDomainService participantService;
-    private final ProfileService profileSerivice;
+    private final ProfileDomainService profileService;
     private final MeetupDomainService meetupService;
 
     public long calculateUnEvaluatedCount(Meetup meetup, UUID evaluatorProfileId) {
@@ -43,7 +43,7 @@ public class EvaluationQueryService {
     }
 
     public List<EvaluatableProfileResponse> getEvaluatableUsers(UUID meetupId, UUID evaluatorMemberId) {
-        Profile evaluatorProfile = profileSerivice.getProfileEntityByMemberId(evaluatorMemberId);
+        Profile evaluatorProfile = profileService.getProfileEntityByMemberId(evaluatorMemberId);
         // 1. 모임 참가자 조회
         List<ParticipantResponse> participants = participantService.getParticipantsByMeetupId(meetupId);
 
@@ -70,7 +70,7 @@ public class EvaluationQueryService {
 
     @Transactional(readOnly = true)
     public Page<UnEvaluatedMeetupDto> getUnEvaluatedMeetups(UUID memberId, Pageable pageable) {
-        Profile me = profileSerivice.getProfileEntityByMemberId(memberId);
+        Profile me = profileService.getProfileEntityByMemberId(memberId);
 
         Page<Meetup> meetups = meetupService.findEndedMeetupsByProfileId(me.getId(), pageable);
 

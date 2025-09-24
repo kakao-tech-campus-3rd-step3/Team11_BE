@@ -5,7 +5,7 @@ import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.service.MemberDomainService;
-import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public abstract class BaseEvaluationTest extends BaseE2ETest {
     protected MemberDomainService memberService;
 
     @Autowired
-    protected ProfileService profileService;
+    protected ProfileDomainService profileService;
 
     @Autowired
     protected EvaluationRepository evaluationRepository;

@@ -16,7 +16,7 @@ import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.evaluation.service.EvaluationCommandService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
-import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import com.pnu.momeet.unit.BaseUnitTest;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -36,7 +36,7 @@ class EvaluationCommandServiceTest extends BaseUnitTest {
     private EvaluationRepository evaluationRepository;
 
     @Mock
-    private ProfileService profileService;
+    private ProfileDomainService profileService;
 
     @Mock
     private ParticipantDomainService participantService;
