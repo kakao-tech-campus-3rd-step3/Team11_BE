@@ -46,3 +46,8 @@ jwt:
 ip-hash:
   secret-key: ${IP_HASH_SECRET_KEY:default-secret}
   method: SHA-256
+
+kakao:
+  client-id: ${KAKAO_CLIENT_ID}
+  client-secret: ${KAKAO_CLIENT_SECRET}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
