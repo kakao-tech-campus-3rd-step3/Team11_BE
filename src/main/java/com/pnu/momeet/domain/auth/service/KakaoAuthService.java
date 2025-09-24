@@ -12,7 +12,9 @@ import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.domain.member.service.MemberEntityService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.AuthenticationException;
@@ -25,6 +27,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KakaoAuthService {
@@ -62,7 +65,10 @@ public class KakaoAuthService {
 
         UUID memberId = findOrCreateKakaoMember(kakaoUserInfo);
 
-        return generateKakaoTokenPair(memberId);
+        TokenResponse tokenResponse = generateKakaoTokenPair(memberId);
+
+        log.info("카카오 로그인 성공: {}", kakaoUserInfo.email());
+        return tokenResponse;
     }
 
     private String getAccessTokenFromKakao(String code) {
@@ -128,10 +134,12 @@ public class KakaoAuthService {
             Member existingMember = memberEntityService.getByEmail(kakaoUserInfo.email());
 
             if (existingMember.getProvider() != Provider.KAKAO) {
+                log.warn("카카오 로그인 실패: 지원하지 않는 경로 - {} - {}", existingMember.getProvider(), kakaoUserInfo.email());
                 throw new AuthenticationException("지원하지 않은 경로로 로그인을 시도하였습니다.") {};
             }
 
             if (!existingMember.isAccountNonLocked()) {
+                log.warn("카카오 로그인 실패: 잠긴 계정 - {}", kakaoUserInfo.email());
                 throw new BannedAccountException("잠긴 계정입니다. 관리자에게 문의하세요.") {};
             }
 
@@ -146,6 +154,7 @@ public class KakaoAuthService {
                             List.of(Role.ROLE_USER)
                     )
             );
+            log.info("카카오 회원가입 성공: {}", kakaoUserInfo.email());
             return newMember.getId();
         }
     }
