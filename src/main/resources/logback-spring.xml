@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <configuration>
-    <springProperty scope="context" name="LOG_PATH" source="log.log-path"/>
+    <springProperty scope="context" name="LOG_PATH" source="logging.file.path"/>
     <!-- 시스템 전반의 로그 레벨 설정 -->
-    <springProperty scope="context" name="ROOT_LOG_LEVEL" source="log.level.root"/>
+    <springProperty scope="context" name="ROOT_LOG_LEVEL" source="logging.level.root"/>
     <!-- 개발중인 앱의 로그 레벨 설정 -->
-    <springProperty scope="context" name="APP_LOG_LEVEL" source="log.level.app"/>
+    <springProperty scope="context" name="APP_LOG_LEVEL" source="logging.level.com.pnu.momeet"/>
 
     <property name="CONSOLE_LOG_PATTERN" value="%boldGreen(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %-5level %cyan(%logger{36}) - %msg%n"/>
     <!-- 파일기반 로그를 더 간략하게 -->
