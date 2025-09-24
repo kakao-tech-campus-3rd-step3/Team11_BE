@@ -23,8 +23,9 @@ public class EvaluationGetTest extends BaseEvaluationTest {
             .header(AUTH_HEADER, BEAR_PREFIX + accessToken)
             .param("page", 0)
             .param("size", 5)
+            .param("evaluated", false)
             .when()
-            .get("/me/unEvaluated-meetups")
+            .get("/me/meetups")
             .then().log().all()
             .statusCode(HttpStatus.OK.value())
             .body("content", notNullValue())
@@ -37,9 +38,25 @@ public class EvaluationGetTest extends BaseEvaluationTest {
     void getUnEvaluatedMeetups_fail_unauthorized() {
         RestAssured
             .given().log().all()
+            .param("evaluated", false)
             .when()
-            .get("/me/unEvaluated-meetups")
+            .get("/me/meetups")
             .then().log().all()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    @DisplayName("evaluated=true는 아직 미지원 - 400 Bad Request")
+    void getMeetups_fail_evaluated_true_not_supported() {
+        String accessToken = getToken(Role.ROLE_USER).accessToken();
+
+        RestAssured
+            .given().log().all()
+            .header(AUTH_HEADER, BEAR_PREFIX + accessToken)
+            .param("evaluated", true)
+            .when()
+            .get("/me/meetups")
+            .then().log().all()
+            .statusCode(HttpStatus.BAD_REQUEST.value());
     }
 }

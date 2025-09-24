@@ -50,8 +50,6 @@ public class Profile extends BaseEntity {
     @Column(name = "temperature", precision = 4, scale = 1, nullable = false)
     private BigDecimal temperature = BigDecimal.valueOf(36.5);
 
-
-
     @Column(name = "likes", nullable = false)
     private int likes = 0;
 

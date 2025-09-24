@@ -2,23 +2,26 @@ package com.pnu.momeet.e2e.meetup;
 
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.service.MemberDomainService;
-import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.*;
-import java.util.EnumMap;
 
 @Tag("meetup")
 public abstract class BaseMeetupTest extends BaseE2ETest {

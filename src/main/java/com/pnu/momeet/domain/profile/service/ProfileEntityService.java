@@ -2,14 +2,13 @@ package com.pnu.momeet.domain.profile.service;
 
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
+import java.util.NoSuchElementException;
+import java.util.UUID;
+import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.NoSuchElementException;
-import java.util.UUID;
-import java.util.function.Consumer;
 
 @Slf4j
 @Service
