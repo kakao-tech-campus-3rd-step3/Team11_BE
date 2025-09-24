@@ -2,7 +2,7 @@ package com.pnu.momeet.domain.participant.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
-import com.pnu.momeet.domain.participant.service.ParticipantService;
+import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/meetups/{meetupId}/participants")
 @RequiredArgsConstructor
 public class ParticipantController {
-    private final ParticipantService participantService;
+    private final ParticipantDomainService participantService;
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping

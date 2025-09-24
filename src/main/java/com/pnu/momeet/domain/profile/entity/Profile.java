@@ -50,14 +50,13 @@ public class Profile extends BaseEntity {
     @Column(name = "temperature", precision = 4, scale = 1, nullable = false)
     private BigDecimal temperature = BigDecimal.valueOf(36.5);
 
+
+
     @Column(name = "likes", nullable = false)
     private int likes = 0;
 
     @Column(name = "dislikes", nullable = false)
     private int dislikes = 0;
-
-    @Column(name = "un_evaluated_meetup_id")
-    private Long unEvaluatedMeetupId;
 
     private Profile(
         UUID memberId,

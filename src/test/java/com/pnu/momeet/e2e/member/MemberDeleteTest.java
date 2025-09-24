@@ -1,7 +1,7 @@
 package com.pnu.momeet.e2e.member;
 
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
-import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,13 +20,12 @@ public class MemberDeleteTest extends BaseMemberTest {
     @Override
     protected void setup() {
         super.setup();
-        MemberResponse member = memberService.saveMember(
-            new Member(
+        MemberCreateRequest request = new MemberCreateRequest(
                 "delete_test1@test.com",
                 "deleteTestPass1!",
-                List.of(Role.ROLE_USER)
-            )
+                List.of(Role.ROLE_USER.name())
         );
+        MemberResponse member = memberService.saveMember(request);
         toBeDeleted.add(member.id());
     }
 

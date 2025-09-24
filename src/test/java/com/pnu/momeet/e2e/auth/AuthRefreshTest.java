@@ -5,8 +5,8 @@ import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
-import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -32,9 +32,10 @@ public class AuthRefreshTest extends BaseAuthTest {
     @Override
     protected void setup() {
         super.setup();
-        loggedInMember = memberService.saveMember(
-            new Member("testRefrsh@test.com", testPassword, List.of(Role.ROLE_USER))
+        MemberCreateRequest request = new MemberCreateRequest(
+            "testRefrsh@test.com", testPassword, List.of(Role.ROLE_USER.name())
         );
+        loggedInMember = memberService.saveMember(request);
         tokenResponse = emailAuthService.login(loggedInMember.email(), testPassword);
 
         toBeDeleted.add(loggedInMember);

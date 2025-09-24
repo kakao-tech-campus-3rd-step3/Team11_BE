@@ -5,11 +5,11 @@ import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.meetup.dto.request.LocationRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
-import com.pnu.momeet.domain.meetup.service.MeetupService;
+import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
-import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
@@ -37,11 +37,11 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
     @Autowired
     protected EmailAuthService emailAuthService;
     @Autowired
-    protected MemberService memberService;
+    protected MemberDomainService memberService;
     @Autowired
     protected ProfileRepository profileRepository;
     @Autowired
-    protected MeetupService meetupService;
+    protected MeetupDomainService meetupService;
 
     @BeforeEach
     @Override
@@ -105,8 +105,8 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
     protected void createTestcase() {
         String email = UUID.randomUUID().toString().substring(0, 8) + "@test.com";
         emails.add(email);
-        members.add(memberService.saveMember(new Member(
-                email, TEST_USER_PASSWORD, List.of(Role.ROLE_USER)
+        members.add(memberService.saveMember(new MemberCreateRequest(
+                email, TEST_USER_PASSWORD, List.of(Role.ROLE_USER.name())
         )));
         tokens.add(emailAuthService.login(email, TEST_USER_PASSWORD));
         profiles.add(profileRepository.save(Profile.create(
