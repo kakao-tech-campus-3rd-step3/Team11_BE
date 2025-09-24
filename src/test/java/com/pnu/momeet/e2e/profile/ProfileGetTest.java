@@ -1,8 +1,6 @@
 package com.pnu.momeet.e2e.profile;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.notNullValue;
 
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;

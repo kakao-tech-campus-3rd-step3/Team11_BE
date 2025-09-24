@@ -8,13 +8,12 @@ import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.service.MeetupService;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
-import com.pnu.momeet.domain.participant.service.ParticipantService;
+import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileService;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EvaluationQueryService {
 
     private final EvaluationRepository evaluationRepository;
-    private final ParticipantService participantService;
+    private final ParticipantDomainService participantService;
     private final ProfileService profileSerivice;
     private final MeetupService meetupService;
 
