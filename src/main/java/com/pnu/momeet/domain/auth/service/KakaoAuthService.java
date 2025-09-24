@@ -10,7 +10,8 @@ import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.member.service.MemberDomainService;
+import com.pnu.momeet.domain.member.service.MemberEntityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -40,7 +41,7 @@ public class KakaoAuthService {
     private static final long IAT_BUFFER_SECONDS = 10;
 
     private final RestTemplate restTemplate;
-    private final MemberService memberService;
+    private final MemberEntityService memberEntityService;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
 
@@ -124,9 +125,9 @@ public class KakaoAuthService {
 
     private UUID findOrCreateKakaoMember(KakaoUserInfo kakaoUserInfo) {
         try {
-            MemberResponse existingMember = memberService.findMemberByEmail(kakaoUserInfo.email());
+            Member existingMember = memberEntityService.getByEmail(kakaoUserInfo.email());
 
-            if (existingMember.provider() != Provider.KAKAO) {
+            if (existingMember.getProvider() != Provider.KAKAO) {
                 throw new AuthenticationException("지원하지 않은 경로로 로그인을 시도하였습니다.") {};
             }
 
@@ -134,9 +135,9 @@ public class KakaoAuthService {
                 throw new BannedAccountException("잠긴 계정입니다. 관리자에게 문의하세요.") {};
             }
 
-            return existingMember.id();
+            return existingMember.getId();
         } catch (NoSuchElementException e) {
-            MemberResponse newMember = memberService.saveMember(
+            Member newMember = memberEntityService.saveMember(
                     new Member(
                             kakaoUserInfo.email(),
                             "",
@@ -145,14 +146,16 @@ public class KakaoAuthService {
                             List.of(Role.ROLE_USER)
                     )
             );
-            return newMember.id();
+            return newMember.getId();
         }
     }
 
     private TokenResponse generateKakaoTokenPair(UUID memberId) {
-        memberService.updateMemberById(memberId, member -> {
-            member.setTokenIssuedAt(LocalDateTime.now().minusSeconds(IAT_BUFFER_SECONDS));
-            member.setEnabled(true);
+        Member member = memberEntityService.getById(memberId);
+
+        memberEntityService.updateMember(member, m -> {
+            m.setTokenIssuedAt(LocalDateTime.now().minusSeconds(IAT_BUFFER_SECONDS));
+            m.setEnabled(true);
         });
 
         String accessToken = jwtTokenProvider.generateAccessToken(memberId);
