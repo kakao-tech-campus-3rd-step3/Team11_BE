@@ -69,11 +69,6 @@ public class ParticipantEntityService {
     }
 
     @Transactional(readOnly = true)
-    public boolean existsByIdAndMeetupId(Long id, UUID meetupId) {
-        return participantRepository.existsByIdAndMeetupId(id, meetupId);
-    }
-
-    @Transactional(readOnly = true)
     public boolean existsByProfileIdAndMeetupId(UUID profileId, UUID meetupId) {
         return participantRepository.existsByProfileIdAndMeetupId(profileId, meetupId);
     }
@@ -105,11 +100,6 @@ public class ParticipantEntityService {
         updater.accept(participant);
         log.debug("특정 id의 참가자 정보 수정 성공. id={}", participant.getId());
         return participant;
-    }
-
-    @Transactional
-    public Participant saveParticipant(Participant participant) {
-        return participantRepository.save(participant);
     }
 
     @Transactional
