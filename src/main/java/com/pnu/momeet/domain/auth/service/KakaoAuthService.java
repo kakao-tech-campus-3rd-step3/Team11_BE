@@ -145,7 +145,6 @@ public class KakaoAuthService {
                             List.of(Role.ROLE_USER)
                     )
             );
-            System.out.println("--------------------------kakaoId: " + kakaoUserInfo);
             return newMember.id();
         }
     }
