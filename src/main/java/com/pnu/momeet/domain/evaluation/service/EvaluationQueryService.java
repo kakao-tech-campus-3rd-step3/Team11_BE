@@ -5,7 +5,7 @@ import com.pnu.momeet.domain.evaluation.entity.Evaluation;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 import com.pnu.momeet.domain.meetup.dto.response.UnEvaluatedMeetupDto;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
-import com.pnu.momeet.domain.meetup.service.MeetupService;
+import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
 import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
@@ -32,7 +32,7 @@ public class EvaluationQueryService {
     private final EvaluationRepository evaluationRepository;
     private final ParticipantDomainService participantService;
     private final ProfileService profileSerivice;
-    private final MeetupService meetupService;
+    private final MeetupDomainService meetupService;
 
     public long calculateUnEvaluatedCount(Meetup meetup, UUID evaluatorProfileId) {
         long evaluatedCount = evaluationRepository.countByMeetupIdAndEvaluatorProfileId(

@@ -49,8 +49,6 @@ public class MeetupDslRepository {
             Optional<String> keyword
     ) {
         QMeetup meetup = QMeetup.meetup;
-        QProfile profile = QProfile.profile;
-        QMeetupHashTag hashTag = QMeetupHashTag.meetupHashTag;
 
         BooleanBuilder builder = new BooleanBuilder();
 
@@ -66,44 +64,39 @@ public class MeetupDslRepository {
 
         return jpaQueryFactory
                 .selectFrom(meetup)
-                .leftJoin(meetup.owner, profile).fetchJoin()
-                .leftJoin(meetup.hashTags, hashTag).fetchJoin()
+                .leftJoin(meetup.hashTags).fetchJoin()
                 .where(builder)
                 .orderBy(meetup.createdAt.desc())
                 .fetch();
     }
 
-    public Optional<Meetup> findOwnedMeetupByMemberId(UUID memberId) {
+    public List<Meetup> findAllByOwnerIdAndStatusIn(UUID profileId, List<MeetupStatus> statuses) {
         QMeetup meetup = QMeetup.meetup;
 
-        return Optional.ofNullable(
-                jpaQueryFactory
-                    .select(meetup)
-                    .from(meetup)
-                    .where(
-                        meetup.owner.memberId.eq(memberId)
-                        .and(
-                            meetup.status.eq(MeetupStatus.OPEN)
-                            .or(meetup.status.eq(MeetupStatus.IN_PROGRESS))
-                        )
-                    )
-                    .fetchOne()
-        );
+        return jpaQueryFactory
+                .selectFrom(meetup)
+                .leftJoin(meetup.hashTags).fetchJoin()
+                .where(
+                    meetup.owner.id.eq(profileId)
+                    .and(meetup.status.in(statuses))
+                )
+                .orderBy(meetup.createdAt.desc())
+                .fetch();
     }
 
-    public boolean existsByOwnerIdAndStatusIn(UUID memberId, List<MeetupStatus> statuses) {
+
+    public boolean existsByOwnerIdAndStatusIn(UUID profileId, List<MeetupStatus> statuses) {
         QMeetup meetup = QMeetup.meetup;
 
         Integer result = jpaQueryFactory
                 .selectOne()
                 .from(meetup)
                 .where(
-                    meetup.owner.memberId.eq(memberId)
+                    meetup.owner.id.eq(profileId)
                     .and(meetup.status.in(statuses))
                 )
                 .limit(1)
                 .fetchFirst();
-
         return result != null;
     }
 
@@ -121,31 +114,6 @@ public class MeetupDslRepository {
                     .leftJoin(meetup.hashTags, hashTag).fetchJoin()
                     .leftJoin(meetup.sigungu, sigungu).fetchJoin()
                     .where(meetup.id.eq(meetupId))
-                    .fetchOne()
-        );
-    }
-
-
-    public Optional<Meetup> findOwnedMeetupByMemberIdWithDetails(UUID memberId) {
-        QMeetup meetup = QMeetup.meetup;
-        QProfile profile = QProfile.profile;
-        QMeetupHashTag hashTag = QMeetupHashTag.meetupHashTag;
-        QSigungu sigungu = QSigungu.sigungu;
-
-        return Optional.ofNullable(
-                jpaQueryFactory
-                    .select(meetup)
-                    .from(meetup)
-                    .leftJoin(meetup.owner, profile).fetchJoin()
-                    .leftJoin(meetup.hashTags, hashTag).fetchJoin()
-                    .leftJoin(meetup.sigungu, sigungu).fetchJoin()
-                    .where(
-                        meetup.owner.memberId.eq(memberId)
-                        .and(
-                            meetup.status.eq(MeetupStatus.OPEN)
-                            .or(meetup.status.eq(MeetupStatus.IN_PROGRESS))
-                        )
-                    )
                     .fetchOne()
         );
     }

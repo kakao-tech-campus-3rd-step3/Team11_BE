@@ -5,7 +5,7 @@ import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.meetup.dto.request.LocationRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
-import com.pnu.momeet.domain.meetup.service.MeetupService;
+import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.enums.Role;
@@ -41,7 +41,7 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
     @Autowired
     protected ProfileRepository profileRepository;
     @Autowired
-    protected MeetupService meetupService;
+    protected MeetupDomainService meetupService;
 
     @BeforeEach
     @Override

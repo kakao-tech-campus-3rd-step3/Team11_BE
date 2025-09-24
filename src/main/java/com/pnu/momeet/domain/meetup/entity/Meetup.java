@@ -15,6 +15,7 @@ import org.locationtech.jts.geom.Point;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "meetup")
@@ -88,7 +89,8 @@ public class Meetup extends BaseEntity {
             Point locationPoint,
             String address,
             Sigungu sigungu,
-            LocalDateTime endAt
+            LocalDateTime endAt,
+            MeetupStatus status
     ) {
         this.owner = owner;
         this.name = name;
@@ -101,6 +103,8 @@ public class Meetup extends BaseEntity {
         this.address = address;
         this.sigungu = sigungu;
         this.endAt = endAt;
+        this.status = Objects.requireNonNullElse(status, MeetupStatus.OPEN);
+        this.participantCount = 0;
     }
 
     public void setHashTags(List<String> hashTags) {
@@ -113,10 +117,12 @@ public class Meetup extends BaseEntity {
     public void addParticipant(Participant participant) {
         this.participants.add(participant);
         participant.setMeetup(this);
+        this.participantCount = this.participants.size();
     }
 
     public void removeParticipant(Participant participant) {
         this.participants.remove(participant);
         participant.setMeetup(null);
+        this.participantCount = this.participants.size();
     }
 }

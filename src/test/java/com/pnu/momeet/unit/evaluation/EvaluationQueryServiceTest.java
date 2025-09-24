@@ -13,7 +13,7 @@ import com.pnu.momeet.domain.meetup.dto.response.UnEvaluatedMeetupDto;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
-import com.pnu.momeet.domain.meetup.service.MeetupService;
+import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
 import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
@@ -58,7 +58,7 @@ public class EvaluationQueryServiceTest extends BaseUnitTest {
     private ProfileService profileService;
 
     @Mock
-    private MeetupService meetupService;
+    private MeetupDomainService meetupService;
 
     @InjectMocks
     private EvaluationQueryService evaluationQueryService;
