@@ -12,18 +12,13 @@ import com.pnu.momeet.domain.evaluation.dto.response.EvaluationResponse;
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
 import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
-import com.pnu.momeet.domain.evaluation.service.EvaluationCommandService;
-import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
 import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
-import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
-import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
+import com.pnu.momeet.domain.evaluation.service.EvaluationCommandService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.service.ProfileService;
 import com.pnu.momeet.unit.BaseUnitTest;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -47,7 +42,7 @@ class EvaluationCommandServiceTest extends BaseUnitTest {
     private ParticipantDomainService participantService;
 
     @InjectMocks
-    private EvaluationCommandService evaluationService;
+    private EvaluationCommandService evaluationCommandService;
 
     @Test
     @DisplayName("평가 성공 - LIKE")
@@ -94,7 +89,7 @@ class EvaluationCommandServiceTest extends BaseUnitTest {
 
         EvaluationCreateRequest request = new EvaluationCreateRequest(meetupId, targetProfileId, Rating.LIKE);
 
-        EvaluationResponse resp = evaluationService.createEvaluation(evaluatorMemberId, request, "fakeHash");
+        EvaluationResponse resp = evaluationCommandService.createEvaluation(evaluatorMemberId, request, "fakeHash");
 
         assertThat(resp.rating()).isEqualTo("LIKE");
         verify(evaluationRepository).save(any(Evaluation.class));
@@ -142,7 +137,7 @@ class EvaluationCommandServiceTest extends BaseUnitTest {
         EvaluationCreateRequest request = new EvaluationCreateRequest(meetupId, targetProfileId, Rating.LIKE);
 
         assertThrows(IllegalStateException.class,
-            () -> evaluationService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
+            () -> evaluationCommandService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
     }
 
     @Test
@@ -196,7 +191,7 @@ class EvaluationCommandServiceTest extends BaseUnitTest {
         EvaluationCreateRequest request = new EvaluationCreateRequest(meetupId, targetProfileId, Rating.LIKE);
 
         assertThrows(IllegalStateException.class,
-            () -> evaluationService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
+            () -> evaluationCommandService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
     }
 
     @Test
@@ -245,138 +240,6 @@ class EvaluationCommandServiceTest extends BaseUnitTest {
         EvaluationCreateRequest request = new EvaluationCreateRequest(meetupId, targetProfileId, Rating.LIKE);
 
         assertThrows(IllegalStateException.class,
-            () -> evaluationService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
-    }
-
-    @Test
-    @DisplayName("평가 가능한 사용자 조회 성공 - 자기 자신 제외, 평가 없음")
-    void getEvaluatableUsers_success_noEvaluations() {
-        // given
-        UUID meetupId = UUID.randomUUID();
-        UUID evaluatorProfileId = UUID.randomUUID();
-        UUID targetProfileId = UUID.randomUUID();
-
-        ProfileResponse targetProfile = new ProfileResponse(
-            targetProfileId,
-            "참가자",
-            25,
-            Gender.MALE,
-            "https://example.com/test.png",
-            "소개",
-            "서울",
-            BigDecimal.valueOf(36.5),
-            10,
-            2,
-            null,
-            LocalDateTime.now(),
-            LocalDateTime.now()
-        );
-        ParticipantResponse participantResponse = new ParticipantResponse(
-            1L,
-            targetProfile,
-            "MEMBER",
-            true,
-            false,
-            LocalDateTime.now().minusMinutes(5),
-            LocalDateTime.now().minusDays(1)
-        );
-
-        given(participantService.getParticipantsByMeetupId(meetupId))
-            .willReturn(List.of(
-                new ParticipantResponse(
-                    1L,
-                    new ProfileResponse(
-                        evaluatorProfileId,
-                        "평가자",
-                        30,
-                        Gender.MALE,
-                        null,
-                        "소개",
-                        "부산",
-                        BigDecimal.valueOf(37.0),
-                        5,
-                        1,
-                        null,
-                        LocalDateTime.now(),
-                        LocalDateTime.now()
-                    ),
-                    "MEMBER",
-                    true,
-                    false,
-                    LocalDateTime.now(),
-                    LocalDateTime.now()
-                ),
-                participantResponse
-            ));
-
-        given(evaluationRepository.findByMeetupIdAndEvaluatorProfileId(meetupId, evaluatorProfileId))
-            .willReturn(List.of());
-
-        // when
-        List<EvaluatableProfileResponse> result =
-            evaluationService.getEvaluatableUsers(meetupId, evaluatorProfileId);
-
-        // then
-        assertThat(result).hasSize(1); // 자기 자신 제외
-        EvaluatableProfileResponse resp = result.getFirst();
-        assertThat(resp.profileId()).isEqualTo(targetProfileId);
-        assertThat(resp.nickname()).isEqualTo("참가자");
-        assertThat(resp.currentEvaluation()).isNull();
-    }
-
-    @Test
-    @DisplayName("평가 가능한 사용자 조회 성공 - 이미 평가한 경우 LIKE 반환")
-    void getEvaluatableUsers_success_withExistingEvaluation() {
-        // given
-        UUID meetupId = UUID.randomUUID();
-        UUID evaluatorProfileId = UUID.randomUUID();
-        UUID targetProfileId = UUID.randomUUID();
-
-        ProfileResponse targetProfile = new ProfileResponse(
-            targetProfileId,
-            "참가자",
-            25,
-            Gender.FEMALE,
-            "https://example.com/test.png",
-            "소개",
-            "서울",
-            BigDecimal.valueOf(36.5),
-            10,
-            2,
-            null,
-            LocalDateTime.now(),
-            LocalDateTime.now()
-        );
-        ParticipantResponse participantResponse = new ParticipantResponse(
-            1L,
-            targetProfile,
-            "MEMBER",
-            true,
-            false,
-            LocalDateTime.now().minusMinutes(5),
-            LocalDateTime.now().minusDays(1)
-        );
-
-        given(participantService.getParticipantsByMeetupId(meetupId))
-            .willReturn(List.of(participantResponse));
-
-        Evaluation existingEval = Evaluation.create(
-            meetupId,
-            evaluatorProfileId,
-            targetProfileId,
-            Rating.LIKE,
-            "ipHash"
-        );
-        given(evaluationRepository.findByMeetupIdAndEvaluatorProfileId(meetupId, evaluatorProfileId))
-            .willReturn(List.of(existingEval));
-
-        // when
-        List<EvaluatableProfileResponse> result =
-            evaluationService.getEvaluatableUsers(meetupId, evaluatorProfileId);
-
-        // then
-        assertThat(result).hasSize(1);
-        EvaluatableProfileResponse resp = result.getFirst();
-        assertThat(resp.currentEvaluation()).isEqualTo(Rating.LIKE);
+            () -> evaluationCommandService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
     }
 }
