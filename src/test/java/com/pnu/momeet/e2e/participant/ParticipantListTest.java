@@ -32,7 +32,7 @@ public class ParticipantListTest extends BaseParticipantTest {
         
         // When & Then: 참가자 목록 조회
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
         .when()
                 .get("/{meetupId}/participants")
@@ -41,11 +41,11 @@ public class ParticipantListTest extends BaseParticipantTest {
                 .statusCode(200)
                 .body("size()", equalTo(3)) // 호스트 + 참가자 2명
                 .body("profile.nickname", hasItems(
-                        profiles.get(0).getNickname(),
+                        profiles.getFirst().getNickname(),
                         profiles.get(1).getNickname(),
                         profiles.get(2).getNickname()
                 ))
-                .body("find { it.role == 'HOST' }.profile.nickname", equalTo(profiles.get(0).getNickname()))
+                .body("find { it.role == 'HOST' }.profile.nickname", equalTo(profiles.getFirst().getNickname()))
                 .body("findAll { it.role == 'MEMBER' }.size()", equalTo(2));
     }
 
@@ -57,7 +57,7 @@ public class ParticipantListTest extends BaseParticipantTest {
         
         // When & Then: 참가자 목록 조회
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
         .when()
                 .get("/{meetupId}/participants")
@@ -65,7 +65,7 @@ public class ParticipantListTest extends BaseParticipantTest {
                 .log().all()
                 .statusCode(200)
                 .body("size()", equalTo(1)) // 호스트만
-                .body("[0].profile.nickname", equalTo(profiles.get(0).getNickname()))
+                .body("[0].profile.nickname", equalTo(profiles.getFirst().getNickname()))
                 .body("[0].role", equalTo("HOST"));
     }
 
@@ -104,7 +104,7 @@ public class ParticipantListTest extends BaseParticipantTest {
         
         // When & Then: 존재하지 않는 밋업의 참가자 목록 조회
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", nonExistentMeetupId)
         .when()
                 .get("/{meetupId}/participants")
@@ -146,7 +146,7 @@ public class ParticipantListTest extends BaseParticipantTest {
         
         // When & Then: 참가자 목록 조회 시 프로필 정보 확인
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
         .when()
                 .get("/{meetupId}/participants")
@@ -180,7 +180,7 @@ public class ParticipantListTest extends BaseParticipantTest {
         
         // When & Then: 전체 참가자 목록 조회
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
         .when()
                 .get("/{meetupId}/participants")

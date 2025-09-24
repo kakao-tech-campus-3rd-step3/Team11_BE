@@ -1,20 +1,18 @@
 package com.pnu.momeet.domain.auth.service;
 
-import com.pnu.momeet.common.exception.BannedAccountException;
 import com.pnu.momeet.common.security.util.JwtTokenProvider;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
-import com.pnu.momeet.domain.member.dto.response.MemberInfo;
-import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.member.service.MemberEntityService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,24 +22,25 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailAuthService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider tokenProvider;
-    private final MemberService memberService;
+    private final MemberEntityService memberService;
     private final PasswordEncoder passwordEncoder;
 
     private static final long IAT_BUFFER_SECONDS = 10;
 
     private TokenResponse generateTokenPair(UUID memberId) {
         // 토큰 발급 시점 기록 & 계정 활성화
-        memberService.updateMemberById(memberId, member -> {
-            member.setTokenIssuedAt(LocalDateTime.now().minusSeconds(IAT_BUFFER_SECONDS));
-            member.setEnabled(true);
+        Member member = memberService.getById(memberId);
+        memberService.updateMember(member, m -> {
+            m.setTokenIssuedAt(LocalDateTime.now().minusSeconds(IAT_BUFFER_SECONDS));
+            m.setEnabled(true);
         });
-
         // 액세스 토큰과 리프레시 토큰 발급
         String accessToken = tokenProvider.generateAccessToken(memberId);
         String refreshToken = tokenProvider.generateRefreshToken(memberId);
@@ -54,41 +53,43 @@ public class EmailAuthService {
 
     @Transactional
     public TokenResponse signUp(String email, String password) {
-        MemberResponse savedMember = memberService.saveMember(new Member(email, password, List.of(Role.ROLE_USER)));
-        return generateTokenPair(savedMember.id());
+        Member savedMember = memberService.createMember(
+                new Member(email, password, List.of(Role.ROLE_USER))
+        );
+        var response =  generateTokenPair(savedMember.getId());
+        log.info("회원가입 성공: {}", email);
+        return response;
     }
 
     @Transactional
     public TokenResponse login(String email, String password) {
-
-        MemberInfo memberInfo;
+        Member member;
         try {
-            memberInfo = memberService.findMemberInfoByEmail(email);
+            member = memberService.getByEmail(email);
         } catch (NoSuchElementException e) {
+            log.warn("로그인 실패: 존재하지 않는 이메일 - {}", email);
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
-
-        if (memberInfo.provider() != Provider.EMAIL) {
+        if (member.getProvider() != Provider.EMAIL) {
+            log.warn("로그인 실패: 지원하지 않는 경로 - {} - {}", member.getProvider(), email);
             throw new AuthenticationException("지원하지 않은 경로로 로그인을 시도하였습니다.") {};
         }
-
-        if (!passwordEncoder.matches(password, memberInfo.password())) {
+        if (!passwordEncoder.matches(password, member.getPassword())) {
+            log.warn("로그인 실패: 비밀번호 불일치 - {}", email);
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
-
-        if (!memberInfo.isAccountNonLocked()) {
-            throw new BannedAccountException("잠긴 계정입니다. 관리자에게 문의하세요.") {};
-        }
-
-        return generateTokenPair(memberInfo.id());
+        var response =  generateTokenPair(member.getId());
+        log.info("로그인 성공: {}", email);
+        return response;
     }
 
     @Transactional
     public void logout(UUID memberId) {
         if (refreshTokenRepository.existsById(memberId)) {
-            memberService.disableMemberById(memberId);
             refreshTokenRepository.deleteById(memberId);
+            log.info("로그아웃 성공: {}", memberId);
         }
+        log.warn("로그아웃 시도: 존재하지 않는 회원 - {}", memberId);
     }
 
     @Transactional
@@ -98,20 +99,26 @@ public class EmailAuthService {
             Claims payload = tokenProvider.getPayload(refreshToken);
             memberId = UUID.fromString(payload.getSubject());
         } catch (ExpiredJwtException e) {
+            log.warn("리프레시 토큰 만료: {}", refreshToken);
             throw new AuthenticationException("리프레시 토큰이 만료되었습니다. 다시 로그인 해주세요.") {
             };
         } catch (Exception e) {
+            log.warn("리프레시 토큰 파싱 실패: {}", refreshToken);
             throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") {
             };
         }
 
-        RefreshToken savedToken = refreshTokenRepository.findById(memberId).orElseThrow(
-                () -> new AuthenticationException("로그아웃된 사용자입니다. 다시 로그인 해주세요.") {});
-
-        if (!savedToken.getValue().equals(refreshToken)) {
+        var savedToken = refreshTokenRepository.findById(memberId);
+        if (savedToken.isEmpty()) {
+            log.warn("리프레시 토큰 없음: {}", memberId);
+            throw new AuthenticationException("로그아웃된 사용자입니다. 다시 로그인 해주세요.") {};
+        }
+        if (!savedToken.get().getValue().equals(refreshToken)) {
+            log.warn("리프레시 토큰 불일치: {}", memberId);
             throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") {};
         }
-
-        return generateTokenPair(memberId);
+        var response =  generateTokenPair(memberId);
+        log.info("토큰 재발급 성공: {}", memberId);
+        return response;
     }
 }

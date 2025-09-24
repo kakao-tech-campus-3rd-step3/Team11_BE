@@ -5,10 +5,13 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 public class ProfileSelfTest extends BaseProfileTest {
 
@@ -60,10 +63,15 @@ public class ProfileSelfTest extends BaseProfileTest {
     @Test
     @DisplayName("내 프로필 조회 실패 - 404 Not Found (프로필 없음)")
     void getMyProfile_fail_notFound_profileMissing() {
-        // admin 계정에는 프로필이 없음
+        var member = memberService.saveMember(new MemberCreateRequest(
+                "SearchTest@test.com", "SearchTestPass1!", List.of("ROLE_USER")
+        ));
+        membersToBeDeleted.add(member.id());
+        var tokenResponse = emailAuthService.login("SearchTest@test.com", "SearchTestPass1!");
+
         RestAssured
             .given()
-                .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_ADMIN).accessToken())
+                .header(AUTH_HEADER, BEAR_PREFIX + tokenResponse.accessToken())
             .when()
                 .get("/me")
             .then()

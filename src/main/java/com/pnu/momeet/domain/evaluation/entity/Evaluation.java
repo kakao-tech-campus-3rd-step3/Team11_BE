@@ -16,12 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(
-    name = "evaluation",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uq_evaluation", columnNames = {"meetup_id", "evaluator_profile_id", "target_profile_id", "ip_hash"})
-    }
-)
+@Table(name = "evaluation")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -36,7 +31,7 @@ public class Evaluation extends BaseCreatedEntity {
     @Column(name = "target_profile_id", nullable = false)
     private UUID targetProfileId;
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     @Column(name = "rating", nullable = false)
     private Rating rating;
 

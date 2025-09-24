@@ -68,9 +68,9 @@ public class Participant extends SimpleCreationEntity {
     ) {
         this.meetup = meetup;
         this.profile = profile;
-        this.role = role;
-        this.isActive = isActive;
-        this.isRated = isRated;
-        this.lastActiveAt = lastActiveAt;
+        this.role = (role != null) ? role : MeetupRole.MEMBER;
+        this.isActive = (isActive != null) ? isActive : false;
+        this.isRated = (isRated != null) ? isRated : false;
+        this.lastActiveAt = (lastActiveAt != null) ? lastActiveAt : LocalDateTime.now();
     }
 }

@@ -1,7 +1,7 @@
 package com.pnu.momeet.e2e.member;
 
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
-import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,20 +30,20 @@ public class MemberReadTest extends BaseMemberTest {
 
         IntStream.range(0, 15)
             .forEach(num -> {
-                Member member = new Member(
-                        "readTest" + num + "@test.com",
-                        "ReadTestPass123!@#",
-                        List.of(Role.ROLE_USER)
+                var request = new MemberCreateRequest(
+                    "readTest" + num + "@test.com",
+                    "ReadTestPass123!@#",
+                    List.of(Role.ROLE_USER.name())
                 );
-                memberService.saveMember(member);
-                toBeDeleted.add(member.getId());
+                var response =  memberService.saveMember(request);
+                toBeDeleted.add(response.id());
             });
 
         testMember = memberService.saveMember(
-                new Member(
+                new MemberCreateRequest(
                 "testerRead@test.com",
                 "ReadTestPass123!@#",
-                List.of(Role.ROLE_USER)
+                List.of(Role.ROLE_USER.name())
         ));
 
         testMemberToken = emailAuthService.login(

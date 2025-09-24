@@ -39,3 +39,6 @@ out/
 ### env files ###
 .env
 .env.local
+
+### Logs ###
+logs

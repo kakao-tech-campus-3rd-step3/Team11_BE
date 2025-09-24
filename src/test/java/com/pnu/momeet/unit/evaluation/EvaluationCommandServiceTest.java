@@ -12,14 +12,14 @@ import com.pnu.momeet.domain.evaluation.dto.response.EvaluationResponse;
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
 import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
-import com.pnu.momeet.domain.evaluation.service.EvaluationService;
+import com.pnu.momeet.domain.evaluation.service.EvaluationCommandService;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
-import com.pnu.momeet.domain.participant.service.ParticipantService;
+import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
-import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import com.pnu.momeet.unit.BaseUnitTest;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,19 +35,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
-class EvaluationServiceTest extends BaseUnitTest {
+class EvaluationCommandServiceTest extends BaseUnitTest {
 
     @Mock
     private EvaluationRepository evaluationRepository;
 
     @Mock
-    private ProfileService profileService;
+    private ProfileDomainService profileService;
 
     @Mock
-    private ParticipantService participantService;
+    private ParticipantDomainService participantService;
 
     @InjectMocks
-    private EvaluationService evaluationService;
+    private EvaluationCommandService evaluationCommandService;
 
     @Test
     @DisplayName("평가 성공 - LIKE")
@@ -94,7 +94,7 @@ class EvaluationServiceTest extends BaseUnitTest {
 
         EvaluationCreateRequest request = new EvaluationCreateRequest(meetupId, targetProfileId, Rating.LIKE);
 
-        EvaluationResponse resp = evaluationService.createEvaluation(evaluatorMemberId, request, "fakeHash");
+        EvaluationResponse resp = evaluationCommandService.createEvaluation(evaluatorMemberId, request, "fakeHash");
 
         assertThat(resp.rating()).isEqualTo("LIKE");
         verify(evaluationRepository).save(any(Evaluation.class));
@@ -142,7 +142,7 @@ class EvaluationServiceTest extends BaseUnitTest {
         EvaluationCreateRequest request = new EvaluationCreateRequest(meetupId, targetProfileId, Rating.LIKE);
 
         assertThrows(IllegalStateException.class,
-            () -> evaluationService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
+            () -> evaluationCommandService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
     }
 
     @Test
@@ -196,7 +196,7 @@ class EvaluationServiceTest extends BaseUnitTest {
         EvaluationCreateRequest request = new EvaluationCreateRequest(meetupId, targetProfileId, Rating.LIKE);
 
         assertThrows(IllegalStateException.class,
-            () -> evaluationService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
+            () -> evaluationCommandService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
     }
 
     @Test
@@ -245,7 +245,7 @@ class EvaluationServiceTest extends BaseUnitTest {
         EvaluationCreateRequest request = new EvaluationCreateRequest(meetupId, targetProfileId, Rating.LIKE);
 
         assertThrows(IllegalStateException.class,
-            () -> evaluationService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
+            () -> evaluationCommandService.createEvaluation(evaluatorMemberId, request, "fakeHash"));
     }
 
     @Test
@@ -267,7 +267,6 @@ class EvaluationServiceTest extends BaseUnitTest {
             BigDecimal.valueOf(36.5),
             10,
             2,
-            null,
             LocalDateTime.now(),
             LocalDateTime.now()
         );
@@ -296,7 +295,6 @@ class EvaluationServiceTest extends BaseUnitTest {
                         BigDecimal.valueOf(37.0),
                         5,
                         1,
-                        null,
                         LocalDateTime.now(),
                         LocalDateTime.now()
                     ),
@@ -314,7 +312,7 @@ class EvaluationServiceTest extends BaseUnitTest {
 
         // when
         List<EvaluatableProfileResponse> result =
-            evaluationService.getEvaluatableUsers(meetupId, evaluatorProfileId);
+            evaluationCommandService.getEvaluatableUsers(meetupId, evaluatorProfileId);
 
         // then
         assertThat(result).hasSize(1); // 자기 자신 제외
@@ -343,7 +341,6 @@ class EvaluationServiceTest extends BaseUnitTest {
             BigDecimal.valueOf(36.5),
             10,
             2,
-            null,
             LocalDateTime.now(),
             LocalDateTime.now()
         );
@@ -372,7 +369,7 @@ class EvaluationServiceTest extends BaseUnitTest {
 
         // when
         List<EvaluatableProfileResponse> result =
-            evaluationService.getEvaluatableUsers(meetupId, evaluatorProfileId);
+            evaluationCommandService.getEvaluatableUsers(meetupId, evaluatorProfileId);
 
         // then
         assertThat(result).hasSize(1);
