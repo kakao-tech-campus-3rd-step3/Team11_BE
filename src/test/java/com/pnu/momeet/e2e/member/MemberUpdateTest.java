@@ -2,9 +2,9 @@ package com.pnu.momeet.e2e.member;
 
 import com.pnu.momeet.domain.member.dto.request.AdminChangePasswordRequest;
 import com.pnu.momeet.domain.member.dto.request.ChangePasswordRequest;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.request.MemberEditRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
-import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -30,10 +30,10 @@ public class MemberUpdateTest extends BaseMemberTest {
     protected void setup() {
         super.setup();
         testMember = memberService.saveMember(
-                new Member(
+                new MemberCreateRequest(
                 "update_info_test@test.com",
                 "updateTestPass1!",
-                    List.of(Role.ROLE_USER)
+                    List.of(Role.ROLE_USER.name())
         ));
         testMemberToken = emailAuthService.login(
                 testMember.email(),

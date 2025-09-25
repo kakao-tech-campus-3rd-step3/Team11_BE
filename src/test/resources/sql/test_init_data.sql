@@ -91,7 +91,7 @@ INSERT INTO public_test.meetup_participant (
 ) VALUES (
     (SELECT id FROM public_test.meetup WHERE name = '종료된 테스트 모임'),
     (SELECT id FROM public_test.profile WHERE nickname = '관리자'),
-    'OWNER',
+    'HOST',
     true,
     false,
     now()

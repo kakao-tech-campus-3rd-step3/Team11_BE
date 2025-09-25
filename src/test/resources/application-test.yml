@@ -6,11 +6,11 @@ spring:
       path: /h2-console
   jpa:
     database: postgresql
-    show-sql: true
+    show-sql: false
     properties:
-      format_sql: true
+      format_sql: false
       hibernate:
-        show_sql: true
+        show_sql: false
         default_schema: public_test
     defer-datasource-initialization: true
 
@@ -18,3 +18,8 @@ spring:
     init:
       mode: always
       data-locations: classpath:sql/test_init_scheme.sql, classpath:sql/test_init_data.sql
+
+logging:
+  level:
+    org.springframework: WARN
+    com.pnu.momeet: DEBUG

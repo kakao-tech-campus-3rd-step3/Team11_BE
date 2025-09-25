@@ -34,7 +34,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // When & Then: 호스트가 참가자를 강퇴
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
                 .pathParam("participantId", participantId)
         .when()
@@ -45,7 +45,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // 참가자 목록에서 제거되었는지 확인
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
         .when()
                 .get("/{meetupId}/participants")
@@ -53,7 +53,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
                 .log().all()
                 .statusCode(200)
                 .body("size()", equalTo(1)) // 호스트만 남음
-                .body("[0].profile.nickname", equalTo(profiles.get(0).getNickname()))
+                .body("[0].profile.nickname", equalTo(profiles.getFirst().getNickname()))
                 .body("profile.nickname", not(hasItem(profiles.get(1).getNickname())));
     }
 
@@ -96,7 +96,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // When: 호스트가 특정 참가자를 강퇴
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
                 .pathParam("participantId", participantToKickId)
         .when()
@@ -107,7 +107,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // Then: 강퇴된 참가자만 제거되고 나머지는 유지
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
         .when()
                 .get("/{meetupId}/participants")
@@ -116,7 +116,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
                 .statusCode(200)
                 .body("size()", equalTo(3)) // 호스트 + 2명 참가자
                 .body("profile.nickname", hasItems(
-                        profiles.get(0).getNickname(),
+                        profiles.getFirst().getNickname(),
                         profiles.get(1).getNickname(),
                         profiles.get(3).getNickname()
                 ))
@@ -171,7 +171,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // When & Then: 존재하지 않는 참가자를 강퇴 시도
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
                 .pathParam("participantId", nonExistentParticipantId)
         .when()
@@ -189,7 +189,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // 호스트의 참가자 ID 조회
         Response participantsResponse = given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
         .when()
                 .get("/{meetupId}/participants")
@@ -202,7 +202,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // When & Then: 호스트가 자신을 강퇴 시도
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
                 .pathParam("participantId", hostParticipantId)
         .when()
@@ -221,7 +221,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // When & Then: 존재하지 않는 밋업에서 강퇴 시도
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", nonExistentMeetupId)
                 .pathParam("participantId", participantId)
         .when()
@@ -292,7 +292,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // 첫 번째 사용자에게 호스트 역할 부여
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
                 .pathParam("participantId", participantId1)
         .when()
@@ -314,7 +314,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // 강퇴된 참가자가 목록에서 제거되었는지 확인
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
         .when()
                 .get("/{meetupId}/participants")
@@ -345,7 +345,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // 참가자 강퇴
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup.id())
                 .pathParam("participantId", participantId)
         .when()
@@ -389,7 +389,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
         
         // When & Then: 첫 번째 밋업의 호스트가 두 번째 밋업의 참가자를 강퇴 시도
         given()
-                .header("Authorization", "Bearer " + tokens.get(0).accessToken())
+                .header("Authorization", "Bearer " + tokens.getFirst().accessToken())
                 .pathParam("meetupId", meetup1.id())
                 .pathParam("participantId", participantId)
         .when()

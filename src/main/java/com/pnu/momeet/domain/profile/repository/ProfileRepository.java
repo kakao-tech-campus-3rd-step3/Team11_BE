@@ -4,6 +4,7 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface ProfileRepository extends JpaRepository<Profile, UUID> {
     Optional<Profile> findByMemberId(UUID memberId);
@@ -11,4 +12,9 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
     boolean existsByMemberId(UUID memberId);
 
     boolean existsByNicknameIgnoreCase(String nickname);
+
+    @Query("""
+        SELECT p.id FROM Profile p WHERE p.memberId = :memberId
+    """)
+    Optional<UUID> findIdByMemberId(UUID memberId);
 }

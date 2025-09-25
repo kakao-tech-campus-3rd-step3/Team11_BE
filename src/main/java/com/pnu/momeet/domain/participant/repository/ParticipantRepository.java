@@ -22,16 +22,13 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
     """)
     List<Participant> findTopTwoByOrderByTemperatureDesc(UUID meetupId);
 
-    Optional<Participant> findByIdAndMeetupId(Long id, UUID meetupId);
+    List<Participant> findAllByProfileId(UUID profileId);
+
     Optional<Participant> findByProfileIdAndMeetupId(UUID profileId, UUID meetupId);
 
-    boolean existsByMeetupIdAndProfileId(UUID meetup_id, UUID profile_id);
+    Optional<Participant> findByIdAndMeetupId(Long id, UUID meetupId);
+
+    boolean existsByProfileIdAndMeetupId(UUID profileId, UUID meetupId);
 
     boolean existsByIdAndMeetupId(Long id, UUID meetupId);
-
-    @Query("""
-        SELECT p FROM Participant p
-        WHERE p.meetup.id = :meetupId AND p.profile.memberId = :memberId
-    """)
-    Optional<Participant> findByMemberIdAndMeetupId(UUID memberId, UUID meetupId);
 }

@@ -2,23 +2,26 @@ package com.pnu.momeet.e2e.meetup;
 
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
-import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.member.service.MemberService;
-import com.pnu.momeet.domain.meetup.service.MeetupService;
+import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.*;
-import java.util.EnumMap;
 
 @Tag("meetup")
 public abstract class BaseMeetupTest extends BaseE2ETest {
@@ -40,10 +43,10 @@ public abstract class BaseMeetupTest extends BaseE2ETest {
     protected EmailAuthService emailAuthService;
 
     @Autowired
-    protected MeetupService meetupService;
+    protected MeetupDomainService meetupService;
     
     @Autowired
-    protected MemberService memberService;
+    protected MemberDomainService memberService;
     @Autowired
     private ProfileRepository profileRepository;
 
@@ -74,9 +77,10 @@ public abstract class BaseMeetupTest extends BaseE2ETest {
     }
 
     protected void createTestUser(String email) {
-        users.put(email, memberService.saveMember(
-                new Member(email, TEST_USER_PASSWORD, List.of(Role.ROLE_USER))
-        ));
+        var request= new MemberCreateRequest(
+            email, TEST_USER_PASSWORD, List.of(Role.ROLE_USER.name())
+        );
+        users.put(email, memberService.saveMember(request));
         userTokens.put(email, emailAuthService.login(email, TEST_USER_PASSWORD));
         memberToBeDeleted.add(users.get(email).id());
 

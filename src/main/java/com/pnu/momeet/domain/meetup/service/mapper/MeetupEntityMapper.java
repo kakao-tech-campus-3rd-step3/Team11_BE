@@ -6,6 +6,8 @@ import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
 import com.pnu.momeet.domain.meetup.dto.response.UnEvaluatedMeetupDto;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.entity.MeetupHashTag;
+import com.pnu.momeet.domain.participant.entity.Participant;
+import com.pnu.momeet.domain.participant.enums.MeetupRole;
 import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
 import com.pnu.momeet.domain.sigungu.service.mapper.SigunguEntityMapper;
 
@@ -91,5 +93,13 @@ public class MeetupEntityMapper {
             meetup.getCapacity(),
             unEvaluatedCount
         );
+    }
+
+    public static Participant toHostParticipant(Meetup meetup) {
+        return Participant.builder()
+                .meetup(meetup)
+                .profile(meetup.getOwner())
+                .role(MeetupRole.HOST)
+                .build();
     }
 }

@@ -16,7 +16,6 @@ public record ProfileResponse(
     BigDecimal temperature,
     int likes,
     int dislikes,
-    Long unEvaluatedMeetupId,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {

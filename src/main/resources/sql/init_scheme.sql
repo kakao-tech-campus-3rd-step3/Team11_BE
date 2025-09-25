@@ -140,11 +140,12 @@ CREATE TABLE evaluation (
     meetup_id UUID  NOT NULL,
     evaluator_profile_id UUID  NOT NULL,
     target_profile_id UUID  NOT NULL,
-    rating SMALLINT NOT NULL, -- 0=LIKE, 1=DISLIKE
+    rating VARCHAR(20) NOT NULL,
     ip_hash VARCHAR(128) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT uq_evaluation UNIQUE (meetup_id, evaluator_profile_id, target_profile_id, ip_hash),
+    CONSTRAINT uq_evaluation_meetup_id_evaluator_profile_id_target_profile_id
+        UNIQUE (meetup_id, evaluator_profile_id, target_profile_id),
     CONSTRAINT fk_evaluation_meetup FOREIGN KEY (meetup_id) REFERENCES meetup(id),
     CONSTRAINT fk_evaluation_evaluator_profile FOREIGN KEY (evaluator_profile_id) REFERENCES profile(id),
     CONSTRAINT fk_evaluation_target_profile FOREIGN KEY (target_profile_id) REFERENCES profile(id)

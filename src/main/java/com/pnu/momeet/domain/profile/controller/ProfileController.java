@@ -1,19 +1,14 @@
 package com.pnu.momeet.domain.profile.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
-import com.pnu.momeet.domain.meetup.dto.response.UnEvaluatedMeetupDto;
 import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
 import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
-import com.pnu.momeet.domain.profile.service.ProfileFacade;
-import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,8 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ProfileController {
 
-    private final ProfileService profileService;
-    private final ProfileFacade profileFacade;
+    private final ProfileDomainService profileService;
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/me")
@@ -45,18 +39,6 @@ public class ProfileController {
     @GetMapping("/{profileId}")
     public ResponseEntity<ProfileResponse> getProfileById(@PathVariable UUID profileId) {
         return ResponseEntity.ok(profileService.getProfileById(profileId));
-    }
-
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @GetMapping("/me/unEvaluated-meetups")
-    public ResponseEntity<Page<UnEvaluatedMeetupDto>> getUnEvaluatedMeetups(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
-        @PageableDefault(size = 10) Pageable pageable
-    ) {
-        Page<UnEvaluatedMeetupDto> result =
-            profileFacade.getUnEvaluatedMeetups(userDetails.getMemberId(), pageable);
-
-        return ResponseEntity.ok(result);
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
