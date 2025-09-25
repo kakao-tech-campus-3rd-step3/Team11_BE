@@ -40,7 +40,8 @@ public class WebSecurityConfig {
             "/api/auth/signup",
             "/api/auth/refresh",
             "/api/auth/kakao",  // Kakao 소셜 로그인 허용
-            "/api/auth/kakao/callback",   // Kakao 소셜 로그인 콜백 허용
+            "/api/auth/kakao/callback", // Kakao 소셜 로그인 콜백 허용
+            "/api/auth/kakao/withdraw", // Kakao 소셜 회원 탈퇴
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/error",
