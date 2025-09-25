@@ -1,4 +1,4 @@
-package com.pnu.momeet.common.config;
+package com.pnu.momeet.common.security.config;
 
 import com.pnu.momeet.common.security.details.CustomUserDetailService;
 import com.pnu.momeet.common.security.filter.JwtAuthenticationFilter;

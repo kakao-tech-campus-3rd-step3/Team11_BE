@@ -1,6 +1,5 @@
 package com.pnu.momeet.common.config;
 
-import com.pnu.momeet.common.security.handler.CustomHandshakeHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +18,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
         registry.addEndpoint("/ws/chat")
-                .setHandshakeHandler(new CustomHandshakeHandler())
+//                .setHandshakeHandler(new CustomHandshakeHandler())
                 // TODO: 배포 시 도메인 수정
                 .setAllowedOriginPatterns("*") // 모든 도메인 허용(개발용)
                 .withSockJS()
