@@ -9,7 +9,7 @@ import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
 import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
-import com.pnu.momeet.domain.badge.service.BadgeService;
+import com.pnu.momeet.domain.badge.service.BadgeDomainService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class BadgeController {
 
-    private final BadgeService badgeService;
+    private final BadgeDomainService badgeService;
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/me/badges")
