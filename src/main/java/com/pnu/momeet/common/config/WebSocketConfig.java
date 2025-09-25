@@ -1,7 +1,6 @@
 package com.pnu.momeet.common.config;
 
 import com.pnu.momeet.common.security.handler.CustomHandshakeHandler;
-import com.pnu.momeet.common.security.interceptor.JwtAuthenticationInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,14 +15,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    private final JwtAuthenticationInterceptor authenticationInterceptor;
 
     @Override
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
         registry.addEndpoint("/ws/chat")
                 .setHandshakeHandler(new CustomHandshakeHandler())
-                .addInterceptors(authenticationInterceptor)
-                .setAllowedOriginPatterns("*")
+                // TODO: 배포 시 도메인 수정
+                .setAllowedOriginPatterns("*") // 모든 도메인 허용(개발용)
                 .withSockJS()
                 .setHeartbeatTime(25000); // 25초마다 heartbeat
     }
@@ -41,15 +39,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(
             @NonNull MessageBrokerRegistry registry
     ) {
-        // Simple broker 설정 - 메모리 기반
-        registry.enableSimpleBroker("/topic", "/queue")
-                .setHeartbeatValue(new long[]{10000, 10000})
-                .setTaskScheduler(customMessageBrokerTaskScheduler()); // 커스텀 스케줄러 연결
 
         // 애플리케이션 목적지 prefix
-        registry.setApplicationDestinationPrefixes("/app");
+        registry.setApplicationDestinationPrefixes("/app", "/topic");
 
-        // 사용자별 목적지 prefix
-        registry.setUserDestinationPrefix("/user");
+        // Simple broker 설정 - 메모리 기반
+        registry.enableSimpleBroker("/topic", "/queue")
+                .setHeartbeatValue(new long[]{10_000, 20_000})
+                .setTaskScheduler(customMessageBrokerTaskScheduler()); // 커스텀 스케줄러 연결
     }
 }

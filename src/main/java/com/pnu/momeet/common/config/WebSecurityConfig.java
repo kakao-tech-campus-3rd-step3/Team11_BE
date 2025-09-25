@@ -39,12 +39,9 @@ public class WebSecurityConfig {
             "/api/auth/login",
             "/api/auth/signup",
             "/api/auth/refresh",
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
             "/error",
             "/admin",  // 관리자 페이지 허용
-            "/admin/**",
-            "/ws/chat/**"  // WebSocket 엔드포인트 허용
+            "/admin/**"
     };
 
     @Bean
@@ -101,6 +98,7 @@ public class WebSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
+        // TODO : 배포 시 도메인으로 변경
         configuration.addAllowedOriginPattern("*");
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
