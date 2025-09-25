@@ -151,18 +151,16 @@ public class KakaoAuthService {
 
             return existingMember.getId();
         } catch (NoSuchElementException e) {
-            Member newMember = memberEntityService.saveMember(
-                    new Member(
-                            kakaoUserInfo.email(),
-                            "",
-                            Provider.KAKAO,
-                            kakaoUserInfo.kakaoId(),
-                            List.of(Role.ROLE_USER)
-                    )
-            );
-            log.info("카카오 회원가입 성공: {}", kakaoUserInfo.email());
-            return newMember.getId();
+            return signupKakaoMember(kakaoUserInfo);
         }
+    }
+
+    private UUID signupKakaoMember(KakaoUserInfo kakaoUserInfo) {
+        Member newMember = memberEntityService.saveMember(
+                new Member(kakaoUserInfo.email(), "", Provider.KAKAO, kakaoUserInfo.kakaoId(), List.of(Role.ROLE_USER))
+        );
+        log.info("카카오 회원가입 성공: {}", kakaoUserInfo.email());
+        return newMember.getId();
     }
 
     private TokenResponse generateKakaoTokenPair(UUID memberId) {
