@@ -12,23 +12,23 @@ import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
-import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
+import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
-import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
+import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeDslRepository;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import com.pnu.momeet.domain.badge.service.BadgeService;
-import com.pnu.momeet.domain.profile.entity.Profile;
+import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.enums.Gender;
-import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -41,7 +41,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -62,7 +61,7 @@ class BadgeServiceTest {
     private BadgeDslRepository badgeDslRepository;
 
     @Mock
-    private ProfileService profileService;
+    private ProfileDomainService profileService;
 
     @Mock
     private S3StorageService s3StorageService;
@@ -77,13 +76,13 @@ class BadgeServiceTest {
         UUID memberId = UUID.randomUUID();
         UUID profileId = UUID.randomUUID();
 
-        Profile real = Profile.create(memberId, "닉", 20, Gender.MALE, null, "소개", "부산");
-        Profile profile = Mockito.spy(real);
-        Mockito.doReturn(profileId).when(profile).getId();
+        ProfileResponse profileResponse = new ProfileResponse(
+            profileId, "닉", 20, Gender.MALE, null, "소개", "부산",
+            BigDecimal.valueOf(36.5), 0, 0,
+            LocalDateTime.now().minusDays(2), LocalDateTime.now()
+        );
 
-        given(profileService.getProfileEntityByMemberId(memberId)).willReturn(profile);
-
-        given(profileService.getProfileEntityByMemberId(memberId)).willReturn(profile);
+        given(profileService.getProfileByMemberId(memberId)).willReturn(profileResponse);
 
         ProfileBadgePageRequest req = new ProfileBadgePageRequest();
         req.setPage(0);
@@ -122,7 +121,7 @@ class BadgeServiceTest {
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent()).hasSize(2);
 
-        verify(profileService).getProfileEntityByMemberId(memberId);
+        verify(profileService).getProfileByMemberId(memberId);
 
         verify(badgeDslRepository).findBadgesByProfileId(eq(profileId), pageableCaptor.capture());
         Pageable used = pageableCaptor.getValue();
@@ -139,14 +138,14 @@ class BadgeServiceTest {
         ProfileBadgePageRequest req = new ProfileBadgePageRequest();
         req.setPage(0); req.setSize(10);
 
-        given(profileService.getProfileEntityByMemberId(memberId))
+        given(profileService.getProfileByMemberId(memberId))
             .willThrow(new NoSuchElementException("프로필이 존재하지 않습니다."));
 
         // when & then
         assertThrows(NoSuchElementException.class,
             () -> badgeService.getMyBadges(memberId, req));
 
-        verify(profileService).getProfileEntityByMemberId(memberId);
+        verify(profileService).getProfileByMemberId(memberId);
         verify(badgeDslRepository, never()).findBadgesByProfileId(any(), any());
     }
 
@@ -157,17 +156,12 @@ class BadgeServiceTest {
         UUID profileId = UUID.randomUUID();
 
         // 존재 검증만 통과하면 되므로, 반환값은 내용이 중요치 않음
-        UUID dummyMemberId = UUID.randomUUID();
-        Profile dummy = Profile.create(
-            dummyMemberId,
-            "닉",
-            20,
-            Gender.FEMALE,
-            null,
-            "소개",
-            "부산"
+        ProfileResponse profileResponse = new ProfileResponse(
+            profileId, "닉", 20, Gender.MALE, null, "소개", "부산",
+            BigDecimal.valueOf(36.5), 0, 0,
+            LocalDateTime.now().minusDays(2), LocalDateTime.now()
         );
-        given(profileService.getProfileEntityByProfileId(profileId)).willReturn(dummy);
+        given(profileService.getProfileById(profileId)).willReturn(profileResponse);
 
         ProfileBadgePageRequest req = new ProfileBadgePageRequest();
         req.setPage(1);
@@ -215,7 +209,7 @@ class BadgeServiceTest {
         assertThat(result.getTotalElements()).isEqualTo(7);
         assertThat(result.getContent()).hasSize(3);
 
-        verify(profileService).getProfileEntityByProfileId(profileId);
+        verify(profileService).getProfileById(profileId);
         verify(badgeDslRepository).findBadgesByProfileId(eq(profileId), pageableCaptor.capture());
 
         Pageable used = pageableCaptor.getValue();
@@ -233,14 +227,14 @@ class BadgeServiceTest {
         req.setPage(0);
         req.setSize(10);
 
-        given(profileService.getProfileEntityByProfileId(profileId))
+        given(profileService.getProfileById(profileId))
             .willThrow(new NoSuchElementException("프로필이 존재하지 않습니다."));
 
         // when & then
         assertThrows(NoSuchElementException.class,
             () -> badgeService.getUserBadges(profileId, req));
 
-        verify(profileService).getProfileEntityByProfileId(profileId);
+        verify(profileService).getProfileById(profileId);
         verify(badgeDslRepository, never()).findBadgesByProfileId(any(), any());
     }
 
