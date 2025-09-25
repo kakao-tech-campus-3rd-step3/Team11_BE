@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -77,13 +79,14 @@ public class KakaoAuthService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        String body = "grant_type=authorization_code" +
-                "&client_id=" + clientId +
-                "&client_secret=" + clientSecret +
-                "&redirect_uri=" + redirectUri +
-                "&code=" + code;
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", "authorization_code");
+        form.add("client_id", clientId);
+        form.add("client_secret", clientSecret);
+        form.add("redirect_uri", redirectUri);
+        form.add("code", code);
 
-        HttpEntity<String> request = new HttpEntity<>(body, headers);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
