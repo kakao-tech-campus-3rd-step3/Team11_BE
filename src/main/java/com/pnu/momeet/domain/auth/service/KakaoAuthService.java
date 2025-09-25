@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -51,10 +52,12 @@ public class KakaoAuthService {
     private final RefreshTokenRepository refreshTokenRepository;
 
     public String getKakaoAuthUrl() {
-        return "https://kauth.kakao.com/oauth/authorize" +
-                "?response_type=code" +
-                "&client_id=" + clientId +
-                "&redirect_uri=" + redirectUri;
+        return UriComponentsBuilder.fromUriString("https://kauth.kakao.com/oauth/authorize")
+                .queryParam("response_type", "code")
+                .queryParam("client_id", clientId)
+                .queryParam("redirect_uri", redirectUri)
+                .build(true)
+                .toUriString();
     }
 
     public KakaoUserInfo getKakaoUserInfo(String code) {
