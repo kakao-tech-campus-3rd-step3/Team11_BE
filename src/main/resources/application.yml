@@ -24,7 +24,7 @@ spring:
 
   jpa:
     database: postgresql
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: update
     defer-datasource-initialization: true

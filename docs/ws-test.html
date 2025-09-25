@@ -146,12 +146,11 @@
 
             const socket = new SockJS(socketUrl);
             stompClient = Stomp.over(socket);
+            stompClient.heartbeat.outgoing = 20000; // 클라이언트 -> 서버
+            stompClient.heartbeat.incoming = 20000;
             // 로그 과다 방지
             stompClient.debug = function() {};
 
-            // 서버는 핸드셰이크 단계에서 Cookie 또는 Authorization 헤더를 사용합니다.
-            // 브라우저 기본 WebSocket/SockJS는 커스텀 헤더 주입이 어려우므로
-            // 쿠키 기반 인증이 필요합니다(동일 오리진 권장).
             stompClient.connect({}, function onConnect() {
                 setStatus(true);
                 log('STOMP connected');
@@ -159,15 +158,20 @@
                 // 구독 설정
                 const msgDest = `/topic/meetups/${meetupId}/messages`;
                 const actDest = `/topic/meetups/${meetupId}/actions`;
-
-                subscriptions.push(stompClient.subscribe(msgDest, (frame) => {
-                    log(`[MESSAGE] ${frame.body}`);
+                const errorDest = `/user/queue/errors`;
+                // 에러 구독 추가
+                subscriptions.push(stompClient.subscribe(errorDest, (frame) => {
+                    log(`[ERROR] ${frame.body}`);
                 }));
                 subscriptions.push(stompClient.subscribe(actDest, (frame) => {
                     log(`[ACTION] ${frame.body}`);
                 }));
+                subscriptions.push(stompClient.subscribe(msgDest, (frame) => {
+                    log(`[MESSAGE] ${frame.body}`);
+                }));
 
-                log(`Subscribed: ${msgDest}, ${actDest}`);
+
+                log(`Subscribed: ${msgDest}, ${actDest}, ${errorDest}`);
             }, function onError(err) {
                 setStatus(false);
                 log(`Connection error: ${err && err.body ? err.body : err}`);
@@ -201,7 +205,6 @@
             const meetupId = getMeetupId();
             const type = byId('msgType').value;
             const content = byId('msgContent').value.trim();
-            if (!content) { alert('내용을 입력하세요.'); return; }
 
             const dest = `/app/meetups/${meetupId}/messages`;
             const payload = { type, content };
@@ -257,5 +260,3 @@
     </script>
 </body>
 </html>
-
-
