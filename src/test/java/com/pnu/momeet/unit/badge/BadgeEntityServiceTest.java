@@ -47,7 +47,7 @@ class BadgeEntityServiceTest {
     @DisplayName("getById - 존재하면 반환")
     void getById_exists() {
         UUID id = UUID.randomUUID();
-        Badge badge = Badge.create("이름", "설명", "https://icon");
+        Badge badge = Badge.create("이름", "설명", "https://icon", "CODE");
         given(badgeRepository.findById(id)).willReturn(Optional.of(badge));
 
         Badge found = entityService.getById(id);
@@ -77,7 +77,7 @@ class BadgeEntityServiceTest {
     @Test
     @DisplayName("save - 위임")
     void save() {
-        Badge b = Badge.create("n", "d", "https://icon");
+        Badge b = Badge.create("n", "d", "https://icon", "CODE");
         given(badgeRepository.save(b)).willReturn(b);
 
         var saved = entityService.save(b);
@@ -89,7 +89,7 @@ class BadgeEntityServiceTest {
     @Test
     @DisplayName("delete - 위임")
     void delete() {
-        Badge b = Badge.create("n", "d", "https://icon");
+        Badge b = Badge.create("n", "d", "https://icon", "CODE");
         entityService.delete(b);
         verify(badgeRepository).delete(b);
     }
@@ -119,6 +119,7 @@ class BadgeEntityServiceTest {
                 "A",
                 "A",
                 "https://a",
+                "A",
                 LocalDateTime.now().minusDays(1),
                 true
             ),
@@ -127,6 +128,7 @@ class BadgeEntityServiceTest {
                 "B",
                 "B",
                 "https://b",
+                "B",
                 LocalDateTime.now().minusDays(2),
                 false
             )
@@ -143,5 +145,27 @@ class BadgeEntityServiceTest {
         verify(badgeDslRepository).findBadgesByProfileId(eq(profileId), pageableCaptor.capture());
         assertThat(pageableCaptor.getValue().getPageNumber()).isEqualTo(1);
         assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("existsByCodeIgnoreCase - 위임(true)")
+    void existsByCodeIgnoreCase_true() {
+        // given
+        given(badgeRepository.existsByCodeIgnoreCase("FIRST_JOIN")).willReturn(true);
+
+        // when / then
+        assertThat(entityService.existsByCodeIgnoreCase("FIRST_JOIN")).isTrue();
+        verify(badgeRepository).existsByCodeIgnoreCase("FIRST_JOIN");
+    }
+
+    @Test
+    @DisplayName("existsByCodeIgnoreCase - 위임(false)")
+    void existsByCodeIgnoreCase_false() {
+        // given
+        given(badgeRepository.existsByCodeIgnoreCase("UNIQUE_CODE")).willReturn(false);
+
+        // when / then
+        assertThat(entityService.existsByCodeIgnoreCase("UNIQUE_CODE")).isFalse();
+        verify(badgeRepository).existsByCodeIgnoreCase("UNIQUE_CODE");
     }
 }

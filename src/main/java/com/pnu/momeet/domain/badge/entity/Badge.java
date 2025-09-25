@@ -26,8 +26,11 @@ public class Badge extends BaseEntity {
     @Column(name = "icon_url", nullable = false, length = 255)
     private String iconUrl;
 
-    public static Badge create(String name, String description, String iconUrl) {
-        return new Badge(name, description, iconUrl);
+    @Column(name = "code", length = 50, nullable = false)
+    private String code;
+
+    public static Badge create(String name, String description, String iconUrl, String code) {
+        return new Badge(name, description, iconUrl, normalizeCode(code));
     }
 
     public void updateIconUrl(String newImageUrl) {
@@ -37,5 +40,9 @@ public class Badge extends BaseEntity {
     public void updateBadge(String name, String description) {
         if (name != null) this.name = name;
         if (description != null) this.description = description;
+    }
+
+    private static String normalizeCode(String raw) {
+        return raw == null ? null : raw.trim().toUpperCase();
     }
 }

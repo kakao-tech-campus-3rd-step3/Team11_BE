@@ -56,6 +56,9 @@ public class Profile extends BaseEntity {
     @Column(name = "dislikes", nullable = false)
     private int dislikes = 0;
 
+    @Column(name = "completed_join_meetups", nullable = false)
+    private int completedJoinMeetups = 0;
+
     private Profile(
         UUID memberId,
         String nickname,
@@ -110,5 +113,9 @@ public class Profile extends BaseEntity {
 
     public void increaseDislikes() {
         this.dislikes++;
+    }
+
+    public void increaseCompletedJoinMeetups() {
+        this.completedJoinMeetups++;
     }
 }

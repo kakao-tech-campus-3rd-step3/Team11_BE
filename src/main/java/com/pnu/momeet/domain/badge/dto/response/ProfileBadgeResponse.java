@@ -8,6 +8,7 @@ public record ProfileBadgeResponse(
     String name,
     String description,
     String iconUrl,
+    String code,
     LocalDateTime createdAt,
     boolean representative
 ) {

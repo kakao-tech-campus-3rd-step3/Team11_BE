@@ -52,7 +52,7 @@ CREATE TABLE public_test.profile (
     temperature              NUMERIC(4,1) NOT NULL DEFAULT 36.5,
     likes                    INTEGER      NOT NULL DEFAULT 0,
     dislikes                 INTEGER      NOT NULL DEFAULT 0,
-    un_evaluated_meetup_id   BIGINT,
+    completed_join_meetups   INTEGER      NOT NULL DEFAULT 0,
     created_at               TIMESTAMP  NOT NULL DEFAULT NOW(),
     updated_at               TIMESTAMP  NOT NULL DEFAULT NOW(),
     CONSTRAINT ck_profile_nickname_len        CHECK (char_length(btrim(nickname)) BETWEEN 2 AND 20),
@@ -137,9 +137,18 @@ CREATE TABLE public_test.badge (
     name        VARCHAR(20)  UNIQUE NOT NULL,
     description VARCHAR(255),
     icon_url    VARCHAR(255) NOT NULL,
+    code        VARCHAR(50)  NOT NULL,
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()
+    updated_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT chk_badge_code_format CHECK (code ~ '^[A-Z0-9_]+$')
 );
+
+-- 배지 이름 대소문자 무시 유니크
+CREATE UNIQUE INDEX IF NOT EXISTS uq_badge_name_ci ON public_test.badge (LOWER(btrim(name)));
+
+-- 배지 코드: 대소문자 무시 유니크 (전 행 대상)
+CREATE UNIQUE INDEX IF NOT EXISTS ux_badge_code_ci ON public_test.badge (LOWER(code));
 
 CREATE TABLE public_test.profile_badge (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),

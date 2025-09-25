@@ -4,6 +4,7 @@ import com.pnu.momeet.common.mapper.facade.EvaluatableProfileMapper;
 import com.pnu.momeet.domain.evaluation.dto.request.EvaluationCreateRequest;
 import com.pnu.momeet.domain.evaluation.dto.response.EvaluationResponse;
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
+import com.pnu.momeet.domain.evaluation.event.EvaluationSubmittedEvent;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 import com.pnu.momeet.domain.evaluation.service.mapper.EvaluationEntityMapper;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
@@ -20,6 +21,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ public class EvaluationCommandService {
     private final EvaluationRepository evaluationRepository;
     private final ProfileDomainService profileService;
     private final ParticipantDomainService participantService;
+    private final ApplicationEventPublisher events;
 
     private static final Duration EVALUATION_COOLTIME = Duration.ofHours(24);
 
@@ -91,7 +94,14 @@ public class EvaluationCommandService {
             ipHash
         );
 
-        return EvaluationEntityMapper.toResponseDto(evaluationRepository.save(newEvaluation));
+        Evaluation saved = evaluationRepository.save(newEvaluation);
+
+        events.publishEvent(new EvaluationSubmittedEvent(
+            request.meetupId(), evaluatorProfile.getId(), targetProfile.getId(),
+            request.rating().name(), LocalDateTime.now()
+        ));
+
+        return EvaluationEntityMapper.toResponseDto(saved);
     }
 
     @Transactional(readOnly = true)

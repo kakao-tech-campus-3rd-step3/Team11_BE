@@ -98,34 +98,37 @@ INSERT INTO public_test.meetup_participant (
 );
 
 INSERT INTO public_test.badge (
-    id, name, description, icon_url, created_at, updated_at
+    id, name, description, icon_url, code, created_at, updated_at
 ) VALUES (
     gen_random_uuid(),
     '[TEST] 모임 새싹',
     '테스트용: 첫 참여 배지',
     'https://static.example.com/badges/test-first.png',
+    'FIRST_JOIN',
     now(),
     now()
 );
 
 INSERT INTO public_test.badge (
-    id, name, description, icon_url, created_at, updated_at
+    id, name, description, icon_url, code, created_at, updated_at
 ) VALUES (
     gen_random_uuid(),
     '[TEST] 모임 고수',
     '테스트용: 10회 참여 배지',
     'https://static.example.com/badges/test-10.png',
+    'TEN_JOINS',
     now(),
     now()
 );
 
 INSERT INTO public_test.badge (
-    id, name, description, icon_url, created_at, updated_at
+    id, name, description, icon_url, code, created_at, updated_at
 ) VALUES (
     gen_random_uuid(),
     '[TEST] 호감 인기인',
-    '테스트용: 좋아요 5개',
+    '테스트용: 좋아요 10개',
     'https://static.example.com/badges/test-like5.png',
+    'LIKE_10',
     now(),
     now()
 );

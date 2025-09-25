@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeDslRepository;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,11 @@ public class BadgeEntityService {
     @Transactional(readOnly = true)
     public boolean existsByNameIgnoreCase(String name) {
         return badgeRepository.existsByNameIgnoreCase(name);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByCodeIgnoreCase(String code) {
+        return badgeRepository.existsByCodeIgnoreCase(code);
     }
 
     @Transactional

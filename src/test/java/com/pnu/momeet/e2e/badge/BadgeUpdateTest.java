@@ -62,7 +62,8 @@ class BadgeUpdateTest extends BaseBadgeTest {
         Badge badge = Badge.create(
             "[E2E] 수정대상",
             "원래 설명",
-            initialIconUrl
+            initialIconUrl,
+            "EDIT"
         );
         badgeRepository.save(badge);
 

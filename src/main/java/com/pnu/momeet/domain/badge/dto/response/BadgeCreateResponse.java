@@ -8,6 +8,7 @@ public record BadgeCreateResponse(
     String name,
     String description,
     String iconUrl,
+    String code,
     LocalDateTime createdAt
 ) {
 }
