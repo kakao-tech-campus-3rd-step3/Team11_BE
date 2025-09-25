@@ -42,6 +42,11 @@ public class ProfileDomainService {
     }
 
     @Transactional(readOnly = true)
+    public ProfileResponse getProfileByMemberId(UUID memberId) {
+        return ProfileEntityMapper.toResponseDto(entityService.getByMemberId(memberId));
+    }
+
+    @Transactional(readOnly = true)
     public ProfileResponse getProfileById(UUID profileId) {
         return ProfileEntityMapper.toResponseDto(entityService.getById(profileId));
     }

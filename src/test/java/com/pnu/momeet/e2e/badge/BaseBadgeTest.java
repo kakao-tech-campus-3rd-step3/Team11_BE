@@ -4,9 +4,8 @@ import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.member.service.MemberService;
-import com.pnu.momeet.domain.profile.repository.ProfileRepository;
-import com.pnu.momeet.domain.profile.service.ProfileService;
+import com.pnu.momeet.domain.member.service.MemberDomainService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
 import java.util.ArrayList;
@@ -29,9 +28,9 @@ public abstract class BaseBadgeTest extends BaseE2ETest {
     @Autowired
     protected EmailAuthService emailAuthService;
     @Autowired
-    protected MemberService memberService;
+    protected MemberDomainService memberService;
     @Autowired
-    protected ProfileService profileService;
+    protected ProfileDomainService profileService;
     @Autowired
     protected BadgeRepository badgeRepository;
 
@@ -45,7 +44,7 @@ public abstract class BaseBadgeTest extends BaseE2ETest {
         testTokens.put(Role.ROLE_USER,  emailAuthService.login(TEST_USER_EMAIL,  TEST_USER_PASSWORD));
 
         // 테스트 유저의 프로필 ID 확보 (E2E 시나리오 용)
-        var testMember = memberService.findMemberByEmail(TEST_USER_EMAIL);
+        var testMember = memberService.getMemberByEmail(TEST_USER_EMAIL);
         testUserProfileId = profileService.getMyProfile(testMember.id()).id();
     }
 

@@ -3,19 +3,18 @@ package com.pnu.momeet.domain.badge.service;
 import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
-import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
+import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
-import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
+import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeDslRepository;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import com.pnu.momeet.domain.badge.service.mapper.BadgeDtoMapper;
-import com.pnu.momeet.domain.profile.entity.Profile;
-import com.pnu.momeet.domain.profile.service.ProfileService;
-import jakarta.validation.Valid;
+import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -34,21 +33,21 @@ public class BadgeService {
 
     private final BadgeDslRepository badgeDslRepository;
     private final BadgeRepository badgeRepository;
-    private final ProfileService profileService;
+    private final ProfileDomainService profileService;
     private final S3StorageService s3StorageService;
 
     @Transactional(readOnly = true)
     public Page<ProfileBadgeResponse> getMyBadges(UUID memberId, ProfileBadgePageRequest profileBadgePageRequest) {
         PageRequest pageRequest = BadgeDtoMapper.toProfileBadgePageRequest(profileBadgePageRequest);
-        Profile profile = profileService.getProfileEntityByMemberId(memberId);
-        return badgeDslRepository.findBadgesByProfileId(profile.getId(), pageRequest);
+        ProfileResponse profile = profileService.getProfileByMemberId(memberId);
+        return badgeDslRepository.findBadgesByProfileId(profile.id(), pageRequest);
     }
 
     @Transactional(readOnly = true)
     public Page<ProfileBadgeResponse> getUserBadges(UUID profileId, ProfileBadgePageRequest request) {
         PageRequest pageRequest = BadgeDtoMapper.toProfileBadgePageRequest(request);
         // 프로필 존재 검증
-        profileService.getProfileEntityByProfileId(profileId);
+        profileService.getProfileById(profileId);
         return badgeDslRepository.findBadgesByProfileId(profileId, pageRequest);
     }
 
