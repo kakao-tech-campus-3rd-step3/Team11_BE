@@ -56,13 +56,20 @@ public class BadgeDomainService {
             throw new IllegalArgumentException("이미 존재하는 배지 이름입니다.");
         }
 
+        String rawCode = request.code();
+        String normalizedCode = rawCode == null ? null : rawCode.trim().toUpperCase();
+        if (entityService.existsByCodeIgnoreCase(normalizedCode)) {
+            log.warn("중복 code로 배지 생성 시도. code={}", normalizedCode);
+            throw new IllegalArgumentException("이미 존재하는 배지 코드입니다.");
+        }
+
         String iconUrl = null;
         if (request.iconImage() != null) {
             iconUrl = s3StorageService.uploadImage(request.iconImage(), ICON_IMAGE_PREFIX);
             log.info("배지 아이콘 업로드 성공. name={}, iconUrl={}", name, iconUrl);
         }
 
-        Badge newBadge = Badge.create(name, request.description(), iconUrl);
+        Badge newBadge = Badge.create(name, request.description(), iconUrl, request.code());
         Badge saved = entityService.save(newBadge);
         log.info("배지 생성 성공. id={}, name={}", saved.getId(), saved.getName());
         return BadgeDtoMapper.toCreateResponseDto(saved);

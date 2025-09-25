@@ -65,6 +65,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart(namePart)
             .multiPart(descPart)
             .multiPart("iconImage", "/image/badger.png", imageBytes, "image/png")
+            .multiPart("code", "TEST")
             .when()
             .post(ENDPOINT)
             .then().log().all()
@@ -91,6 +92,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart("name", "테스트배지")
             .multiPart("description", "desc")
             .multiPart("iconImage", "/image/badger.png", imageBytes, "image/png")
+            .multiPart("code", "TEST")
             .when()
             .post(ENDPOINT)
             .then().log().all()
@@ -109,6 +111,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart("name", "권한테스트")
             .multiPart("description", "USER 는 금지")
             .multiPart("iconImage", "/image/badger.png", imageBytes, "image/png")
+            .multiPart("code", "TEST")
             .when()
             .post(ENDPOINT)
             .then().log().all()
@@ -124,6 +127,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .contentType(ContentType.MULTIPART)
             .multiPart("name", "뱃") // min=2 위반
             .multiPart("description", "설명")
+            .multiPart("code", "TEST")
             .when()
             .post(ENDPOINT)
             .then().log().all()
@@ -147,6 +151,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart("name", "중복테스트")
             .multiPart("description", "1회차")
             .multiPart("iconImage", "/image/badger.png", imageBytes, "image/png")
+            .multiPart("code", "TEST1")
             .when().post(ENDPOINT)
             .then().statusCode(201).extract();
 
@@ -161,6 +166,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart("name", "중복테스트")
             .multiPart("description", "2회차")
             .multiPart("iconImage", "/image/badger.png", imageBytes, "image/png")
+            .multiPart("code", "TEST2")
             .when()
             .post(ENDPOINT)
             .then().log().all()

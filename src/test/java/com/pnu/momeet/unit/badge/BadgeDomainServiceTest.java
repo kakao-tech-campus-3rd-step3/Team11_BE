@@ -82,6 +82,7 @@ class BadgeDomainServiceTest {
                 "첫 배지",
                 "첫 배지",
                 "https://icon/1.png",
+                "FIRST",
                 LocalDateTime.now().minusDays(1),
                 true
             ),
@@ -89,6 +90,7 @@ class BadgeDomainServiceTest {
                 UUID.randomUUID(),
                 "둘째 배지",
                 "둘째 배지",
+                "SECOND",
                 "https://icon/2.png",
                 LocalDateTime.now().minusDays(2),
                 false
@@ -148,6 +150,7 @@ class BadgeDomainServiceTest {
                 UUID.randomUUID(),
                 "배지A",
                 "설명A",
+                "A",
                 "https://icon/a.png",
                 LocalDateTime.now().minusHours(5),
                 true
@@ -156,6 +159,7 @@ class BadgeDomainServiceTest {
                 UUID.randomUUID(),
                 "배지B",
                 "설명B",
+                "B",
                 "https://icon/b.png",
                 LocalDateTime.now().minusDays(1),
                 false
@@ -165,6 +169,7 @@ class BadgeDomainServiceTest {
                 "배지C",
                 "설명C",
                 "https://icon/c.png",
+                "C",
                 LocalDateTime.now().minusDays(2),
                 false
             )
@@ -204,29 +209,45 @@ class BadgeDomainServiceTest {
     }
 
     @Test
-    @DisplayName("배지 생성 성공 - 아이콘 업로드 + 저장 위임")
-    void create_success() {
+    @DisplayName("배지 생성 성공 - 코드 TRIM+UPPERCASE 정규화 후 저장")
+    void create_success_normalizeCodeAndSave() {
+        // given
         var icon = new org.springframework.mock.web.MockMultipartFile(
             "iconImage","t.png","image/png", new byte[]{1}
         );
-        var req = new BadgeCreateRequest("모임 병아리", "첫 참여 배지", icon);
+        var req = new BadgeCreateRequest("모임 병아리", "첫 참여 배지", icon, "  first_join  ");
 
+        // 이름/코드 모두 중복 아님
         given(entityService.existsByNameIgnoreCase("모임 병아리")).willReturn(false);
+        given(entityService.existsByCodeIgnoreCase("FIRST_JOIN")).willReturn(false);
+
+        // 업로드 URL 가짜 리턴
         given(s3StorageService.uploadImage(eq(icon), any()))
             .willReturn("https://cdn.example.com/badges/uuid.png");
 
+        // save 시 id 세팅 흉내
         willAnswer(inv -> {
             Badge b = inv.getArgument(0);
             ReflectionTestUtils.setField(b, "id", UUID.randomUUID());
             return b;
         }).given(entityService).save(any(Badge.class));
 
-        BadgeCreateResponse resp = badgeService.createBadge(req);
+        ArgumentCaptor<Badge> badgeCaptor = ArgumentCaptor.forClass(Badge.class);
 
+        // when
+        var resp = badgeService.createBadge(req);
+
+        // then
         assertThat(resp.name()).isEqualTo("모임 병아리");
         assertThat(resp.iconUrl()).contains("cdn.example.com/badges");
+
+        // 저장된 엔티티의 code가 정규화되어 있는지 확인
+        verify(entityService).save(badgeCaptor.capture());
+        Badge saved = badgeCaptor.getValue();
+        assertThat(saved.getCode()).isEqualTo("FIRST_JOIN"); // TRIM + UPPERCASE 확인 포인트
+
         verify(entityService).existsByNameIgnoreCase("모임 병아리");
-        verify(entityService).save(any(Badge.class));
+        verify(entityService).existsByCodeIgnoreCase("FIRST_JOIN");
         verify(s3StorageService).uploadImage(eq(icon), any());
     }
 
@@ -236,7 +257,7 @@ class BadgeDomainServiceTest {
         var icon = new org.springframework.mock.web.MockMultipartFile(
             "iconImage","t.png","image/png", new byte[]{1}
         );
-        var req = new BadgeCreateRequest("중복", "desc", icon);
+        var req = new BadgeCreateRequest("중복", "desc", icon, "DUPLICATED");
 
         given(entityService.existsByNameIgnoreCase("중복")).willReturn(true);
 
@@ -249,11 +270,39 @@ class BadgeDomainServiceTest {
     }
 
     @Test
+    @DisplayName("배지 생성 실패 - 코드 중복 (트림+대문자 정규화 포함)")
+    void create_fail_duplicateCode() {
+        // given
+        var icon = new org.springframework.mock.web.MockMultipartFile(
+            "iconImage","t.png","image/png", new byte[]{1}
+        );
+        // 앞뒤 공백 + 소문자로 들어와도 내부에서 TRIM + UPPERCASE 처리
+        var req = new BadgeCreateRequest("이름", "설명", icon, "  duplicate  ");
+
+        given(entityService.existsByNameIgnoreCase("이름")).willReturn(false);
+        // 정규화 결과 "DUPLICATE" 가 존재한다고 응답
+        given(entityService.existsByCodeIgnoreCase("DUPLICATE")).willReturn(true);
+
+        // when / then
+        assertThatThrownBy(() -> badgeService.createBadge(req))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("이미 존재하는 배지 코드");
+
+        verify(entityService).existsByNameIgnoreCase("이름");
+        verify(entityService).existsByCodeIgnoreCase("DUPLICATE");
+        verify(s3StorageService, never()).uploadImage(any(), any());
+        verify(entityService, never()).save(any(Badge.class));
+    }
+
+    @Test
     @DisplayName("배지 수정 성공 - 이름/설명 변경 + 아이콘 교체")
     void update_success_withIconChange() {
         UUID id = UUID.randomUUID();
         Badge badge = Badge.create(
-            "기존이름", "기존설명", "https://cdn.example.com/badges/old.png"
+            "기존이름",
+            "기존설명",
+            "https://cdn.example.com/badges/old.png",
+            "OLD_CODE"
         );
         ReflectionTestUtils.setField(badge, "id", id);
 
@@ -285,7 +334,10 @@ class BadgeDomainServiceTest {
     void update_success_withoutIcon() {
         UUID id = UUID.randomUUID();
         Badge badge = Badge.create(
-            "기존이름", "기존설명", "https://cdn.example.com/badges/exist.png"
+            "기존이름",
+            "기존설명",
+            "https://cdn.example.com/badges/exist.png",
+            "OLD_CODE"
         );
         ReflectionTestUtils.setField(badge, "id", id);
 
@@ -319,7 +371,12 @@ class BadgeDomainServiceTest {
     @DisplayName("배지 수정 실패 - 이름 중복")
     void update_fail_duplicateName() {
         UUID id = UUID.randomUUID();
-        Badge badge = Badge.create("원래이름", "기존설명", "https://cdn.example.com/badges/old.png");
+        Badge badge = Badge.create(
+            "원래이름",
+            "기존설명",
+            "https://cdn.example.com/badges/old.png",
+            "OLD_CODE"
+        );
         given(entityService.getById(id)).willReturn(badge);
         given(entityService.existsByNameIgnoreCase("중복이름")).willReturn(true);
 
@@ -337,7 +394,12 @@ class BadgeDomainServiceTest {
     @DisplayName("배지 삭제 성공 - 엔티티 삭제 + S3 아이콘 삭제")
     void deleteBadge_success() {
         UUID id = UUID.randomUUID();
-        Badge badge = Badge.create("삭제대상", "설명", "https://cdn.example.com/badges/x.png");
+        Badge badge = Badge.create(
+            "삭제대상",
+            "설명",
+            "https://cdn.example.com/badges/x.png",
+            "DELETE"
+        );
         given(entityService.getById(id)).willReturn(badge);
 
         badgeService.deleteBadge(id);

@@ -52,6 +52,7 @@ public final class BadgeDtoMapper {
             badge.getName(),
             badge.getDescription(),
             badge.getIconUrl(),
+            badge.getCode(),
             badge.getCreatedAt()
         );
     }
@@ -73,6 +74,7 @@ public final class BadgeDtoMapper {
             badge.getName(),
             badge.getDescription(),
             badge.getIconUrl(),
+            badge.getCode(),
             badge.getCreatedAt(),
             badge.getUpdatedAt()
         );

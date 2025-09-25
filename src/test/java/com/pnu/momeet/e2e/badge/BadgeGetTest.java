@@ -33,8 +33,9 @@ public class BadgeGetTest extends BaseBadgeTest {
             .statusCode(200)
             .body("content", notNullValue())
             .body("content[0].name", equalTo("[TEST] 호감 인기인"))
-            .body("content[0].description", equalTo("테스트용: 좋아요 5개"))
+            .body("content[0].description", equalTo("테스트용: 좋아요 10개"))
             .body("content[0].representative", equalTo(false))
+            .body("content[0].code", equalTo("LIKE_10"))
             .body("page.size", equalTo(10))
             .body("page.number", equalTo(0))
             .body("page.totalElements", equalTo(1))
@@ -85,11 +86,14 @@ public class BadgeGetTest extends BaseBadgeTest {
             .body("page.totalElements", notNullValue())
             .body("page.totalPages", notNullValue())
             .body("content[0].name", equalTo("[TEST] 호감 인기인"))
-            .body("content[0].description", equalTo("테스트용: 좋아요 5개"))
+            .body("content[0].description", equalTo("테스트용: 좋아요 10개"))
+            .body("content[0].code", equalTo("LIKE_10"))
             .body("content[1].name", equalTo("[TEST] 모임 고수"))
             .body("content[1].description", equalTo("테스트용: 10회 참여 배지"))
+            .body("content[1].code", equalTo("TEN_JOINS"))
             .body("content[2].name", equalTo("[TEST] 모임 새싹"))
-            .body("content[2].description", equalTo("테스트용: 첫 참여 배지"));
+            .body("content[2].description", equalTo("테스트용: 첫 참여 배지"))
+            .body("content[2].code", equalTo("FIRST_JOIN"));
     }
 
     @Test
@@ -116,10 +120,13 @@ public class BadgeGetTest extends BaseBadgeTest {
             .body("page.totalPages", equalTo(1))
             .body("content[0].name", equalTo("[TEST] 모임 고수"))
             .body("content[0].description", equalTo("테스트용: 10회 참여 배지"))
+            .body("content[0].code", equalTo("TEN_JOINS"))
             .body("content[1].name", equalTo("[TEST] 모임 새싹"))
             .body("content[1].description", equalTo("테스트용: 첫 참여 배지"))
+            .body("content[1].code", equalTo("FIRST_JOIN"))
             .body("content[2].name", equalTo("[TEST] 호감 인기인"))
-            .body("content[2].description", equalTo("테스트용: 좋아요 5개"));
+            .body("content[2].description", equalTo("테스트용: 좋아요 10개"))
+            .body("content[2].code", equalTo("LIKE_10"));
     }
 
     @Test

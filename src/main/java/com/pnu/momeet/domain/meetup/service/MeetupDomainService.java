@@ -11,17 +11,22 @@ import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
+import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupDtoMapper;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
+import com.pnu.momeet.domain.participant.service.ParticipantEntityService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +45,8 @@ public class MeetupDomainService {
     private final MeetupEntityService entityService;
     private final ProfileEntityService profileService;
     private final SigunguEntityService sigunguService;
+    private final ParticipantEntityService participantService;
+    private final ApplicationEventPublisher publisher;
 
     private void validateCategories(String mainCategory, String subCategory) {
         if (mainCategory == null || subCategory == null) {
@@ -184,5 +191,40 @@ public class MeetupDomainService {
         Meetup meetup = meetups.getFirst();
         entityService.deleteById(meetup.getId());
         log.info("사용자 본인의 모임 삭제 성공. id={}, ownerId={}", meetup.getId(), profileId);
+    }
+
+    @Transactional
+    public void finishMeetupByMemberId(UUID memberId, UUID meetupId) {
+        // 1) 소유자 검증: memberId -> profileId -> 소유한 IN_PROGRESS 모임 중 해당 id 확인
+        UUID ownerProfileId = profileService.mapToProfileId(memberId);
+        Meetup meetup = entityService.getById(meetupId);
+        if (!meetup.getOwner().getId().equals(ownerProfileId)) {
+            throw new IllegalStateException("방장만 종료할 수 있습니다.");
+        }
+        if (meetup.getStatus() != MeetupStatus.IN_PROGRESS) {
+            throw new IllegalStateException("종료할 수 있는 상태가 아닙니다.");
+        }
+
+        // 2) 상태 전이: ENDED (엔티티 메서드로 캡슐화 권장)
+        entityService.updateMeetup(meetup, m -> {
+            m.setStatus(MeetupStatus.ENDED);
+            m.setEndAt(LocalDateTime.now()); // 스펙의 ISO 8601 UTC 권장
+        });
+
+        // 3) 완주자 조회 -> 프로필 집계 필드 증가
+        var participants = participantService.getAllByMeetupId(meetupId); // 이미 사용 중인 쿼리 흐름
+        List<UUID> finisherIds = new ArrayList<>();
+        for (var p : participants) {
+            UUID profileId = p.getProfile().getId();
+            Profile profile = profileService.getById(profileId);
+            profile.increaseCompletedJoinMeetups();
+            finisherIds.add(profileId);
+        }
+
+        // 4) 종료 이벤트 발행 (커밋 후 배지 부여)
+        publisher.publishEvent(new MeetupFinishedEvent(meetupId, finisherIds, LocalDateTime.now()));
+
+        log.info("모임 종료 완료. meetupId={}, ownerProfileId={}, finisherCount={}",
+            meetupId, ownerProfileId, finisherIds.size());
     }
 }

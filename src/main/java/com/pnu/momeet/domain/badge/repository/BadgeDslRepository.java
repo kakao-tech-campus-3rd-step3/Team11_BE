@@ -34,6 +34,7 @@ public class BadgeDslRepository {
                 b.name,
                 b.description,
                 b.iconUrl,
+                b.code,
                 pb.createdAt,
                 pb.representative
             ))

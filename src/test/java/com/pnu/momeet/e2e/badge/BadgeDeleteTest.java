@@ -48,7 +48,8 @@ class BadgeDeleteTest extends BaseBadgeTest {
         Badge badge = Badge.create(
             "삭제용-배지",
             "설명",
-            "https://cdn.example.com/badges/d.png"
+            "https://cdn.example.com/badges/d.png",
+            "DELETE"
         );
         badge = badgeRepository.save(badge);
         badgeIdToDelete = badge.getId();

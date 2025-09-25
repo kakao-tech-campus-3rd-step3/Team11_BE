@@ -34,6 +34,8 @@ public class MeetupController {
 
     private final MeetupDomainService meetupService;
 
+    // TODO : 모임 시작, 모임 종료 API 추가
+
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping
     public Page<MeetupResponse> meetupPage(
