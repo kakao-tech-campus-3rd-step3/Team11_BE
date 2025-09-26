@@ -136,6 +136,7 @@ public class KakaoAuthService {
         }
     }
 
+    @Transactional
     private UUID findOrCreateKakaoMember(KakaoUserInfo kakaoUserInfo) {
         try {
             Member existingMember = memberEntityService.getByEmail(kakaoUserInfo.email());
