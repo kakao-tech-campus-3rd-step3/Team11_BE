@@ -5,6 +5,8 @@ DROP TABLE IF EXISTS member_role CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
 DROP TABLE IF EXISTS profile CASCADE;
 DROP TABLE IF EXISTS member CASCADE;
+DROP TABLE IF EXISTS badge CASCADE;
+DROP TABLE IF EXISTS profile_badge CASCADE;
 DROP TABLE IF EXISTS meetup CASCADE;
 DROP TABLE IF EXISTS meetup_hash_tag CASCADE;
 DROP TABLE IF EXISTS meetup_participant CASCADE;
@@ -140,12 +142,11 @@ CREATE TABLE evaluation (
     meetup_id UUID  NOT NULL,
     evaluator_profile_id UUID  NOT NULL,
     target_profile_id UUID  NOT NULL,
-    rating VARCHAR(20) NOT NULL,
+    rating SMALLINT NOT NULL, -- 0=LIKE, 1=DISLIKE
     ip_hash VARCHAR(128) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT uq_evaluation_meetup_id_evaluator_profile_id_target_profile_id
-        UNIQUE (meetup_id, evaluator_profile_id, target_profile_id),
+    CONSTRAINT uq_evaluation UNIQUE (meetup_id, evaluator_profile_id, target_profile_id, ip_hash),
     CONSTRAINT fk_evaluation_meetup FOREIGN KEY (meetup_id) REFERENCES meetup(id),
     CONSTRAINT fk_evaluation_evaluator_profile FOREIGN KEY (evaluator_profile_id) REFERENCES profile(id),
     CONSTRAINT fk_evaluation_target_profile FOREIGN KEY (target_profile_id) REFERENCES profile(id)

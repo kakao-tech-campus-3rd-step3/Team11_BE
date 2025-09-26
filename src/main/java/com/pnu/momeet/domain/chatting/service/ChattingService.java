@@ -21,7 +21,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ChattingService {
-
     private final ChatMessagingTemplate messagingTemplate;
     private final ChatMessageService chatMessageService;
     private final ParticipantEntityService participantService;
@@ -31,6 +30,11 @@ public class ChattingService {
     public void sendMessage(UUID meetupId, UUID memberId, MessageRequest message) {
         // 입력 검증
         validateMessageRequest(message);
+        UUID profileId = profileService.mapToProfileId(memberId);
+        Participant participant = participantService.getByProfileIDAndMeetupID(profileId, meetupId);
+        if (!participant.getIsActive()) {
+            throw new IllegalStateException("채팅방에 입장한 사용자만 메시지를 보낼 수 있습니다.");
+        }
         // 메시지 저장
         MessageResponse response = chatMessageService.saveMessage(meetupId, memberId, message);
         // 메시지 브로드캐스트
@@ -63,7 +67,7 @@ public class ChattingService {
                 p.setIsActive(true);
             });
             messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.ENTER);
-            log.debug("사용자 채팅방 입장 - meetupId: {}, memberId: {}", meetupId, memberId);
+            log.info("사용자 채팅방 입장 - meetupId: {}, memberId: {}", meetupId, memberId);
         }
     }
 
@@ -74,8 +78,8 @@ public class ChattingService {
 
         if (participant.getIsActive()) {
             participantService.updateParticipant(participant, p -> p.setIsActive(false));
-            messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.LEAVE);
-            log.debug("사용자 채팅방 연결 종료 - meetupId: {}, memberId: {}", meetupId, memberId);
+            messagingTemplate.sendAction(meetupId, participant, ChatActionType.LEAVE);
+            log.info("사용자 채팅방 연결 종료 - meetupId: {}, memberId: {}", meetupId, memberId);
         }
     }
 
@@ -87,7 +91,7 @@ public class ChattingService {
                 .forEach(participant -> {
                     participantService.updateParticipant(participant, p -> p.setIsActive(false));
                     messagingTemplate.sendAction(participant.getMeetup().getId(), participant.getId(), ChatActionType.LEAVE);
-                    log.debug("사용자 다건 채팅방 연결 종료 - meetupId: {}, memberId: {}", participant.getMeetup().getId(), memberId);
+                    log.info("사용자 다건 채팅방 연결 종료 - meetupId: {}, memberId: {}", participant.getMeetup().getId(), memberId);
                 });
     }
 }

@@ -1,4 +1,4 @@
-package com.pnu.momeet.common.config;
+package com.pnu.momeet.common.security.config;
 
 import com.pnu.momeet.common.security.details.CustomUserDetailService;
 import com.pnu.momeet.common.security.filter.JwtAuthenticationFilter;
@@ -42,8 +42,6 @@ public class WebSecurityConfig {
             "/api/auth/kakao",  // Kakao 소셜 로그인 허용
             "/api/auth/kakao/callback", // Kakao 소셜 로그인 콜백 허용
             "/api/auth/kakao/withdraw", // Kakao 소셜 회원 탈퇴
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
             "/error",
             "/admin",  // 관리자 페이지 허용
             "/admin/**",

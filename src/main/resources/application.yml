@@ -24,7 +24,7 @@ spring:
 
   jpa:
     database: postgresql
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: update
     defer-datasource-initialization: true
@@ -52,10 +52,11 @@ logging:
     root: INFO
     com.pnu.momeet: DEBUG # 개발 환경에서만 DEBUG 레벨로 설정
   file:
-    path: "./logs"
+    path: './logs'
+
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   client-secret: ${KAKAO_CLIENT_SECRET}
-  redirect-uri: ${KAKAO_REDIRECT_URI}
   admin-key: ${KAKAO_ADMIN_KEY}
+  redirect-uri: http://localhost:8080/api/auth/kakao/callback

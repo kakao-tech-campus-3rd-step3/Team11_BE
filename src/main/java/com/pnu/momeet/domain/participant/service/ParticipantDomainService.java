@@ -1,5 +1,7 @@
 package com.pnu.momeet.domain.participant.service;
 
+import com.pnu.momeet.domain.chatting.enums.ChatActionType;
+import com.pnu.momeet.domain.chatting.util.ChatMessagingTemplate;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
@@ -28,6 +30,7 @@ public class ParticipantDomainService {
     private final ParticipantEntityService entityService;
     private final MeetupEntityService meetupService;
     private final ProfileEntityService profileService;
+    private final ChatMessagingTemplate chatMessagingTemplate;
 
     @Transactional(readOnly = true)
     public List<ParticipantResponse> getParticipantsByMeetupId(UUID meetupId) {
@@ -60,6 +63,7 @@ public class ParticipantDomainService {
             throw new IllegalArgumentException("모임에 참여할 수 없는 상태입니다. 현재 상태: "
                     + meetup.getStatus().getDescription());
         }
+
         if (meetup.getParticipantCount() >= meetup.getCapacity()) {
             log.warn("모임 정원 초과로 인한 참여 시도 실패. meetupId={}, profileId={}", meetupId, profile.getId());
             throw new IllegalArgumentException("모임 정원이 초과되었습니다.");
@@ -68,11 +72,11 @@ public class ParticipantDomainService {
             ParticipantDtoMapper.toEntity(profile, meetup, role)
         );
         // 참가자 추가 및 참가자 수 증가
-        meetupService.updateMeetup(meetup, m -> {
-            m.addParticipant(createdParticipant);
-            m.setParticipantCount(m.getParticipantCount() + 1);
-        });
+        meetupService.updateMeetup(meetup, m -> m.addParticipant(createdParticipant));
         log.info("모임 참가 성공. meetupId={}, profileId={}", meetupId, profile.getId());
+        // 채팅방 입장 알림
+        chatMessagingTemplate.sendAction(meetupId, createdParticipant, ChatActionType.JOIN);
+
         return ParticipantEntityMapper.toDto(createdParticipant);
     }
 
@@ -103,7 +107,11 @@ public class ParticipantDomainService {
             entityService.updateParticipant(replacementHost, p -> p.setRole(MeetupRole.HOST));
             meetupService.updateMeetup(meetup, m -> m.setOwner(replacementHost.getProfile()));
         }
+        // 채팅방 퇴장 알림
+        chatMessagingTemplate.sendAction(meetupId, participant, ChatActionType.EXIT);
+        // 참가자 제거 및 참가자 수 감소
         meetupService.updateMeetup(meetup, m -> m.removeParticipant(participant));
+
         log.info("모임 탈퇴 성공. meetupId={}, profileId={}", meetupId, profile.getId());
     }
 
@@ -123,10 +131,11 @@ public class ParticipantDomainService {
         Participant targetParticipant = entityService.getByIdAndMeetupId(targetParticipantId, meetupId);
 
         entityService.updateParticipant(requester, p -> p.setLastActiveAt(LocalDateTime.now()));
+        // 채팅방 강퇴 알림
+        chatMessagingTemplate.sendAction(meetupId, targetParticipant, ChatActionType.KICKED);
+        // 참가자 제거 및 참가자 수 감소
+        meetupService.updateMeetup(meetupService.getById(meetupId), m -> m.removeParticipant(targetParticipant));
 
-        meetupService.updateMeetup(meetupService.getById(meetupId), m ->
-                m.removeParticipant(targetParticipant)
-        );
         log.info("참가자 강퇴 성공. byId={}, targetParticipantId={}", requester.getId(), targetParticipantId);
     }
 
