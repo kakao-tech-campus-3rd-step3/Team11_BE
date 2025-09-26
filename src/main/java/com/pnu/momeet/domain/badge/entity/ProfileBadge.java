@@ -27,4 +27,9 @@ public class ProfileBadge extends BaseCreatedEntity {
 
     @Column(name = "is_representative", nullable = false)
     private boolean representative = false;
+
+    public ProfileBadge(UUID profileId, UUID badgeId) {
+        this.profileId = profileId;
+        this.badgeId = badgeId;
+    }
 }
