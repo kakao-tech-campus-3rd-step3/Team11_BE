@@ -1,4 +1,4 @@
-package com.pnu.momeet.common.security.config;
+package com.pnu.momeet.common.config;
 
 import com.pnu.momeet.common.security.details.CustomUserDetailService;
 import com.pnu.momeet.common.security.filter.JwtAuthenticationFilter;
@@ -40,10 +40,12 @@ public class WebSecurityConfig {
             "/api/auth/signup",
             "/api/auth/refresh",
             "/api/auth/kakao",  // Kakao 소셜 로그인 허용
-            "/api/auth/kakao/callback",   // Kakao 소셜 로그인 콜백 허용
+            "/api/auth/kakao/callback", // Kakao 소셜 로그인 콜백 허용
+            "/api/auth/kakao/withdraw", // Kakao 소셜 회원 탈퇴
             "/error",
             "/admin",  // 관리자 페이지 허용
             "/admin/**",
+            "/ws/chat/**"  // WebSocket 엔드포인트 허용
     };
 
     @Bean

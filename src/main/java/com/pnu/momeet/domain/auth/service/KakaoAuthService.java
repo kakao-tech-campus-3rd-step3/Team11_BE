@@ -44,6 +44,9 @@ public class KakaoAuthService {
     @Value("${kakao.redirect-uri}")
     private String redirectUri;
 
+    @Value("${kakao.admin-key}")
+    private String adminKey;
+
     private static final long IAT_BUFFER_SECONDS = 10;
 
     private final RestTemplate restTemplate;
@@ -177,5 +180,63 @@ public class KakaoAuthService {
         refreshTokenRepository.save(new RefreshToken(memberId, refreshToken));
 
         return new TokenResponse(accessToken, refreshToken);
+    }
+
+    private boolean callKakaoUnlinkApi(String kakaoId) {
+        String url = "https://kapi.kakao.com/v1/user/unlink";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "KakaoAK " + adminKey);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("target_id_type", "user_id");
+        form.add("target_id", kakaoId);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
+
+        try {
+            log.debug("카카오 연동 해제 API 요청: {}", url);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                log.warn("카카오 연동 해제 API 실패: HTTP {} - {}", response.getStatusCode(), kakaoId);
+                return false;
+            }
+
+            Map<String, Object> responseBody = response.getBody();
+            boolean success = responseBody != null && responseBody.containsKey("id");
+
+            if (!success) {
+                log.warn("카카오 연동 해제 API 응답 오류: {}", responseBody);
+            }
+
+            log.info("카카오 연동 해제 API 성공: {}", kakaoId);
+            return success;
+        } catch (Exception e) {
+            log.error("카카오 연동 해제 실패: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    @Transactional
+    public void withdrawKakaoMember(UUID memberId) {
+        Member member = memberEntityService.getById(memberId);
+
+        if (member.getProvider() != Provider.KAKAO) {
+            log.warn("카카오 회원 탈퇴 실패: 카카오 회원이 아님 - {} ({})", member.getEmail(), member.getProvider());
+            throw new IllegalArgumentException("카카오 회원이 아닙니다.");
+        }
+
+        log.info("카카오 연동 해제 API 호출 시작: {}", member.getProviderId());
+        boolean unlinkSuccess = callKakaoUnlinkApi(member.getProviderId());
+
+        if (!unlinkSuccess) {
+            log.error("카카오 연동 해제 실패: {} ({})", member.getEmail(), member.getProviderId());
+            throw new IllegalArgumentException("카카오 연동 해제 실패로 탈퇴할 수 없습니다.");
+        }
+
+        memberEntityService.deleteById(memberId);
+        log.info("카카오 연동 해제 및 회원 탈퇴 완료: {}", member.getEmail());
     }
 }
