@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.common.mapper;
 
+import java.util.Set;
 import org.springframework.data.domain.Sort;
 
 import java.util.ArrayList;
@@ -27,5 +28,16 @@ public class PageMapper {
         }
 
         return Sort.by(orders);
+    }
+
+    public static Sort toSortOrDefault(String sortValue, Set<String> allowed, Sort defaultSort) {
+        Sort parsed = toSort(sortValue);
+
+        // 화이트리스트 적용
+        List<Sort.Order> safe = parsed.stream()
+            .filter(o -> allowed.contains(o.getProperty()))
+            .toList();
+
+        return safe.isEmpty() ? defaultSort : Sort.by(safe);
     }
 }
