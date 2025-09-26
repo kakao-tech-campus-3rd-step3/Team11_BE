@@ -5,6 +5,8 @@ DROP TABLE IF EXISTS member_role CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
 DROP TABLE IF EXISTS profile CASCADE;
 DROP TABLE IF EXISTS member CASCADE;
+DROP TABLE IF EXISTS badge CASCADE;
+DROP TABLE IF EXISTS profile_badge CASCADE;
 DROP TABLE IF EXISTS meetup CASCADE;
 DROP TABLE IF EXISTS meetup_hash_tag CASCADE;
 DROP TABLE IF EXISTS meetup_participant CASCADE;
@@ -149,36 +151,27 @@ CREATE TABLE evaluation (
 );
 
 
-CREATE TABLE badge_condition (
-     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-     code VARCHAR(50) UNIQUE NOT NULL, -- 조건 키 값 (예: FIRST_JOIN, TEN_JOINS)
-     description VARCHAR(255), -- 조건 설명 (운영/개발 참고용)
-     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE badge (
+CREATE TABLE IF NOT EXISTS badge (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(20) UNIQUE NOT NULL,
     description VARCHAR(255),
-    icon_url VARCHAR(255) NOT NULL, -- 배지 아이콘 URL
-    condition_id UUID NOT NULL REFERENCES badge_condition(id),
+    icon_url VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE profile_badge (
+CREATE TABLE IF NOT EXISTS profile_badge (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     profile_id UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
     badge_id UUID NOT NULL REFERENCES badge(id) ON DELETE CASCADE,
-    granted_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     is_representative BOOLEAN NOT NULL DEFAULT FALSE,
-    UNIQUE (profile_id, badge_id)
+    CONSTRAINT uq_profile_badge UNIQUE(profile_id, badge_id)
 );
 
-CREATE TABLE badge_condition_mapping (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    badge_id UUID NOT NULL REFERENCES badge(id) ON DELETE CASCADE,
-    condition_id UUID NOT NULL REFERENCES badge_condition(id) ON DELETE CASCADE,
-    operator VARCHAR(10) NOT NULL DEFAULT 'AND' -- 조건 결합 방식 (AND/OR)
-);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_one_rep_badge_per_profile
+    ON profile_badge(profile_id) WHERE is_representative = TRUE;
+CREATE INDEX IF NOT EXISTS idx_profile_badge_profile ON profile_badge(profile_id);
+CREATE INDEX IF NOT EXISTS idx_profile_badge_badge   ON profile_badge(badge_id);
+CREATE INDEX IF NOT EXISTS idx_profile_rep_only
+    ON profile_badge(profile_id) WHERE is_representative = TRUE;
