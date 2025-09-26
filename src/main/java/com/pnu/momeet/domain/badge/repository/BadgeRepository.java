@@ -13,6 +13,6 @@ public interface BadgeRepository extends JpaRepository<Badge, UUID> {
 
     boolean existsByCodeIgnoreCase(String code);
 
-    @Query("select b.id from Badge b where LOWER(b.code) = LOWER(:code)")
+    @Query("select b.id from Badge b where b.code = :code")
     Optional<UUID> findIdByCode(@Param("code") String code);
 }
