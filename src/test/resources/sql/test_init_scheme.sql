@@ -112,20 +112,3 @@ CREATE TABLE public_test.meetup_participant (
 
 CREATE INDEX IF NOT EXISTS idx_meetup_participant_meetup ON public_test.meetup_participant (meetup_id);
 CREATE INDEX IF NOT EXISTS idx_meetup_participant_profile ON public_test.meetup_participant (profile_id);
-
-
-CREATE TABLE public_test.evaluation (
-    id UUID PRIMARY KEY,
-    meetup_id UUID  NOT NULL,
-    evaluator_profile_id UUID  NOT NULL,
-    target_profile_id UUID  NOT NULL,
-    rating VARCHAR(20) NOT NULL,
-    ip_hash VARCHAR(128) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-
-    CONSTRAINT uq_evaluation_meetup_id_evaluator_profile_id_target_profile_id
-        UNIQUE (meetup_id, evaluator_profile_id, target_profile_id),
-    CONSTRAINT fk_evaluation_meetup FOREIGN KEY (meetup_id) REFERENCES public_test.meetup(id),
-    CONSTRAINT fk_evaluation_evaluator_profile FOREIGN KEY (evaluator_profile_id) REFERENCES public_test.profile(id),
-    CONSTRAINT fk_evaluation_target_profile FOREIGN KEY (target_profile_id) REFERENCES public_test.profile(id)
-);
