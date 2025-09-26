@@ -1,6 +1,6 @@
 package com.pnu.momeet.domain.auth.controller;
 
-import com.pnu.momeet.common.model.TokenInfo;
+import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.common.security.util.JwtTokenProvider;
 import com.pnu.momeet.common.security.util.TokenCookieManager;
 import com.pnu.momeet.domain.auth.dto.request.KakaoCallbackRequest;
@@ -10,11 +10,10 @@ import com.pnu.momeet.domain.auth.service.KakaoAuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -53,12 +52,10 @@ public class KakaoAuthController {
     // 카카오 회원 탈퇴
     @PostMapping("/withdraw")
     public ResponseEntity<WithdrawResponse> kakaoWithdraw(
-            @RequestHeader("Authorization") String token,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletResponse response
     ) {
-        String cleanToken = token.replace("Bearer ", "");
-        TokenInfo tokenInfo = jwtTokenProvider.parseToken(cleanToken);
-        UUID memberId = UUID.fromString(tokenInfo.subject());
+        UUID memberId = userDetails.getMemberId();
 
         kakaoAuthService.withdrawKakaoMember(memberId);
 
