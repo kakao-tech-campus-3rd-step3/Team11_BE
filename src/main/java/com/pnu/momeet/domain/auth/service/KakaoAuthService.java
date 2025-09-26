@@ -47,6 +47,15 @@ public class KakaoAuthService {
     @Value("${kakao.admin-key}")
     private String adminKey;
 
+    @Value("${kakao.token-url}")
+    private String tokenUrl;
+
+    @Value("${kakao.user-info-url}")
+    private String userInfoUrl;
+
+    @Value("${kakao.unlink-url}")
+    private String unlinkUrl;
+
     private static final long IAT_BUFFER_SECONDS = 10;
 
     private final RestTemplate restTemplate;
@@ -80,8 +89,6 @@ public class KakaoAuthService {
     }
 
     private String getAccessTokenFromKakao(String code) {
-        String url = "https://kauth.kakao.com/oauth/token";
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -95,7 +102,7 @@ public class KakaoAuthService {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+            ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
 
             Map<String, Object> responseBody = response.getBody();
             if (responseBody == null || !responseBody.containsKey("access_token")) {
@@ -109,15 +116,13 @@ public class KakaoAuthService {
     }
 
     private KakaoUserInfo getKakaoUserInfoFromToken(String token) {
-        String url = "https://kapi.kakao.com/v2/user/me";
-
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
 
         HttpEntity<String> request = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, request, Map.class);
+            ResponseEntity<Map> response = restTemplate.exchange(userInfoUrl, HttpMethod.GET, request, Map.class);
 
             Map<String, Object> userInfo = response.getBody();
             if (userInfo == null || !userInfo.containsKey("id") || !userInfo.containsKey("kakao_account")) {
@@ -184,8 +189,6 @@ public class KakaoAuthService {
     }
 
     private boolean callKakaoUnlinkApi(String kakaoId) {
-        String url = "https://kapi.kakao.com/v1/user/unlink";
-
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "KakaoAK " + adminKey);
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -197,8 +200,8 @@ public class KakaoAuthService {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
 
         try {
-            log.debug("카카오 연동 해제 API 요청: {}", url);
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+            log.debug("카카오 연동 해제 API 요청: {}", unlinkUrl);
+            ResponseEntity<Map> response = restTemplate.postForEntity(unlinkUrl, request, Map.class);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 log.warn("카카오 연동 해제 API 실패: HTTP {} - {}", response.getStatusCode(), kakaoId);
