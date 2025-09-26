@@ -3,6 +3,7 @@ package com.pnu.momeet.domain.auth.service;
 import com.pnu.momeet.common.exception.BannedAccountException;
 import com.pnu.momeet.common.security.util.JwtTokenProvider;
 import com.pnu.momeet.domain.auth.dto.KakaoUserInfo;
+import com.pnu.momeet.domain.auth.dto.request.KakaoTokenRequest;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
@@ -87,20 +88,23 @@ public class KakaoAuthService {
     }
 
     private String getAccessTokenFromKakao(String code) {
+        KakaoTokenRequest request = new KakaoTokenRequest(
+                "authorization_code",
+                clientId,
+                clientSecret,
+                redirectUri,
+                code
+        );
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("grant_type", "authorization_code");
-        form.add("client_id", clientId);
-        form.add("client_secret", clientSecret);
-        form.add("redirect_uri", redirectUri);
-        form.add("code", code);
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
-
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+            String requestBody = convertToFormUrlEncoded(request);
+            HttpEntity<String> httpEntity = new HttpEntity<>(requestBody, headers);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    tokenUrl, httpEntity, Map.class
+            );
 
             Map<String, Object> responseBody = response.getBody();
             if (responseBody == null || !responseBody.containsKey("access_token")) {
@@ -111,6 +115,17 @@ public class KakaoAuthService {
         } catch (Exception e) {
             throw new IllegalArgumentException("카카오 인증 중 오류가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    private String convertToFormUrlEncoded(KakaoTokenRequest request) {
+        return String.format(
+                "grant_type=%s&client_id=%s&client_secret=%s&redirect_uri=%s&code=%s",
+                request.grant_type(),
+                request.client_id(),
+                request.client_secret(),
+                request.redirect_uri(),
+                request.code()
+        );
     }
 
     private KakaoUserInfo getKakaoUserInfoFromToken(String token) {
