@@ -8,7 +8,7 @@ import io.restassured.RestAssured;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-public class BadgeSelfTest extends BaseBadgeTest {
+public class BadgeSelfTest extends BaseProfileBadgeTest {
 
     @Test
     @DisplayName("USER: 내 배지 조회 — [TEST] 호감 인기인 포함 & 대표 아님")
