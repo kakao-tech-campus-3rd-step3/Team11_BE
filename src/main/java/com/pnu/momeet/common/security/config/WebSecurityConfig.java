@@ -39,9 +39,11 @@ public class WebSecurityConfig {
             "/api/auth/login",
             "/api/auth/signup",
             "/api/auth/refresh",
+            "/api/auth/kakao",  // Kakao 소셜 로그인 허용
+            "/api/auth/kakao/callback",   // Kakao 소셜 로그인 콜백 허용
             "/error",
             "/admin",  // 관리자 페이지 허용
-            "/admin/**"
+            "/admin/**",
     };
 
     @Bean
@@ -98,7 +100,6 @@ public class WebSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-        // TODO : 배포 시 도메인으로 변경
         configuration.addAllowedOriginPattern("*");
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
