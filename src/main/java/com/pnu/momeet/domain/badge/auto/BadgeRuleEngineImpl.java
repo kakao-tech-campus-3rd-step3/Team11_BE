@@ -1,11 +1,8 @@
 package com.pnu.momeet.domain.badge.auto;
 
 import com.pnu.momeet.domain.evaluation.event.EvaluationSubmittedEvent;
-import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
-import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.EnumSet;
 import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -27,20 +24,24 @@ public class BadgeRuleEngineImpl implements BadgeRuleEngine {
     @Override
     public Stream<String> evaluateOnMeetupFinished(UUID profileId) {
         int joins = profileService.getById(profileId).getCompletedJoinMeetups();
-        List<String> out = new ArrayList<>();
-        if (joins == FIRST_COUNT) out.add(FIRST_JOIN);
-        if (joins == TEN_COUNT)   out.add(TEN_JOINS);
 
-        return out.stream();
+        return EnumSet.allOf(BadgeRule.class).stream()
+            .filter(rule -> rule.metric() == Metric.JOIN_COUNT)
+            .filter(rule -> joins == rule.threshold())
+            .map(BadgeRule::code);
     }
 
     @Override
     public Stream<String> evaluateOnEvaluationSubmitted(EvaluationSubmittedEvent e) {
         // 받은 좋아요 누적 기준
-        if ("LIKE".equalsIgnoreCase(e.rating())) {
-            int likes = profileService.getById(e.targetProfileId()).getLikes();
-            if (likes == TEN_COUNT) return Stream.of(LIKE_10);
+        if (!"LIKE".equalsIgnoreCase(e.rating())) {
+            return Stream.empty();
         }
-        return Stream.empty();
+        int likeCount = profileService.getById(e.targetProfileId()).getLikes();
+
+        return EnumSet.allOf(BadgeRule.class).stream()
+            .filter(rule -> rule.metric() == Metric.LIKE_COUNT)
+            .filter(rule -> likeCount == rule.threshold())
+            .map(BadgeRule::code);
     }
 }
