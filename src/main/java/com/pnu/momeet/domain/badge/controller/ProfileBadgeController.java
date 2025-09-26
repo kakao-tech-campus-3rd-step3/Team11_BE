@@ -1,10 +1,13 @@
 package com.pnu.momeet.domain.badge.controller;
 
+import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
+import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
 import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
+import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
 import com.pnu.momeet.domain.badge.service.BadgeDomainService;
 import jakarta.validation.Valid;
@@ -15,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -26,46 +30,27 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/badges")
+@RequestMapping("/api/profiles")
 @RequiredArgsConstructor
-public class BadgeController {
+public class ProfileBadgeController {
 
     private final BadgeDomainService badgeService;
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @PostMapping()
-    public ResponseEntity<BadgeCreateResponse> createBadge(
-        @Valid @ModelAttribute BadgeCreateRequest request
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping("/me/badges")
+    public Page<ProfileBadgeResponse> getMyBadges(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @Valid @ModelAttribute ProfileBadgePageRequest request
     ) {
-        BadgeCreateResponse saved = badgeService.createBadge(request);
-        URI location = URI.create("/api/profiles/badges/" + saved.badgeId());
-        return ResponseEntity.created(location).body(saved);
+        return badgeService.getMyBadges(userDetails.getMemberId(), request);
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping()
-    public Page<BadgeResponse> getBadges(
-        @Valid @ModelAttribute BadgePageRequest request
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping("/{profileId}/badges")
+    public Page<ProfileBadgeResponse> getUserBadges(
+        @PathVariable UUID profileId,
+        @Valid @ModelAttribute ProfileBadgePageRequest request
     ) {
-        return badgeService.getBadges(request);
-    }
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @PatchMapping("/{badgeId}")
-    public ResponseEntity<BadgeUpdateResponse> updateBadge(
-        @PathVariable UUID badgeId,
-        @Valid @ModelAttribute BadgeUpdateRequest request
-    ) {
-        BadgeUpdateResponse saved = badgeService.updateBadge(badgeId, request);
-        return ResponseEntity.ok(saved);
-    }
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/{badgeId}")
-    public void deleteBadge(
-        @PathVariable UUID badgeId
-    ) {
-        badgeService.deleteBadge(badgeId);
+        return badgeService.getUserBadges(profileId, request);
     }
 }

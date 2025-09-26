@@ -98,7 +98,7 @@ class BadgeUpdateTest extends BaseBadgeTest {
             .multiPart(descPart)
             .multiPart("iconImage", "badge.png", imageBytes, "image/png")
             .when()
-            .patch("/badges/{badgeId}", targetBadgeId)
+            .patch("/{badgeId}", targetBadgeId)
             .then().log().all()
             .statusCode(HttpStatus.OK.value())
             .body("badgeId", notNullValue())
@@ -129,7 +129,7 @@ class BadgeUpdateTest extends BaseBadgeTest {
             .contentType(ContentType.MULTIPART)
             .multiPart(namePart)
             .when()
-            .patch("/badges/{badgeId}", targetBadgeId)
+            .patch("/{badgeId}", targetBadgeId)
             .then().log().all()
             .statusCode(HttpStatus.OK.value())
             .body("name", equalTo("텍스트만수정"))
@@ -150,7 +150,7 @@ class BadgeUpdateTest extends BaseBadgeTest {
             .contentType(ContentType.MULTIPART)
             .multiPart(namePart)
             .when()
-            .patch("/badges/{badgeId}", targetBadgeId)
+            .patch("/{badgeId}", targetBadgeId)
             .then().log().all()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
@@ -167,7 +167,7 @@ class BadgeUpdateTest extends BaseBadgeTest {
             .contentType(ContentType.MULTIPART)
             .multiPart(namePart)
             .when()
-            .patch("/badges/{badgeId}", targetBadgeId)
+            .patch("/{badgeId}", targetBadgeId)
             .then().log().all()
             .statusCode(HttpStatus.FORBIDDEN.value());
     }
@@ -182,7 +182,7 @@ class BadgeUpdateTest extends BaseBadgeTest {
             .contentType(ContentType.MULTIPART)
             .multiPart(new MultiPartSpecBuilder("수정").controlName("name").build())
             .when()
-            .patch("/badges/{badgeId}", notExist)
+            .patch("/{badgeId}", notExist)
             .then().log().all()
             .statusCode(HttpStatus.NOT_FOUND.value());
     }
@@ -198,7 +198,7 @@ class BadgeUpdateTest extends BaseBadgeTest {
             .contentType(ContentType.MULTIPART)
             .multiPart(badName)
             .when()
-            .patch("/badges/{badgeId}", targetBadgeId)
+            .patch("/{badgeId}", targetBadgeId)
             .then().log().all()
             .statusCode(HttpStatus.BAD_REQUEST.value());
     }

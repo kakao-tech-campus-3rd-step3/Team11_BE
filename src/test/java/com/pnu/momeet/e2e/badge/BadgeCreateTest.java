@@ -38,8 +38,6 @@ public class BadgeCreateTest extends BaseBadgeTest {
     @Autowired
     private S3StorageService s3StorageService;
 
-    private static final String ENDPOINT = "/badges";
-
     @Test
     @DisplayName("배지 생성 성공 - 201 Created + Location 헤더")
     void createBadge_success_201() throws Exception {
@@ -67,7 +65,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart("iconImage", "/image/badger.png", imageBytes, "image/png")
             .multiPart("code", "TEST")
             .when()
-            .post(ENDPOINT)
+            .post()
             .then().log().all()
             .statusCode(201)
             .header("Location", containsString("/api/profiles/badges/"))
@@ -94,7 +92,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart("iconImage", "/image/badger.png", imageBytes, "image/png")
             .multiPart("code", "TEST")
             .when()
-            .post(ENDPOINT)
+            .post()
             .then().log().all()
             .statusCode(401);
     }
@@ -113,7 +111,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart("iconImage", "/image/badger.png", imageBytes, "image/png")
             .multiPart("code", "TEST")
             .when()
-            .post(ENDPOINT)
+            .post()
             .then().log().all()
             .statusCode(403);
     }
@@ -129,7 +127,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart("description", "설명")
             .multiPart("code", "TEST")
             .when()
-            .post(ENDPOINT)
+            .post()
             .then().log().all()
             .statusCode(400);
     }
@@ -152,7 +150,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart("description", "1회차")
             .multiPart("iconImage", "/image/badger.png", imageBytes, "image/png")
             .multiPart("code", "TEST1")
-            .when().post(ENDPOINT)
+            .when().post()
             .then().statusCode(201).extract();
 
         UUID created = UUID.fromString(first.jsonPath().getString("badgeId"));
@@ -168,7 +166,7 @@ public class BadgeCreateTest extends BaseBadgeTest {
             .multiPart("iconImage", "/image/badger.png", imageBytes, "image/png")
             .multiPart("code", "TEST2")
             .when()
-            .post(ENDPOINT)
+            .post()
             .then().log().all()
             .statusCode(400);
     }

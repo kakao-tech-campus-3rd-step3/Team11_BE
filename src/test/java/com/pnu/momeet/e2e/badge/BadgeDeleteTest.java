@@ -67,7 +67,7 @@ class BadgeDeleteTest extends BaseBadgeTest {
             .contentType(ContentType.JSON)
             .header("Authorization", "Bearer " + admin.accessToken())
             .when()
-            .delete("/badges/{badgeId}", badgeIdToDelete)
+            .delete("/{badgeId}", badgeIdToDelete)
             .then()
             .statusCode(204);
 
@@ -84,7 +84,7 @@ class BadgeDeleteTest extends BaseBadgeTest {
             .contentType(ContentType.JSON)
             .header("Authorization", "Bearer " + user.accessToken())
             .when()
-            .delete("/badges/{badgeId}", badgeIdToDelete)
+            .delete("/{badgeId}", badgeIdToDelete)
             .then()
             .statusCode(403);
     }
@@ -100,7 +100,7 @@ class BadgeDeleteTest extends BaseBadgeTest {
             .contentType(ContentType.JSON)
             .header("Authorization", "Bearer " + admin.accessToken())
             .when()
-            .delete("/badges/{badgeId}", random)
+            .delete("/{badgeId}", random)
             .then()
             .statusCode(404)
             .body("detail", equalTo("존재하지 않는 배지입니다."));;

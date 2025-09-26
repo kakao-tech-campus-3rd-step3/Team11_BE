@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Tag("badge")
-public abstract class BaseBadgeTest extends BaseE2ETest {
+public class BaseProfileBadgeTest extends BaseE2ETest {
 
     protected Map<Role, TokenResponse> testTokens;
     protected List<UUID> badgesToBeDeleted;
@@ -37,7 +37,7 @@ public abstract class BaseBadgeTest extends BaseE2ETest {
     @BeforeEach
     protected void setup() {
         super.setup();
-        RestAssured.basePath = "/api/badges"; // 배지 컨트롤러 베이스 경로
+        RestAssured.basePath = "/api/profiles"; // 배지 컨트롤러 베이스 경로
         testTokens = new HashMap<>();
         badgesToBeDeleted = new ArrayList<>();
         testTokens.put(Role.ROLE_ADMIN, emailAuthService.login(TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD));
