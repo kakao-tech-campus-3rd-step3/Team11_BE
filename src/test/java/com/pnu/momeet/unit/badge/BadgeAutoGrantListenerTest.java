@@ -55,8 +55,8 @@ class BadgeAutoGrantListenerTest {
         // 문자열 리터럴 대신 BadgeRule enum의 code() 사용
         given(badgeRuleEngine.evaluateOnMeetupFinished(p1))
             .willReturn(List.of(
-                BadgeRule.FIRST_JOIN.code(),
-                BadgeRule.TEN_JOINS.code()
+                BadgeRule.FIRST_JOIN.getCode(),
+                BadgeRule.TEN_JOINS.getCode()
             ));
         given(badgeRuleEngine.evaluateOnMeetupFinished(p2))
             .willReturn(List.of());
@@ -64,8 +64,8 @@ class BadgeAutoGrantListenerTest {
         listener.onMeetupFinished(e);
 
         // p1은 2개 코드 부여
-        verify(badgeAwarder).award(p1, BadgeRule.FIRST_JOIN.code());
-        verify(badgeAwarder).award(p1, BadgeRule.TEN_JOINS.code());
+        verify(badgeAwarder).award(p1, BadgeRule.FIRST_JOIN.getCode());
+        verify(badgeAwarder).award(p1, BadgeRule.TEN_JOINS.getCode());
         // p2는 없음
         verify(badgeAwarder, never()).award(eq(p2), anyString());
     }
@@ -88,10 +88,10 @@ class BadgeAutoGrantListenerTest {
 
         // 문자열 리터럴 대신 BadgeRule enum의 code() 사용
         given(badgeRuleEngine.evaluateOnEvaluationSubmitted(e))
-            .willReturn(List.of(BadgeRule.LIKE_10.code()));
+            .willReturn(List.of(BadgeRule.LIKE_10.getCode()));
 
         listener.onEvaluationSubmitted(e);
 
-        verify(badgeAwarder).award(target, BadgeRule.LIKE_10.code());
+        verify(badgeAwarder).award(target, BadgeRule.LIKE_10.getCode());
     }
 }

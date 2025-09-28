@@ -21,9 +21,9 @@ public class BadgeRuleEngineImpl implements BadgeRuleEngine {
         int joins = profileService.getById(profileId).getCompletedJoinMeetups();
 
         return EnumSet.allOf(BadgeRule.class).stream()
-            .filter(rule -> rule.metric() == Metric.JOIN_COUNT)
-            .filter(rule -> joins == rule.threshold())
-            .map(BadgeRule::code)
+            .filter(rule -> rule.getMetric() == Metric.JOIN_COUNT)
+            .filter(rule -> joins == rule.getThreshold())
+            .map(BadgeRule::getCode)
             .distinct()
             .toList();
     }
@@ -37,9 +37,9 @@ public class BadgeRuleEngineImpl implements BadgeRuleEngine {
         int likeCount = profileService.getById(e.targetProfileId()).getLikes();
 
         return EnumSet.allOf(BadgeRule.class).stream()
-            .filter(rule -> rule.metric() == Metric.LIKE_COUNT)
-            .filter(rule -> likeCount == rule.threshold())
-            .map(BadgeRule::code)
+            .filter(rule -> rule.getMetric() == Metric.LIKE_COUNT)
+            .filter(rule -> likeCount == rule.getThreshold())
+            .map(BadgeRule::getCode)
             .distinct()
             .toList();
     }
