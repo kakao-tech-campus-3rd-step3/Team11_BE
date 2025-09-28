@@ -1,7 +1,10 @@
 package com.pnu.momeet.domain.chatting.service.mapper;
 
+import com.pnu.momeet.domain.chatting.dto.response.ActionResponse;
 import com.pnu.momeet.domain.chatting.dto.response.MessageResponse;
 import com.pnu.momeet.domain.chatting.entity.ChatMessage;
+import com.pnu.momeet.domain.chatting.enums.ChatActionType;
+import com.pnu.momeet.domain.participant.entity.Participant;
 
 public class ChatEntityMapper {
 
@@ -13,10 +16,27 @@ public class ChatEntityMapper {
                 message.getType(),
                 message.getContent(),
                 message.getSender().getId(),
-                message.getSender().getProfile().getId(),
-                message.getSender().getProfile().getNickname(),
-                message.getSender().getProfile().getImageUrl(),
                 message.getCreatedAt()
+        );
+    }
+
+    public static ActionResponse toAction(Participant participant, ChatActionType actionType) {
+        return new ActionResponse(
+                participant.getId(),
+                participant.getProfile().getId(),
+                participant.getProfile().getNickname(),
+                participant.getProfile().getImageUrl(),
+                actionType
+        );
+    }
+
+    public static ActionResponse toAction(Long participantId, ChatActionType actionType) {
+        return new ActionResponse(
+                participantId,
+                null,
+                null,
+                null,
+                actionType
         );
     }
 }

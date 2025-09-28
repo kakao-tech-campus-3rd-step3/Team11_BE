@@ -17,7 +17,7 @@ public class EvaluationCreateTest extends BaseEvaluationTest {
     @Test
     @DisplayName("평가 성공 - 200 OK")
     void createEvaluation_success() {
-        UUID meetupId = UUID.randomUUID(); // 실제로는 테스트용 meetup 생성 필요
+        UUID meetupId = test_meetup_id; // 실제로는 테스트용 meetup 생성 필요
         UUID targetProfileId = test_user_profile_uuid; // 예시로 테스트 계정 프로필 사용
 
         ExtractableResponse<Response> response = RestAssured

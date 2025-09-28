@@ -19,7 +19,6 @@ public class ProfileEntityMapper {
             profile.getTemperature(),
             profile.getLikes(),
             profile.getDislikes(),
-            profile.getUnEvaluatedMeetupId(),
             profile.getCreatedAt(),
             profile.getUpdatedAt()
         );

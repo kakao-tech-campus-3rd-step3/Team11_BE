@@ -8,6 +8,9 @@ import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
+import com.pnu.momeet.domain.profile.entity.Profile;
+import com.pnu.momeet.domain.sigungu.entity.Sigungu;
+import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -19,12 +22,13 @@ public class MeetupDtoMapper {
         // private constructor to prevent instantiation
     }
 
-    public static Meetup toEntity(MeetupCreateRequest request) {
+    public static Meetup toEntity(MeetupCreateRequest request, Point locationPoint, Profile profile, Sigungu sigungu) {
         MainCategory category = MainCategory.valueOf(request.category());
         SubCategory subCategory = null;
         if (request.subCategory() != null) {
             subCategory = SubCategory.valueOf(request.subCategory());
         }
+
         LocalDateTime endAt = LocalDateTime.now().plusHours(request.durationHours());
 
         // hashTags는 서비스 레이어에서 설정
@@ -35,7 +39,10 @@ public class MeetupDtoMapper {
                 .description(request.description())
                 .capacity(request.capacity())
                 .scoreLimit(request.scoreLimit())
+                .locationPoint(locationPoint)
                 .address(request.location().address())
+                .sigungu(sigungu)
+                .owner(profile)
                 .endAt(endAt)
                 .build();
     }

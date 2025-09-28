@@ -1,6 +1,6 @@
 package com.pnu.momeet.common.security.details;
 
-import com.pnu.momeet.domain.member.service.MemberService;
+import com.pnu.momeet.domain.member.service.MemberDomainService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,11 +12,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
 
-    private final MemberService memberService;
+    private final MemberDomainService memberService;
 
     @Override
     public CustomUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var memberInfo = memberService.findMemberInfoById(UUID.fromString(username));
+        var memberInfo = memberService.getMemberInfoById(UUID.fromString(username));
         return new CustomUserDetails(memberInfo);
     }
 }

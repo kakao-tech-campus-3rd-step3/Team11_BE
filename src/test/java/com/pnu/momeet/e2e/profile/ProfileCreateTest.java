@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import io.restassured.builder.MultiPartSpecBuilder;
@@ -17,7 +18,9 @@ import io.restassured.response.Response;
 import io.restassured.specification.MultiPartSpecification;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -52,16 +55,23 @@ public class ProfileCreateTest extends BaseProfileTest {
         byte[] imageBytes = resource.getInputStream().readAllBytes();
 
         // 한글 필드의 인코딩을 명시적으로 지정하여 테스트의 안정성 확보
-        MultiPartSpecification nicknamePart = new MultiPartSpecBuilder("새로운닉네임")
+        MultiPartSpecification nicknamePart = new MultiPartSpecBuilder("새로운닉네임성공")
             .controlName("nickname").charset(StandardCharsets.UTF_8).build();
         MultiPartSpecification descriptionPart = new MultiPartSpecBuilder("새로운 자기소개입니다.")
             .controlName("description").charset(StandardCharsets.UTF_8).build();
         MultiPartSpecification baseLocationPart = new MultiPartSpecBuilder("서울 강남구")
             .controlName("baseLocation").charset(StandardCharsets.UTF_8).build();
 
+        var member = memberService.saveMember(new MemberCreateRequest(
+                "createProfile@test.com",
+                "createProfilePass1!", List.of("ROLE_USER")
+        ));
+        membersToBeDeleted.add(member.id());
+        var tokenResponse = emailAuthService.login("createProfile@test.com", "createProfilePass1!");
+
         ExtractableResponse<Response> response = RestAssured
             .given().log().all()
-            .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_ADMIN).accessToken())
+            .header(AUTH_HEADER, BEAR_PREFIX + tokenResponse.accessToken())
             .contentType(ContentType.MULTIPART) // multipart/form-data 사용
             .multiPart(nicknamePart)
             .multiPart("age", 25)
@@ -74,7 +84,7 @@ public class ProfileCreateTest extends BaseProfileTest {
             .then().log().all()
             .statusCode(201)
             .header("Location", containsString("/api/profiles/"))
-            .body("nickname", equalTo("새로운닉네임"))
+            .body("nickname", equalTo("새로운닉네임성공"))
             .body("age", equalTo(25))
             .body("id", notNullValue())
             .body("imageUrl", equalTo(fakeImageUrl)) // 응답에 이미지 URL이 포함되었는지 검증

@@ -50,6 +50,7 @@ dependencies {
 
     // Spring Security 및 JWT
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-messaging'
     implementation "io.jsonwebtoken:jjwt-api:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${JJWT_VERSION}"

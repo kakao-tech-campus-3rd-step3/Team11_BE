@@ -39,9 +39,9 @@ public class AuthSignupTest extends BaseAuthTest {
                 .extract()
                 .as(TokenResponse.class);
 
-        MemberResponse signedUpMember = memberService.findMemberByEmail(request.email());
+        MemberResponse signedUpMember = memberService.getMemberByEmail(request.email());
         toBeDeleted.add(signedUpMember); // 회원가입한 계정 삭제를 위해 리스트에 추가
-        MemberInfo memberInfo = memberService.findMemberInfoById(signedUpMember.id());
+        MemberInfo memberInfo = memberService.getMemberInfoById(signedUpMember.id());
 
         testTokenPair(response, signedUpMember);
         assertThat(signedUpMember).isNotNull();

@@ -7,9 +7,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.annotation.SubscribeMapping;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.util.UUID;
 
 @Slf4j
@@ -23,10 +26,29 @@ public class ChattingController {
     public void sendMessage(
             @DestinationVariable UUID meetupId,
             MessageRequest messageRequest,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
+            @AuthenticationPrincipal Principal principal
+            ) {
+        UUID memberId = UUID.fromString(principal.getName());
         chatMessageService.sendMessage(
-            meetupId, userDetails.getMemberId(), messageRequest
+            meetupId, memberId, messageRequest
         );
+    }
+
+    @SubscribeMapping("/meetups/{meetupId}/actions")
+    public void subscribeActions(
+            @DestinationVariable UUID meetupId,
+            @AuthenticationPrincipal Principal principal
+    ) {
+        UUID memberId = UUID.fromString(principal.getName());
+        chatMessageService.connectToMeetup(meetupId, memberId);
+    }
+
+    @SubscribeMapping("/meetups/{meetupId}/messages")
+    public void subscribeMessages(
+            @DestinationVariable UUID meetupId,
+            @AuthenticationPrincipal Principal principal
+    ) {
+        UUID memberId = UUID.fromString(principal.getName());
+        chatMessageService.connectToMeetup(meetupId, memberId);
     }
 }

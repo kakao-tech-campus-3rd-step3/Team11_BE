@@ -1,11 +1,17 @@
+DROP TABLE IF EXISTS evaluation CASCADE;
+DROP TABLE IF EXISTS chat_message CASCADE;
 DROP TABLE IF EXISTS refresh_token CASCADE;
 DROP TABLE IF EXISTS member_role CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
 DROP TABLE IF EXISTS profile CASCADE;
 DROP TABLE IF EXISTS member CASCADE;
+DROP TABLE IF EXISTS badge CASCADE;
+DROP TABLE IF EXISTS profile_badge CASCADE;
 DROP TABLE IF EXISTS meetup CASCADE;
 DROP TABLE IF EXISTS meetup_hash_tag CASCADE;
 DROP TABLE IF EXISTS meetup_participant CASCADE;
+DROP TABLE IF EXISTS badge CASCADE;
+DROP TABLE IF EXISTS profile_badge CASCADE;
 
 CREATE TABLE member (
     id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -46,7 +52,7 @@ CREATE TABLE profile (
     temperature              NUMERIC(4,1) NOT NULL DEFAULT 36.5,
     likes                    INTEGER      NOT NULL DEFAULT 0,
     dislikes                 INTEGER      NOT NULL DEFAULT 0,
-    un_evaluated_meetup_id   BIGINT,
+    completed_join_meetups   INTEGER      NOT NULL DEFAULT 0,
     created_at               TIMESTAMP  NOT NULL DEFAULT NOW(),
     updated_at               TIMESTAMP  NOT NULL DEFAULT NOW(),
     CONSTRAINT ck_profile_nickname_len        CHECK (char_length(btrim(nickname)) BETWEEN 2 AND 20),
@@ -145,3 +151,38 @@ CREATE TABLE evaluation (
     CONSTRAINT fk_evaluation_evaluator_profile FOREIGN KEY (evaluator_profile_id) REFERENCES profile(id),
     CONSTRAINT fk_evaluation_target_profile FOREIGN KEY (target_profile_id) REFERENCES profile(id)
 );
+
+
+CREATE TABLE IF NOT EXISTS badge (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(20) UNIQUE NOT NULL,
+    description VARCHAR(255),
+    icon_url VARCHAR(255) NOT NULL,
+    code VARCHAR(50)  NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT chk_badge_code_format CHECK (code ~ '^[A-Z0-9_]+$')
+);
+
+-- 배지 이름 대소문자 무시 유니크
+CREATE UNIQUE INDEX IF NOT EXISTS uq_badge_name_ci ON badge (LOWER(btrim(name)));
+
+-- 배지 코드: 대소문자 무시 유니크 (전 행 대상)
+CREATE UNIQUE INDEX IF NOT EXISTS ux_badge_code_ci ON badge (LOWER(code));
+
+CREATE TABLE IF NOT EXISTS profile_badge (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profile_id UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    badge_id UUID NOT NULL REFERENCES badge(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    is_representative BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT uq_profile_badge UNIQUE(profile_id, badge_id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_one_rep_badge_per_profile
+    ON profile_badge(profile_id) WHERE is_representative = TRUE;
+CREATE INDEX IF NOT EXISTS idx_profile_badge_profile ON profile_badge(profile_id);
+CREATE INDEX IF NOT EXISTS idx_profile_badge_badge   ON profile_badge(badge_id);
+CREATE INDEX IF NOT EXISTS idx_profile_rep_only
+    ON profile_badge(profile_id) WHERE is_representative = TRUE;

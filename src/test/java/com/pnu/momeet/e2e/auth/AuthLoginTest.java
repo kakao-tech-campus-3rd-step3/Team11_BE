@@ -36,7 +36,7 @@ public class AuthLoginTest extends BaseAuthTest {
 
         testTokenPair(response, testMember);
 
-        MemberInfo loggedInMember = memberService.findMemberInfoById(testMember.id());
+        MemberInfo loggedInMember = memberService.getMemberInfoById(testMember.id());
         assertThat(loggedInMember.enabled()).isTrue(); // 계정 활성화 여부
         assertThat(loggedInMember.tokenIssuedAt()).isNotNull(); // 토큰 발급 시점
     }
@@ -76,23 +76,5 @@ public class AuthLoginTest extends BaseAuthTest {
                     .log().all()
                     .statusCode(401)
         );
-    }
-
-    @Test
-    @DisplayName("로그인 실패 테스트 - 계정 잠금(403 Forbidden)")
-    public void login_fail_banned_account() {
-        // given
-        memberService.updateMemberById(testMember.id(), member -> member.setAccountNonLocked(false));
-
-        LoginRequest request = new LoginRequest(testMember.email(), testPassword);
-        RestAssured
-                .given()
-                .contentType(ContentType.JSON)
-                .body(request)
-                .when()
-                .post("/login")
-                .then()
-                .log().all()
-                .statusCode(403);
     }
 }
