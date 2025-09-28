@@ -10,6 +10,7 @@ import com.pnu.momeet.domain.badge.auto.BadgeAutoGrantListener;
 import com.pnu.momeet.domain.badge.auto.BadgeAwarder;
 import com.pnu.momeet.domain.badge.auto.BadgeRule;
 import com.pnu.momeet.domain.badge.auto.BadgeRuleEngine;
+import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.event.EvaluationSubmittedEvent;
 import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
 import java.time.LocalDateTime;
@@ -47,7 +48,8 @@ class BadgeAutoGrantListenerTest {
         MeetupFinishedEvent e = new MeetupFinishedEvent(
             meetupId,
             List.of(p1, p2),
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            UUID.randomUUID()
         );
 
         // 문자열 리터럴 대신 BadgeRule enum의 code() 사용
@@ -59,7 +61,7 @@ class BadgeAutoGrantListenerTest {
         given(badgeRuleEngine.evaluateOnMeetupFinished(p2))
             .willReturn(Stream.empty());
 
-        listener.handleMeetupFinishedEvent(e);
+        listener.onMeetupFinished(e);
 
         // p1은 2개 코드 부여
         verify(badgeAwarder).award(p1, BadgeRule.FIRST_JOIN.code());
@@ -79,15 +81,16 @@ class BadgeAutoGrantListenerTest {
             meetupId,
             evaluator,
             target,
-            "LIKE",
-            LocalDateTime.now()
+            Rating.LIKE,
+            LocalDateTime.now(),
+            UUID.randomUUID()
         );
 
         // 문자열 리터럴 대신 BadgeRule enum의 code() 사용
         given(badgeRuleEngine.evaluateOnEvaluationSubmitted(e))
             .willReturn(Stream.of(BadgeRule.LIKE_10.code()));
 
-        listener.handleEvaluationSubmitted(e);
+        listener.onEvaluationSubmitted(e);
 
         verify(badgeAwarder).award(target, BadgeRule.LIKE_10.code());
     }

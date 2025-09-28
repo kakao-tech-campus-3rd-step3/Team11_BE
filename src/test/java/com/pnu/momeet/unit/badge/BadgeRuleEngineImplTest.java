@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.pnu.momeet.domain.badge.auto.BadgeRuleEngineImpl;
+import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.event.EvaluationSubmittedEvent;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
@@ -82,8 +83,9 @@ class BadgeRuleEngineImplTest {
             meetupId,
             evaluatorProfileId,
             targetProfileId,
-            "LIKE",
-            occurredAt
+            Rating.LIKE,
+            occurredAt,
+            UUID.randomUUID()
         );
 
         Profile p = mock(Profile.class);
@@ -108,8 +110,9 @@ class BadgeRuleEngineImplTest {
             meetupId,
             evaluatorProfileId,
             targetProfileId,
-            "DISLIKE",
-            occurredAt
+            Rating.DISLIKE,
+            occurredAt,
+            UUID.randomUUID()
         );
 
         assertThat(ruleEngine.evaluateOnEvaluationSubmitted(e1)).isEmpty();
@@ -119,8 +122,9 @@ class BadgeRuleEngineImplTest {
             meetupId,
             evaluatorProfileId,
             targetProfileId,
-            "LIKE",
-            occurredAt
+            Rating.LIKE,
+            occurredAt,
+            UUID.randomUUID()
         );
         Profile p = mock(Profile.class);
         given(profileService.getById(targetProfileId)).willReturn(p);
