@@ -54,12 +54,12 @@ class BadgeAutoGrantListenerTest {
 
         // 문자열 리터럴 대신 BadgeRule enum의 code() 사용
         given(badgeRuleEngine.evaluateOnMeetupFinished(p1))
-            .willReturn(Stream.of(
+            .willReturn(List.of(
                 BadgeRule.FIRST_JOIN.code(),
                 BadgeRule.TEN_JOINS.code()
             ));
         given(badgeRuleEngine.evaluateOnMeetupFinished(p2))
-            .willReturn(Stream.empty());
+            .willReturn(List.of());
 
         listener.onMeetupFinished(e);
 
@@ -88,7 +88,7 @@ class BadgeAutoGrantListenerTest {
 
         // 문자열 리터럴 대신 BadgeRule enum의 code() 사용
         given(badgeRuleEngine.evaluateOnEvaluationSubmitted(e))
-            .willReturn(Stream.of(BadgeRule.LIKE_10.code()));
+            .willReturn(List.of(BadgeRule.LIKE_10.code()));
 
         listener.onEvaluationSubmitted(e);
 

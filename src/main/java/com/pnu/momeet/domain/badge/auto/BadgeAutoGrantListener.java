@@ -27,22 +27,23 @@ public class BadgeAutoGrantListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onEvaluationSubmitted(EvaluationSubmittedEvent e) {
-        long t0 = System.currentTimeMillis();
+        long startMillis = System.currentTimeMillis();
         log.info("{} eventId={} type={} meetupId={} evaluatorProfileId={} targetProfileId={} rating={}",
             LogTags.HANDLE_START, e.eventId(), e.type(), e.meetupId(), e.evaluatorProfileId(), e.targetProfileId(), e.rating());
 
-        List<String> codes = badgeRuleEngine.evaluateOnEvaluationSubmitted(e).toList();
+        List<String> codes = badgeRuleEngine.evaluateOnEvaluationSubmitted(e);
         codes.forEach(code -> badgeAwarder.award(e.targetProfileId(), code));
 
+        long elapsedMs = System.currentTimeMillis() - startMillis;
         log.info("{} eventId={} type={} awardedCount={} elapsedMs={}",
-            LogTags.HANDLE_END, e.eventId(), e.type(), codes.size(), System.currentTimeMillis() - t0);
+            LogTags.HANDLE_END, e.eventId(), e.type(), codes.size(), elapsedMs);
     }
 
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onMeetupFinished(MeetupFinishedEvent e) {
-        long t0 = System.currentTimeMillis();
+        long startMillis = System.currentTimeMillis();
         int participants = e.participantProfileIds() == null ? 0 : e.participantProfileIds().size();
         log.info("{} eventId={} type={} meetupId={} participants={}",
             LogTags.HANDLE_START, e.eventId(), e.type(), e.meetupId(), participants);
@@ -50,12 +51,14 @@ public class BadgeAutoGrantListener {
         int awarded = 0;
         if (e.participantProfileIds() != null) {
             for (UUID pid : e.participantProfileIds()) {
-                List<String> codes = badgeRuleEngine.evaluateOnMeetupFinished(pid).toList();
+                List<String> codes = badgeRuleEngine.evaluateOnMeetupFinished(pid);
                 codes.forEach(code -> badgeAwarder.award(pid, code));
                 awarded += codes.size();
             }
         }
+
+        long elapsedMs = System.currentTimeMillis() - startMillis;
         log.info("{} eventId={} type={} awardedCount={} participants={} elapsedMs={}",
-            LogTags.HANDLE_END, e.eventId(), e.type(), awarded, participants, System.currentTimeMillis() - t0);
+            LogTags.HANDLE_END, e.eventId(), e.type(), awarded, participants, elapsedMs);
     }
 }

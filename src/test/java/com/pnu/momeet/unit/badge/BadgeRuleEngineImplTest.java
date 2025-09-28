@@ -39,7 +39,7 @@ class BadgeRuleEngineImplTest {
         given(profileService.getById(pid)).willReturn(p);
         given(p.getCompletedJoinMeetups()).willReturn(1);
 
-        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid).toList();
+        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid);
 
         assertThat(codes).containsExactly("FIRST_JOIN");
         verify(profileService).getById(pid);
@@ -54,7 +54,7 @@ class BadgeRuleEngineImplTest {
         given(profileService.getById(pid)).willReturn(p);
         given(p.getCompletedJoinMeetups()).willReturn(10);
 
-        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid).toList();
+        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid);
 
         assertThat(codes).containsExactly("TEN_JOINS");
     }
@@ -67,7 +67,7 @@ class BadgeRuleEngineImplTest {
         given(profileService.getById(pid)).willReturn(p);
         given(p.getCompletedJoinMeetups()).willReturn(7);
 
-        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid).toList();
+        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid);
 
         assertThat(codes).isEmpty();
     }
@@ -92,7 +92,7 @@ class BadgeRuleEngineImplTest {
         given(profileService.getById(targetProfileId)).willReturn(p);
         given(p.getLikes()).willReturn(10);
 
-        List<String> codes = ruleEngine.evaluateOnEvaluationSubmitted(e).toList();
+        List<String> codes = ruleEngine.evaluateOnEvaluationSubmitted(e);
 
         assertThat(codes).containsExactly("LIKE_10");
     }
