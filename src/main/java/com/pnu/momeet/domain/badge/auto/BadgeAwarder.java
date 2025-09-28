@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.badge.auto;
 
+import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.entity.ProfileBadge;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import com.pnu.momeet.domain.badge.repository.ProfileBadgeRepository;
@@ -22,13 +23,13 @@ public class BadgeAwarder {
     @Transactional
     public void award(UUID profileId, String code) {
         String normalized = code == null ? null : code.trim().toUpperCase();
-        UUID badgeId = badgeRepository.findIdByCode(normalized)
+        Badge badge = badgeRepository.findByCodeIgnoreCase(normalized)
             .orElseThrow(() -> new NoSuchElementException("배지 코드 매핑 누락: " + normalized));
         try {
-            profileBadgeRepository.save(new ProfileBadge(profileId, badgeId));
+            profileBadgeRepository.save(new ProfileBadge(profileId, badge.getId()));
         } catch (DataIntegrityViolationException e) {
             // UNIQUE (profile_id, badge_id) 제약 조건 위반 → 중복 배지 부여 무시
-            log.debug("중복 배지 부여 시도 무시. profileId={}, badgeId={}", profileId, badgeId);
+            log.debug("중복 배지 부여 시도 무시. profileId={}, badgeId={}", profileId, badge.getId());
         }
     }
 }
