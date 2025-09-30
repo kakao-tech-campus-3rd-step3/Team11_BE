@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -62,11 +63,13 @@ public class ChattingEventListener {
         }
     }
 
+    @Async
     @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
     public void handleOnMeetupFinished(MeetupFinishedEvent event) {
         chatEventService.finishMeetup(event.getMeetupId());
     }
 
+    @Async
     @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
     public void handleOnMeetupCanceled(MeetupCanceledEvent event) {
         switch (event.getRequestedBy()) {
