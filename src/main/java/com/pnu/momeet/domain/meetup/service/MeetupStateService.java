@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.meetup.service;
 
 import com.pnu.momeet.common.event.CoreEventPublisher;
+import com.pnu.momeet.domain.evaluation.event.EvaluationDeadlineEndedEvent;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
@@ -27,6 +28,7 @@ public class MeetupStateService {
     private final ProfileEntityService profileService;
     private final ParticipantEntityService participantService;
     private final CoreEventPublisher coreEventPublisher;
+    private final MeetupEntityService meetupEntityService;
 
     @Transactional
     public void startMeetupByMemberId(UUID memberId) {
@@ -86,6 +88,18 @@ public class MeetupStateService {
             throw new IllegalStateException("종료할 수 있는 모임이 없습니다.");
         }
         finishMeetupInternal(availableMeetups.getFirst());
+    }
+
+    @Transactional
+    public void evaluationPeriodEnded(Meetup meetup) {
+        if (meetup.getStatus() != MeetupStatus.ENDED) {
+            // 시스템에 의해 관리되는 상태 전이이므로, 관리자 개입 필요
+            log.warn("평가 기간 종료 처리 중 상태 이상 감지. id={}, status={}", meetup.getId(), meetup.getStatus());
+            throw new IllegalStateException("평가 기간 종료 처리를 할 수 없는 상태입니다.");
+        }
+        meetupEntityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.EVALUATION_TIMEOUT));
+        coreEventPublisher.publish(new EvaluationDeadlineEndedEvent(meetup.getId()));
+        log.info("평가 기간 종료에 따른 모임 상태 변경 완료. id={}, status={}", meetup.getId(), meetup.getStatus());
     }
 
     private void finishMeetupInternal(Meetup meetup) {
