@@ -34,7 +34,7 @@ public class BadgeDomainService {
 
     @Transactional(readOnly = true)
     public Page<ProfileBadgeResponse> getMyBadges(UUID memberId, ProfileBadgePageRequest request) {
-        PageRequest pageRequest = BadgeDtoMapper.toProfileBadgePageRequest(request);
+        PageRequest pageRequest = request.toPageRequest();
         ProfileResponse profile = profileService.getProfileByMemberId(memberId);
         log.debug("내 배지 조회. memberId={}, profileId={}", memberId, profile.id());
         return entityService.findBadgesByProfileId(profile.id(), pageRequest);
@@ -42,7 +42,7 @@ public class BadgeDomainService {
 
     @Transactional(readOnly = true)
     public Page<ProfileBadgeResponse> getUserBadges(UUID profileId, ProfileBadgePageRequest request) {
-        PageRequest pageRequest = BadgeDtoMapper.toProfileBadgePageRequest(request);
+        PageRequest pageRequest = request.toPageRequest();
         profileService.getProfileById(profileId); // 존재 검증
         log.debug("특정 사용자 배지 조회. profileId={}", profileId);
         return entityService.findBadgesByProfileId(profileId, pageRequest);
@@ -118,7 +118,7 @@ public class BadgeDomainService {
 
     @Transactional(readOnly = true)
     public Page<BadgeResponse> getBadges(BadgePageRequest request) {
-        var pageRequest = BadgeDtoMapper.toBadgePageRequest(request);
+        var pageRequest = request.toPageRequest();
         var page = entityService.findAll(pageRequest);
         log.debug("배지 목록 조회. page={}, size={}, total={}",
             pageRequest.getPageNumber(), pageRequest.getPageSize(), page.getTotalElements());

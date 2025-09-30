@@ -5,7 +5,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import com.pnu.momeet.domain.badge.auto.BadgeRuleEngineImpl;
+import com.pnu.momeet.domain.badge.service.BadgeRuleService;
+import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.event.EvaluationSubmittedEvent;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
@@ -22,13 +23,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
-class BadgeRuleEngineImplTest {
+class BadgeRuleServiceTest {
 
     @Mock
     ProfileEntityService profileService;
 
     @InjectMocks
-    BadgeRuleEngineImpl ruleEngine;
+    BadgeRuleService ruleEngine;
 
     @Test
     @DisplayName("모임 종료 평가 - 첫 참여 시 FIRST_JOIN 배지 코드 반환")
@@ -38,7 +39,7 @@ class BadgeRuleEngineImplTest {
         given(profileService.getById(pid)).willReturn(p);
         given(p.getCompletedJoinMeetups()).willReturn(1);
 
-        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid).toList();
+        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid);
 
         assertThat(codes).containsExactly("FIRST_JOIN");
         verify(profileService).getById(pid);
@@ -53,7 +54,7 @@ class BadgeRuleEngineImplTest {
         given(profileService.getById(pid)).willReturn(p);
         given(p.getCompletedJoinMeetups()).willReturn(10);
 
-        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid).toList();
+        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid);
 
         assertThat(codes).containsExactly("TEN_JOINS");
     }
@@ -66,7 +67,7 @@ class BadgeRuleEngineImplTest {
         given(profileService.getById(pid)).willReturn(p);
         given(p.getCompletedJoinMeetups()).willReturn(7);
 
-        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid).toList();
+        List<String> codes = ruleEngine.evaluateOnMeetupFinished(pid);
 
         assertThat(codes).isEmpty();
     }
@@ -82,15 +83,14 @@ class BadgeRuleEngineImplTest {
             meetupId,
             evaluatorProfileId,
             targetProfileId,
-            "LIKE",
-            occurredAt
+            Rating.LIKE
         );
 
         Profile p = mock(Profile.class);
         given(profileService.getById(targetProfileId)).willReturn(p);
         given(p.getLikes()).willReturn(10);
 
-        List<String> codes = ruleEngine.evaluateOnEvaluationSubmitted(e).toList();
+        List<String> codes = ruleEngine.evaluateOnEvaluationSubmitted(e);
 
         assertThat(codes).containsExactly("LIKE_10");
     }
@@ -108,8 +108,7 @@ class BadgeRuleEngineImplTest {
             meetupId,
             evaluatorProfileId,
             targetProfileId,
-            "DISLIKE",
-            occurredAt
+            Rating.DISLIKE
         );
 
         assertThat(ruleEngine.evaluateOnEvaluationSubmitted(e1)).isEmpty();
@@ -119,8 +118,7 @@ class BadgeRuleEngineImplTest {
             meetupId,
             evaluatorProfileId,
             targetProfileId,
-            "LIKE",
-            occurredAt
+            Rating.LIKE
         );
         Profile p = mock(Profile.class);
         given(profileService.getById(targetProfileId)).willReturn(p);

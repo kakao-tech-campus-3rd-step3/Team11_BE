@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.meetup.service;
 
+import com.pnu.momeet.common.event.CoreEventPublisher;
 import com.pnu.momeet.common.exception.CustomValidationException;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupGeoSearchRequest;
@@ -19,14 +20,12 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,7 +45,7 @@ public class MeetupDomainService {
     private final ProfileEntityService profileService;
     private final SigunguEntityService sigunguService;
     private final ParticipantEntityService participantService;
-    private final ApplicationEventPublisher publisher;
+    private final CoreEventPublisher coreEventPublisher;
 
     private void validateCategories(String mainCategory, String subCategory) {
         if (mainCategory == null || subCategory == null) {
@@ -208,11 +207,11 @@ public class MeetupDomainService {
         // 2) 상태 전이: ENDED (엔티티 메서드로 캡슐화 권장)
         entityService.updateMeetup(meetup, m -> {
             m.setStatus(MeetupStatus.ENDED);
-            m.setEndAt(LocalDateTime.now()); // 스펙의 ISO 8601 UTC 권장
+            m.setEndAt(LocalDateTime.now());
         });
 
         // 3) 완주자 조회 -> 프로필 집계 필드 증가
-        var participants = participantService.getAllByMeetupId(meetupId); // 이미 사용 중인 쿼리 흐름
+        var participants = participantService.getAllByMeetupId(meetupId);
         List<UUID> finisherIds = new ArrayList<>();
         for (var p : participants) {
             UUID profileId = p.getProfile().getId();
@@ -222,7 +221,11 @@ public class MeetupDomainService {
         }
 
         // 4) 종료 이벤트 발행 (커밋 후 배지 부여)
-        publisher.publishEvent(new MeetupFinishedEvent(meetupId, finisherIds, LocalDateTime.now()));
+        coreEventPublisher.publish(
+            new MeetupFinishedEvent(
+                meetupId,
+                participants.stream().map(p -> p.getProfile().getId()).toList()
+            ));
 
         log.info("모임 종료 완료. meetupId={}, ownerProfileId={}, finisherCount={}",
             meetupId, ownerProfileId, finisherIds.size());
