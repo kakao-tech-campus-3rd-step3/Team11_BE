@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.meetup.dto.request.LocationRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
+import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
@@ -42,6 +43,8 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
     protected ProfileRepository profileRepository;
     @Autowired
     protected MeetupDomainService meetupService;
+    @Autowired
+    protected MeetupRepository meetupRepository;
 
     @BeforeEach
     @Override
@@ -66,7 +69,7 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
         if (meetups != null) {
             for (MeetupDetail meetup : meetups.values()) {
                 try {
-                    meetupService.deleteMeetupAdmin(meetup.id());
+                    meetupRepository.deleteById(meetup.id());
                 } catch (Exception e) {
                     // 이미 삭제되었거나 오류가 발생한 경우 무시
                 }
