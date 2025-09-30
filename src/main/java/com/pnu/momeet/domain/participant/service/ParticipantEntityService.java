@@ -113,5 +113,10 @@ public class ParticipantEntityService {
         log.debug("특정 id의 참가자 삭제 성공. id={}", id);
     }
 
-
+    @Transactional
+    public void deleteAllByMeetupId(UUID meetupId) {
+        log.debug("특정 모임 ID의 참가자 전체 삭제 시도. meetupId={}", meetupId);
+        participantRepository.deleteAllByMeetupId(meetupId);
+        log.debug("특정 모임 ID의 참가자 전체 삭제 성공. meetupId={}", meetupId);
+    }
 }

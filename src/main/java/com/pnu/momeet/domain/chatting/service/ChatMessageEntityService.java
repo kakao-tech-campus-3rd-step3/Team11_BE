@@ -45,4 +45,11 @@ public class ChatMessageEntityService {
         );
         return savedMessage;
     }
+
+    @Transactional
+    public void deleteAllByMeetupId(UUID meetupId) {
+        log.debug("모임 ID로 모든 채팅 메시지 삭제 시도 - meetupId: {}", meetupId);
+        chatMessageRepository.deleteAllByMeetupId(meetupId);
+        log.debug("모임 ID로 모든 채팅 메시지 삭제 완료 - meetupId: {}", meetupId);
+    }
 }
