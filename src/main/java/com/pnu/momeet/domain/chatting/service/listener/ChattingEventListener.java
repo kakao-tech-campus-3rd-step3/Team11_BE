@@ -1,11 +1,15 @@
-package com.pnu.momeet.domain.chatting.event;
+package com.pnu.momeet.domain.chatting.service.listener;
 
-import com.pnu.momeet.domain.chatting.service.ChattingService;
+import com.pnu.momeet.domain.chatting.service.ChatEventService;
+import com.pnu.momeet.domain.meetup.event.MeetupCanceledEvent;
+import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
@@ -19,7 +23,7 @@ import java.util.UUID;
 public class ChattingEventListener {
 
     private static final String MEETUP_TOPIC_PREFIX = "/topic/meetups/";
-    private final ChattingService chattingService;
+    private final ChatEventService chatEventService;
 
     @EventListener
     public void handleSessionConnected(SessionConnectedEvent event) {
@@ -42,7 +46,7 @@ public class ChattingEventListener {
                 if (meetupId == null || memberId == null) {
                     return;
                 }
-                chattingService.disconnectFromMeetup(meetupId, memberId);
+                chatEventService.disconnectFromMeetup(meetupId, memberId);
             }
         }
     }
@@ -54,7 +58,20 @@ public class ChattingEventListener {
         log.debug("WebSocket 세션 연결 해제됨 - sessionId: {}", sessionId);
         UUID memberId = getMemberIdFromPrincipal(accessor.getUser());
         if (memberId != null) {
-            chattingService.disconnectAllFromMeetup(memberId);
+            chatEventService.disconnectAllFromMeetup(memberId);
+        }
+    }
+
+    @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
+    public void handleOnMeetupFinished(MeetupFinishedEvent event) {
+        chatEventService.finishMeetup(event.getMeetupId());
+    }
+
+    @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
+    public void handleOnMeetupCanceled(MeetupCanceledEvent event) {
+        switch (event.getRequestedBy()) {
+            case ROLE_USER -> chatEventService.cancelMeetup(event.getMeetupId());
+            case ROLE_ADMIN -> chatEventService.cancelByAdminMeetup(event.getMeetupId());
         }
     }
 
