@@ -40,11 +40,11 @@ public class ChatMessage extends SimpleCreationEntity {
     @Column(name = "content", nullable = false, length = 1200)
     private String content;
 
-    public ChatMessage(Meetup meetup, Participant sender, Profile profile, ChatMessageType type, String content) {
-        this.meetup = meetup;
+    public ChatMessage(Participant sender, ChatMessageType type, String content) {
         this.sender = sender;
-        this.profile = profile;
         this.type = type;
         this.content = content;
+        this.meetup = sender.getMeetup();
+        this.profile = sender.getProfile();
     }
 }

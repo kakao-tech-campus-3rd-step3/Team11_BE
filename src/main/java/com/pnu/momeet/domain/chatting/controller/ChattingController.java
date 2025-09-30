@@ -2,7 +2,8 @@ package com.pnu.momeet.domain.chatting.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.domain.chatting.dto.request.MessageRequest;
-import com.pnu.momeet.domain.chatting.service.ChattingService;
+import com.pnu.momeet.domain.chatting.service.ChatEventService;
+import com.pnu.momeet.domain.chatting.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -19,8 +20,8 @@ import java.util.UUID;
 @Controller
 @RequiredArgsConstructor
 public class ChattingController {
-
-    private final ChattingService chatMessageService;
+    private final ChatMessageService chatMessageService;
+    private final ChatEventService chatEventService;
 
     @MessageMapping("/meetups/{meetupId}/messages")
     public void sendMessage(
@@ -40,7 +41,7 @@ public class ChattingController {
             @AuthenticationPrincipal Principal principal
     ) {
         UUID memberId = UUID.fromString(principal.getName());
-        chatMessageService.connectToMeetup(meetupId, memberId);
+        chatEventService.connectToMeetup(meetupId, memberId);
     }
 
     @SubscribeMapping("/meetups/{meetupId}/messages")
@@ -49,6 +50,6 @@ public class ChattingController {
             @AuthenticationPrincipal Principal principal
     ) {
         UUID memberId = UUID.fromString(principal.getName());
-        chatMessageService.connectToMeetup(meetupId, memberId);
+        chatEventService.connectToMeetup(meetupId, memberId);
     }
 }

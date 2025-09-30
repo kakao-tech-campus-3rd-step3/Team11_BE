@@ -101,6 +101,7 @@ CREATE INDEX IF NOT EXISTS idx_meetup_status ON meetup (status);
 CREATE INDEX IF NOT EXISTS idx_meetup_owner ON meetup (owner_id);
 CREATE INDEX IF NOT EXISTS idx_category ON meetup (category);
 CREATE INDEX IF NOT EXISTS idx_sub_category ON meetup (sub_category);
+CREATE INDEX IF NOT EXISTS idx_meetup_state_end_time ON meetup (status, end_at);
 
 CREATE TABLE meetup_hash_tag (
     id              BIGSERIAL PRIMARY KEY,
@@ -112,7 +113,7 @@ CREATE TABLE meetup_hash_tag (
 CREATE TABLE meetup_participant (
     id              BIGSERIAL PRIMARY KEY,
     meetup_id       UUID NOT NULL REFERENCES meetup(id) ON DELETE CASCADE,
-    profile_id      UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    profile_id      UUID NOT NULL REFERENCES profile(id) ON DELETE SET NULL,
     role            VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
     is_active       BOOLEAN NOT NULL DEFAULT FALSE,
     is_rated        BOOLEAN NOT NULL DEFAULT FALSE,
