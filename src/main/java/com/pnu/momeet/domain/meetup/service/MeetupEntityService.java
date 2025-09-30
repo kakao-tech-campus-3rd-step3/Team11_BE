@@ -31,7 +31,7 @@ public class MeetupEntityService {
         log.debug("특정 id의 meetup 조회 시도. id={}", meetupId);
         var meetup = meetupRepository.findById(meetupId);
         if (meetup.isEmpty()) {
-            log.warn("존재하지 않는 id의 meetup 조회 시도. id={}", meetupId);
+            log.info("존재하지 않는 id의 meetup 조회 시도. id={}", meetupId);
             throw new NoSuchElementException("해당 Id의 모임이 존재하지 않습니다. id=" + meetupId);
         }
         log.debug("특정 id의 meetup 조회 성공. id={}", meetupId);
@@ -43,7 +43,7 @@ public class MeetupEntityService {
         log.debug("특정 id의 meetup 상세 조회 시도. id={}", meetupId);
         var meetup = meetupDslRepository.findByIdWithDetails(meetupId);
         if (meetup.isEmpty()) {
-            log.warn("존재하지 않는 id의 meetup 상세 조회 시도. id={}", meetupId);
+            log.info("존재하지 않는 id의 meetup 상세 조회 시도. id={}", meetupId);
             throw new NoSuchElementException("해당 Id의 모임이 존재하지 않습니다. id=" + meetupId);
         }
         log.debug("특정 id의 meetup 상세 조회 성공. id={}", meetupId);
@@ -144,7 +144,7 @@ public class MeetupEntityService {
     public void deleteById(UUID meetupId) {
         log.debug("특정 id의 meetup 삭제 시도. id={}", meetupId);
         if (!this.existsById(meetupId)) {
-            log.warn("존재하지 않는 id의 meetup 삭제 시도. id={}", meetupId);
+            log.info("존재하지 않는 id의 meetup 삭제 시도. id={}", meetupId);
             throw new NoSuchElementException("해당 Id의 모임이 존재하지 않습니다. id=" + meetupId);
         }
         meetupRepository.deleteById(meetupId);

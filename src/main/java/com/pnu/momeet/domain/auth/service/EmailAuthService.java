@@ -67,15 +67,16 @@ public class EmailAuthService {
         try {
             member = memberService.getByEmail(email);
         } catch (NoSuchElementException e) {
-            log.warn("로그인 실패: 존재하지 않는 이메일 - {}", email);
+            log.info("로그인 실패: 존재하지 않는 이메일 - {}", email);
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
         if (member.getProvider() != Provider.EMAIL) {
+            // provider는 service 별로 고정되어 있으므로, 이메일 로그인 시도 시 EMAIL이 아닌 경우는 지원하지 않는 경로로 간주
             log.warn("로그인 실패: 지원하지 않는 경로 - {} - {}", member.getProvider(), email);
             throw new AuthenticationException("지원하지 않은 경로로 로그인을 시도하였습니다.") {};
         }
         if (!passwordEncoder.matches(password, member.getPassword())) {
-            log.warn("로그인 실패: 비밀번호 불일치 - {}", email);
+            log.info("로그인 실패: 비밀번호 불일치 - {}", email);
             throw new AuthenticationException("존재하지 않는 이메일이거나, 잘못된 비밀번호입니다.") {};
         }
         var response =  generateTokenPair(member.getId());
@@ -99,21 +100,22 @@ public class EmailAuthService {
             Claims payload = tokenProvider.getPayload(refreshToken);
             memberId = UUID.fromString(payload.getSubject());
         } catch (ExpiredJwtException e) {
-            log.warn("리프레시 토큰 만료: {}", refreshToken);
+            log.info("리프레시 토큰 만료: {}", refreshToken);
             throw new AuthenticationException("리프레시 토큰이 만료되었습니다. 다시 로그인 해주세요.") {
             };
         } catch (Exception e) {
-            log.warn("리프레시 토큰 파싱 실패: {}", refreshToken);
+            log.info("리프레시 토큰 파싱 실패: {}", refreshToken);
             throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") {
             };
         }
 
         var savedToken = refreshTokenRepository.findById(memberId);
         if (savedToken.isEmpty()) {
-            log.warn("리프레시 토큰 없음: {}", memberId);
+            log.info("리프레시 토큰 없음: {}", memberId);
             throw new AuthenticationException("로그아웃된 사용자입니다. 다시 로그인 해주세요.") {};
         }
         if (!savedToken.get().getValue().equals(refreshToken)) {
+            // parsing이 되었지만 DB에 저장된 토큰과 다르다면, 탈취된 토큰일 가능성이 있으므로 warn 로그 남김
             log.warn("리프레시 토큰 불일치: {}", memberId);
             throw new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") {};
         }

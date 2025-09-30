@@ -6,11 +6,9 @@ import com.pnu.momeet.domain.auth.dto.KakaoUserInfo;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
 import com.pnu.momeet.domain.auth.repository.RefreshTokenRepository;
-import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.enums.Role;
-import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.domain.member.service.MemberEntityService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -148,7 +146,7 @@ public class KakaoAuthService {
             }
 
             if (!existingMember.isAccountNonLocked()) {
-                log.warn("카카오 로그인 실패: 잠긴 계정 - {}", kakaoUserInfo.email());
+                log.info("카카오 로그인 실패: 잠긴 계정 - {}", kakaoUserInfo.email());
                 throw new BannedAccountException("잠긴 계정입니다. 관리자에게 문의하세요.") {};
             }
 
@@ -224,7 +222,7 @@ public class KakaoAuthService {
         Member member = memberEntityService.getById(memberId);
 
         if (member.getProvider() != Provider.KAKAO) {
-            log.warn("카카오 회원 탈퇴 실패: 카카오 회원이 아님 - {} ({})", member.getEmail(), member.getProvider());
+            log.info("카카오 회원 탈퇴 실패: 카카오 회원이 아님 - {} ({})", member.getEmail(), member.getProvider());
             throw new IllegalArgumentException("카카오 회원이 아닙니다.");
         }
 

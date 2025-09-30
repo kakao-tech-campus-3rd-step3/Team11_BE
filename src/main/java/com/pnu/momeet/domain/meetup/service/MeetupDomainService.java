@@ -92,10 +92,11 @@ public class MeetupDomainService {
                 profileId, List.of(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS)
         );
         if (activeMeetups.isEmpty()) {
-            log.warn("진행 중이거나 모집 중인 모임이 없음. memberId={}", memberId);
+            log.info("진행 중이거나 모집 중인 모임이 없음. memberId={}", memberId);
             throw new NoSuchElementException("진행 중이거나 모집 중인 모임이 없습니다.");
         }
         if (activeMeetups.size() > 1) {
+            // 비정상적인 상황
             log.warn("진행 중이거나 모집 중인 모임이 2개 이상임. memberId={}, count={}", memberId, activeMeetups.size());
         }
 
@@ -114,7 +115,7 @@ public class MeetupDomainService {
                 profileService.mapToProfileId(memberId),
                 List.of(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS)
         )) {
-            log.warn("이미 진행 중이거나 모집 중인 모임이 있음. memberId={}", memberId);
+            log.info("이미 진행 중이거나 모집 중인 모임이 있음. memberId={}", memberId);
             throw new CustomValidationException(Map.of(
                     "owner", List.of("이미 진행 중이거나 모집 중인 모임이 있습니다. 하나의 모임만 생성할 수 있습니다.")
             ));
@@ -126,7 +127,7 @@ public class MeetupDomainService {
 
         Profile profile = profileService.getByMemberId(memberId);
         if (profile.getTemperature().doubleValue() < request.scoreLimit()) {
-            log.warn("회원님의 모임 참여 점수가 모임의 제한 점수보다 낮음. memberId={}, profileId={}, scoreLimit={}, temperature={}",
+            log.info("회원님의 모임 참여 점수가 모임의 제한 점수보다 낮음. memberId={}, profileId={}, scoreLimit={}, temperature={}",
                     memberId, profile.getId(), request.scoreLimit(), profile.getTemperature());
             throw new CustomValidationException(Map.of(
                     "scoreLimit", List.of("회원님의 모임 참여 점수가 모임의 제한 점수보다 낮습니다.")
@@ -147,7 +148,7 @@ public class MeetupDomainService {
         UUID profileId = profileService.mapToProfileId(memberId);
         var meetups = entityService.getAllByOwnerIdAndStatusIn(profileId, List.of(MeetupStatus.OPEN));
         if (meetups.isEmpty()) {
-            log.warn("수정 가능한 모임이 없음. memberId={}", memberId);
+            log.info("수정 가능한 모임이 없음. memberId={}", memberId);
             throw new NoSuchElementException("수정 가능한 모임이 없습니다.");
         }
         Meetup meetup = meetups.getFirst();
