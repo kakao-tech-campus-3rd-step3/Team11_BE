@@ -15,6 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -24,11 +25,6 @@ import java.util.function.Consumer;
 public class MeetupEntityService {
     private final MeetupRepository meetupRepository;
     private final MeetupDslRepository meetupDslRepository;
-
-    @Transactional(readOnly = true)
-    public Meetup getReferenceById(UUID meetupId) {
-        return meetupRepository.getReferenceById(meetupId);
-    }
 
     @Transactional(readOnly = true)
     public Meetup getById(UUID meetupId) {
@@ -91,6 +87,14 @@ public class MeetupEntityService {
         log.debug("특정 회원이 소유한 특정 상태의 meetup 목록 조회 시도. ownerId={}, statuses={}", profileId, statuses);
         var meetups = meetupDslRepository.findAllByOwnerIdAndStatusIn(profileId, statuses);
         log.debug("특정 회원이 소유한 특정 상태의 meetup 목록 조회 성공. ownerId={}, size={}", profileId, meetups.size());
+        return meetups;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Meetup> getAllByStatusAndEndAtBefore(MeetupStatus status, LocalDateTime before) {
+        log.debug("특정 상태이면서 특정 시간 이전에 종료된 meetup 목록 조회 시도. status={}, before={}", status, before);
+        var meetups = meetupRepository.findAllByStatusAndEndAtBefore(status, before);
+        log.debug("특정 상태이면서 특정 시간 이전에 종료된 meetup 목록 조회 성공. status={}, size={}", status, meetups.size());
         return meetups;
     }
 
