@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.badge.auto;
+package com.pnu.momeet.domain.badge.service;
 
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.entity.ProfileBadge;
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BadgeAwarder {
+public class BadgeAwardService {
 
     private final BadgeRepository badgeRepository;
     private final ProfileBadgeRepository profileBadgeRepository;

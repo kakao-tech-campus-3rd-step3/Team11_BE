@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.badge.auto;
+package com.pnu.momeet.domain.badge.enums;
 
 public enum Metric {
     JOIN_COUNT,

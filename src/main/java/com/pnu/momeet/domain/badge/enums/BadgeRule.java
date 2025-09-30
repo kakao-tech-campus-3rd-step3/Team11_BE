@@ -1,4 +1,4 @@
-package com.pnu.momeet.domain.badge.auto;
+package com.pnu.momeet.domain.badge.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

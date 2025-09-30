@@ -9,7 +9,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.pnu.momeet.domain.badge.auto.BadgeAwarder;
+import com.pnu.momeet.domain.badge.service.BadgeAwardService;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import com.pnu.momeet.domain.badge.repository.ProfileBadgeRepository;
@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
-class BadgeAwarderTest {
+class BadgeAwardServiceTest {
 
     @Mock
     BadgeRepository badgeRepository;
@@ -35,7 +35,7 @@ class BadgeAwarderTest {
     ProfileBadgeRepository profileBadgeRepository;
 
     @InjectMocks
-    BadgeAwarder awarder;
+    BadgeAwardService awarder;
 
     @Test
     @DisplayName("award - 코드 정규화 후 매핑·저장 호출")

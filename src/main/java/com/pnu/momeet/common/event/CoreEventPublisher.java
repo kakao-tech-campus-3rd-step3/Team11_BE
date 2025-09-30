@@ -1,7 +1,6 @@
 package com.pnu.momeet.common.event;
 
 import com.pnu.momeet.common.logging.LogTags;
-import com.pnu.momeet.common.logging.Source;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,13 +14,12 @@ public class CoreEventPublisher {
 
     private final ApplicationEventPublisher delegate;
 
-    public void publish(DomainEvent event, Source source, Map<String, Object> kv) {
-        StringBuilder sb = new StringBuilder(LogTags.PUBLISH)
-            .append(" type=").append(event.type())
-            .append(" source=").append(source.name());
-        kv.forEach((k, v) -> sb.append(' ').append(k).append('=').append(v));
+    public void publish(DomainEvent event) {
+        StringBuilder sb = new StringBuilder(LogTags.PUBLISH);
+        for (Map.Entry<String, Object> e : event.logInfo().entrySet()) {
+            sb.append(' ').append(e.getKey()).append('=').append(e.getValue());
+        }
         log.info(sb.toString());
-
         delegate.publishEvent(event);
     }
 }

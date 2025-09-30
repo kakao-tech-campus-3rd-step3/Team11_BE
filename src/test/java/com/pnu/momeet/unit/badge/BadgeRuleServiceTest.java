@@ -5,7 +5,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import com.pnu.momeet.domain.badge.auto.BadgeRuleEngineImpl;
+import com.pnu.momeet.domain.badge.service.BadgeRuleService;
 import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.event.EvaluationSubmittedEvent;
 import com.pnu.momeet.domain.profile.entity.Profile;
@@ -23,13 +23,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
-class BadgeRuleEngineImplTest {
+class BadgeRuleServiceTest {
 
     @Mock
     ProfileEntityService profileService;
 
     @InjectMocks
-    BadgeRuleEngineImpl ruleEngine;
+    BadgeRuleService ruleEngine;
 
     @Test
     @DisplayName("모임 종료 평가 - 첫 참여 시 FIRST_JOIN 배지 코드 반환")
@@ -83,9 +83,7 @@ class BadgeRuleEngineImplTest {
             meetupId,
             evaluatorProfileId,
             targetProfileId,
-            Rating.LIKE,
-            occurredAt,
-            UUID.randomUUID()
+            Rating.LIKE
         );
 
         Profile p = mock(Profile.class);
@@ -110,9 +108,7 @@ class BadgeRuleEngineImplTest {
             meetupId,
             evaluatorProfileId,
             targetProfileId,
-            Rating.DISLIKE,
-            occurredAt,
-            UUID.randomUUID()
+            Rating.DISLIKE
         );
 
         assertThat(ruleEngine.evaluateOnEvaluationSubmitted(e1)).isEmpty();
@@ -122,9 +118,7 @@ class BadgeRuleEngineImplTest {
             meetupId,
             evaluatorProfileId,
             targetProfileId,
-            Rating.LIKE,
-            occurredAt,
-            UUID.randomUUID()
+            Rating.LIKE
         );
         Profile p = mock(Profile.class);
         given(profileService.getById(targetProfileId)).willReturn(p);
