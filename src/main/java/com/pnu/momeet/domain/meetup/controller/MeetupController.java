@@ -89,22 +89,4 @@ public class MeetupController {
                 meetupService.updateMeetupByMemberId(request, userDetails.getMemberId())
         );
     }
-
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteMeetup(
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        meetupService.deleteMeetup(userDetails.getMemberId());
-        return ResponseEntity.noContent().build();
-    }
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @DeleteMapping("/{meetupId}")
-    public ResponseEntity<Void> adminDeleteMeetup(
-            @PathVariable UUID meetupId
-    ) {
-        meetupService.deleteMeetupAdmin(meetupId);
-        return ResponseEntity.noContent().build();
-    }
 }
