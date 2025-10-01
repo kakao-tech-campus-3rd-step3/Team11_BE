@@ -2,6 +2,7 @@ package com.pnu.momeet.domain.chatting.service.listener;
 
 import com.pnu.momeet.domain.chatting.service.ChatEventService;
 import com.pnu.momeet.domain.chatting.service.ChatMessageEntityService;
+import com.pnu.momeet.domain.evaluation.event.EvaluationDeadlineEndedEvent;
 import com.pnu.momeet.domain.meetup.event.MeetupCanceledEvent;
 import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
 import lombok.RequiredArgsConstructor;
@@ -83,7 +84,8 @@ public class ChattingEventListener {
 
     @Order(1)
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void handleEvaluationDeadlineEnded(UUID meetupId) {
+    public void handleEvaluationDeadlineEnded(EvaluationDeadlineEndedEvent event) {
+        UUID meetupId = event.getMeetupId();
         log.debug("모임 평가 마감 - 채팅 메시지 삭제 처리 시작, meetupId: {}", meetupId);
         entityService.deleteAllByMeetupId(meetupId);
         log.debug("모임 평가 마감 - 채팅 메시지 삭제 처리 완료, meetupId: {}", meetupId);

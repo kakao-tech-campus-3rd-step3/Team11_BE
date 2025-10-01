@@ -113,7 +113,7 @@ CREATE TABLE meetup_hash_tag (
 CREATE TABLE meetup_participant (
     id              BIGSERIAL PRIMARY KEY,
     meetup_id       UUID NOT NULL REFERENCES meetup(id) ON DELETE CASCADE,
-    profile_id      UUID NOT NULL REFERENCES profile(id) ON DELETE SET NULL,
+    profile_id      UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
     role            VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
     is_active       BOOLEAN NOT NULL DEFAULT FALSE,
     is_rated        BOOLEAN NOT NULL DEFAULT FALSE,
