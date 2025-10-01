@@ -29,7 +29,7 @@ public class ParticipantEntityService {
         log.debug("특정 id의 참가자 조회 시도. id={}", id);
         var participant = participantRepository.findById(id);
         if (participant.isEmpty()) {
-            log.warn("존재하지 않는 id의 참가자 조회 시도. id={}", id);
+            log.info("존재하지 않는 id의 참가자 조회 시도. id={}", id);
             throw new NoSuchElementException("참가자를 찾을 수 없습니다.");
         }
         log.debug("특정 id의 참가자 조회 성공. id={}", id);
@@ -41,7 +41,7 @@ public class ParticipantEntityService {
         log.debug("특정 id와 모임 ID의 참가자 조회 시도. id={}, meetupId={}", id, meetupId);
         var participant = participantRepository.findByIdAndMeetupId(id, meetupId);
         if (participant.isEmpty()) {
-            log.warn("존재하지 않는 id와 모임 ID의 참가자 조회 시도. id={}, meetupId={}", id, meetupId);
+            log.info("존재하지 않는 id와 모임 ID의 참가자 조회 시도. id={}, meetupId={}", id, meetupId);
             throw new NoSuchElementException("참가자를 찾을 수 없습니다.");
         }
         log.debug("특정 id와 모임 ID의 참가자 조회 성공. id={}, meetupId={}", id, meetupId);
@@ -61,7 +61,7 @@ public class ParticipantEntityService {
         log.debug("프로필 ID와 모임 ID로 참가자 조회 시도. profileId={}, meetupId={}", profileId, meetupId);
         var participant = participantRepository.findByProfileIdAndMeetupId(profileId, meetupId);
         if (participant.isEmpty()) {
-            log.warn("존재하지 않는 프로필 ID와 모임 ID로 참가자 조회 시도. profileId={}, meetupId={}", profileId, meetupId);
+            log.info("존재하지 않는 프로필 ID와 모임 ID로 참가자 조회 시도. profileId={}, meetupId={}", profileId, meetupId);
             throw new NoSuchElementException("참가자를 찾을 수 없습니다.");
         }
         log.debug("프로필 ID와 모임 ID로 참가자 조회 성공. profileId={}, meetupId={}", profileId, meetupId);
@@ -79,7 +79,7 @@ public class ParticipantEntityService {
         log.debug("모임 ID로 상위 2명의 참가자 조회 시도. meetupId={}", meetupId);
         var participants = participantRepository.findTopTwoByOrderByTemperatureDesc(meetupId);
         if (participants.size() < 2) {
-            log.warn("상위 2명의 참가자가 존재하지 않음. meetupId={}", meetupId);
+            log.info("상위 2명의 참가자가 존재하지 않음. meetupId={}", meetupId);
             throw new NoSuchElementException("상위 2명의 참가자가 존재하지 않습니다.");
         }
         log.debug("모임 ID로 상위 2명의 참가자 조회 성공. meetupId={}", meetupId);
@@ -106,12 +106,17 @@ public class ParticipantEntityService {
     public void deleteById(Long id) {
         log.debug("특정 id의 참가자 삭제 시도. id={}", id);
         if (!participantRepository.existsById(id)) {
-            log.warn("존재하지 않는 id의 참가자 삭제 시도. id={}", id);
+            log.info("존재하지 않는 id의 참가자 삭제 시도. id={}", id);
             throw new NoSuchElementException("참가자를 찾을 수 없습니다.");
         }
         participantRepository.deleteById(id);
         log.debug("특정 id의 참가자 삭제 성공. id={}", id);
     }
 
-
+    @Transactional
+    public void deleteAllByMeetupId(UUID meetupId) {
+        log.debug("특정 모임 ID의 참가자 전체 삭제 시도. meetupId={}", meetupId);
+        participantRepository.deleteAllByMeetupId(meetupId);
+        log.debug("특정 모임 ID의 참가자 전체 삭제 성공. meetupId={}", meetupId);
+    }
 }

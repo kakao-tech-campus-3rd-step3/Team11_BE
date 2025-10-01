@@ -5,7 +5,6 @@ import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeDslRepository;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +26,7 @@ public class BadgeEntityService {
         log.debug("배지 단건 조회 시도. badgeId={}", badgeId);
         return badgeRepository.findById(badgeId)
             .orElseThrow(() -> {
-                log.warn("존재하지 않는 배지 조회 시도. badgeId={}", badgeId);
+                log.info("존재하지 않는 배지 조회 시도. badgeId={}", badgeId);
                 return new NoSuchElementException("존재하지 않는 배지입니다.");
             });
     }

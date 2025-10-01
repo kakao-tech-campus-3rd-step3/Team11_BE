@@ -32,7 +32,7 @@ public class MemberEntityService {
         var member = memberRepository.findById(id);
 
         if (member.isEmpty()) {
-            log.warn("존재하지 않는 id의 사용자 조회 시도. id={}", id);
+            log.info("존재하지 않는 id의 사용자 조회 시도. id={}", id);
             throw new NoSuchElementException("해당 Id의 사용자가 존재하지 않습니다. id=" + id);
         }
         log.debug("특정 id의 사용자 조회 성공. id={}", id);
@@ -44,7 +44,7 @@ public class MemberEntityService {
         log.debug("특정 이메일의 사용자 조회 시도. email={}", email);
         var member = memberRepository.findMemberByEmail(email);
         if (member.isEmpty()) {
-            log.warn("존재하지 않는 이메일의 사용자 조회 시도. email={}", email);
+            log.info("존재하지 않는 이메일의 사용자 조회 시도. email={}", email);
             throw new NoSuchElementException("해당 이메일의 사용자가 존재하지 않습니다. email=" + email);
         }
         log.debug("특정 이메일의 사용자 조회 성공. email={}", email);
@@ -60,7 +60,7 @@ public class MemberEntityService {
     public Member createMember(Member member) {
         log.debug("사용자 생성 시도. email={}", member.getEmail());
         if (existsByEmail(member.getEmail())) {
-            log.warn("이미 존재하는 이메일로 사용자 생성 시도. email={}", member.getEmail());
+            log.info("이미 존재하는 이메일로 사용자 생성 시도. email={}", member.getEmail());
             throw new DuplicateKeyException("이미 존재하는 이메일입니다. email=" + member.getEmail());
         }
         member.setPassword(passwordEncoder.encode(member.getPassword()));
@@ -95,7 +95,7 @@ public class MemberEntityService {
     public void deleteById(UUID id) {
         log.debug("사용자 삭제 시도. id={}", id);
         if (!memberRepository.existsById(id)) { // 존재하지 않는 회원 삭제 방지
-            log.warn("존재하지 않는 id의 사용자 삭제 시도. id={}", id);
+            log.info("존재하지 않는 id의 사용자 삭제 시도. id={}", id);
             throw new NoSuchElementException("해당 Id의 사용자가 존재하지 않습니다. id=" + id);
         }
         memberRepository.deleteById(id);

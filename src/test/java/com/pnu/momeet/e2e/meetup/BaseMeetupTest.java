@@ -2,6 +2,7 @@ package com.pnu.momeet.e2e.meetup;
 
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
@@ -44,11 +45,13 @@ public abstract class BaseMeetupTest extends BaseE2ETest {
 
     @Autowired
     protected MeetupDomainService meetupService;
-    
+
     @Autowired
     protected MemberDomainService memberService;
     @Autowired
     private ProfileRepository profileRepository;
+    @Autowired
+    private MeetupRepository meetupRepository;
 
     @BeforeEach
     @Override
@@ -103,7 +106,7 @@ public abstract class BaseMeetupTest extends BaseE2ETest {
     protected void tearDown() {
         if (toBeDeleted != null && !toBeDeleted.isEmpty()) {
             for (UUID meetupId : toBeDeleted) {
-                meetupService.deleteMeetupAdmin(meetupId);
+                meetupRepository.deleteById(meetupId);
             }
             toBeDeleted.clear();
         }
