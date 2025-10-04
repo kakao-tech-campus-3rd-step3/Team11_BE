@@ -2,14 +2,19 @@ package com.pnu.momeet.domain.evaluation.service;
 
 import com.pnu.momeet.common.event.CoreEventPublisher;
 import com.pnu.momeet.common.mapper.facade.EvaluatableProfileMapper;
+import com.pnu.momeet.domain.evaluation.dto.request.EvaluationCreateBatchRequest;
 import com.pnu.momeet.domain.evaluation.dto.request.EvaluationCreateRequest;
+import com.pnu.momeet.domain.evaluation.dto.response.EvaluationCreateBatchResponse;
 import com.pnu.momeet.domain.evaluation.dto.response.EvaluationResponse;
+import com.pnu.momeet.domain.evaluation.dto.response.InvalidItem;
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
+import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.event.EvaluationSubmittedEvent;
 import com.pnu.momeet.domain.evaluation.service.mapper.EvaluationEntityMapper;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupSummaryPageRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupSummaryResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
+import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupDtoMapper;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
@@ -18,8 +23,11 @@ import com.pnu.momeet.domain.participant.service.ParticipantEntityService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
+import jakarta.validation.ValidationException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,32 +55,98 @@ public class EvaluationDomainService {
     private final CoreEventPublisher coreEventPublisher;
 
     @Transactional
-    public EvaluationResponse createEvaluation(UUID evaluatorMemberId,
+    public EvaluationCreateBatchResponse createEvaluations(UUID evaluatorMemberId,
+        UUID meetupId,
+        EvaluationCreateBatchRequest req,
+        String ipHash
+    ) {
+        Profile evaluator = profileService.getByMemberId(evaluatorMemberId);
+
+        Set<UUID> participants = participantService.getAllByMeetupId(meetupId).stream()
+            .map(p -> p.getProfile().getId())
+            .filter(pid -> !pid.equals(evaluator.getId()))
+            .collect(Collectors.toSet());
+
+        // 이미 내가 남긴 평가 대상 캐시
+        Set<UUID> already = entityService
+            .getByMeetupAndEvaluator(meetupId, evaluator.getId())
+            .stream()
+            .map(Evaluation::getTargetProfileId)
+            .collect(Collectors.toSet());
+
+        Set<UUID> seen = new HashSet<>();
+        List<EvaluationResponse> created = new ArrayList<>();
+        List<UUID> alreadyEvaluated = new ArrayList<>();
+        List<InvalidItem> invalid = new ArrayList<>();
+
+        for (EvaluationCreateRequest item : req.items()) {
+            UUID targetProfileId = item.targetProfileId();
+            Rating rating = item.rating();
+
+            // 1. 요청 중복/기본 검증
+            if (!seen.add(targetProfileId)) {
+                invalid.add(new InvalidItem(targetProfileId, "요청 내 중복 대상"));
+                continue;
+            }
+            if (!participants.contains(targetProfileId)) {
+                invalid.add(new InvalidItem(targetProfileId, "모임 참가자가 아닙니다."));
+                continue;
+            }
+
+            // 2. 이미 평가했으면 스킵
+            if (already.contains(targetProfileId)) {
+                alreadyEvaluated.add(targetProfileId);
+                continue;
+            }
+
+            // 3. 단건 생성 로직 재사용 (쿨타임/IP/이벤트/집계)
+            try {
+                EvaluationResponse res = createEvaluation(
+                    meetupId,
+                    evaluatorMemberId,
+                    new EvaluationCreateRequest(targetProfileId, rating),
+                    ipHash
+                );
+                created.add(res);
+                already.add(targetProfileId);
+            } catch (IllegalStateException | IllegalArgumentException e) {
+                invalid.add(new InvalidItem(targetProfileId, e.getMessage()));
+            }
+        }
+
+        return new EvaluationCreateBatchResponse(created, alreadyEvaluated, invalid);
+    }
+
+    @Transactional
+    public EvaluationResponse createEvaluation(
+        UUID meetupId,
+        UUID evaluatorMemberId,
         EvaluationCreateRequest request,
-        String ipHash) {
+        String ipHash
+    ) {
         Profile evaluator = profileService.getByMemberId(evaluatorMemberId);
         Profile target = profileService.getById(request.targetProfileId());
 
         // 1. 자기 자신 평가 금지
         if (evaluator.getId().equals(target.getId())) {
-            log.warn("자기 자신 평가 금지 위반. evaluatorPid={}, meetupId={}", evaluator.getId(), request.meetupId());
+            log.warn("자기 자신 평가 금지 위반. evaluatorPid={}, meetupId={}", evaluator.getId(), meetupId);
             throw new IllegalArgumentException("자기 자신은 평가할 수 없습니다.");
         }
 
         // 2. 모임 참가자 검증 (둘 다 해당 모임 참여자여야 함)
-        if (!participantService.existsByProfileIdAndMeetupId(evaluator.getId(), request.meetupId()) &&
-            !participantService.existsByProfileIdAndMeetupId(target.getId(), request.meetupId())
+        if (!participantService.existsByProfileIdAndMeetupId(evaluator.getId(), meetupId) ||
+            !participantService.existsByProfileIdAndMeetupId(target.getId(), meetupId)
         ) {
             log.info("모임 참가자 검증 실패. meetupId={}, evaluatorPid={}, targetPid={}",
-                request.meetupId(), evaluator.getId(), target.getId()
+                meetupId, evaluator.getId(), target.getId()
             );
             throw new IllegalStateException("모임에 참여하지 않은 사용자입니다.");
         }
 
         // 3. 중복/쿨타임/IP 검증
-        if (entityService.existsByMeetupAndPair(request.meetupId(), evaluator.getId(), target.getId())) {
+        if (entityService.existsByMeetupAndPair(meetupId, evaluator.getId(), target.getId())) {
             log.warn("모임 단위 중복 평가. meetupId={}, evaluatorPid={}, targetPid={}",
-                request.meetupId(), evaluator.getId(), target.getId());
+                meetupId, evaluator.getId(), target.getId());
             throw new IllegalStateException("이미 평가한 사용자입니다.");
         }
         entityService.getLastByPair(evaluator.getId(), target.getId())
@@ -83,8 +157,8 @@ public class EvaluationDomainService {
                 throw new IllegalStateException("동일 사용자에 대한 평가는 하루에 한 번만 가능합니다.");
             });
         if (entityService.existsByMeetupTargetIpAfter(
-            request.meetupId(), target.getId(), ipHash, LocalDateTime.now().minus(EVALUATION_COOLTIME))) {
-            log.warn("동일 IP 해시 쿨타임 위반. meetupId={}, targetPid={}", request.meetupId(), target.getId());
+            meetupId, target.getId(), ipHash, LocalDateTime.now().minus(EVALUATION_COOLTIME))) {
+            log.warn("동일 IP 해시 쿨타임 위반. meetupId={}, targetPid={}", meetupId, target.getId());
             throw new IllegalStateException("동일 위치에서 이미 해당 사용자에 대한 평가가 등록되었습니다.");
         }
 
@@ -106,12 +180,12 @@ public class EvaluationDomainService {
 
         // 5. 저장
         Evaluation saved = entityService.save(Evaluation.create(
-            request.meetupId(), evaluator.getId(), target.getId(), request.rating(), ipHash
+            meetupId, evaluator.getId(), target.getId(), request.rating(), ipHash
         ));
 
         // 6. 이벤트 발행
         coreEventPublisher.publish(new EvaluationSubmittedEvent(
-            request.meetupId(), evaluator.getId(), target.getId(), request.rating()
+            meetupId, evaluator.getId(), target.getId(), request.rating()
         ));
         log.info("평가 생성 완료. id={}, meetupId={}, evaluatorPid={}, targetPid={}, rating={}",
             saved.getId(), saved.getMeetupId(), saved.getEvaluatorProfileId(), saved.getTargetProfileId(), saved.getRating());
@@ -197,6 +271,9 @@ public class EvaluationDomainService {
     @Transactional(readOnly = true)
     public List<EvaluatableProfileResponse> getEvaluatableUsers(UUID meetupId, UUID evaluatorMemberId) {
         Profile evaluator = profileService.getByMemberId(evaluatorMemberId);
+
+        // 모임 존재 확인
+        meetupService.getById(meetupId);
 
         // 1) 모임 참가자 & 자기 자신 제외
         List<Participant> participants = participantService.getAllByMeetupId(meetupId);

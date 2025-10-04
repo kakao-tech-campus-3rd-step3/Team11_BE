@@ -4,13 +4,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.pnu.momeet.common.event.CoreEventPublisher;
+import com.pnu.momeet.domain.evaluation.dto.request.EvaluationCreateBatchRequest;
 import com.pnu.momeet.domain.evaluation.dto.request.EvaluationCreateRequest;
+import com.pnu.momeet.domain.evaluation.dto.response.EvaluationCreateBatchResponse;
 import com.pnu.momeet.domain.evaluation.dto.response.EvaluationResponse;
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
 import com.pnu.momeet.domain.evaluation.enums.Rating;
@@ -33,6 +39,8 @@ import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import java.lang.reflect.Constructor;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -43,6 +51,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -55,15 +64,25 @@ class EvaluationDomainServiceTest {
 
     @Mock
     private EvaluationEntityService entityService;
-    @Mock private ProfileEntityService profileService;
-    @Mock private ParticipantEntityService participantService;
-    @Mock private MeetupEntityService meetupService;
-    @Mock private CoreEventPublisher coreEventPublisher;
 
+    @Mock
+    private ProfileEntityService profileService;
+
+    @Mock
+    private ParticipantEntityService participantService;
+
+    @Mock
+    private MeetupEntityService meetupService;
+
+    @Mock
+    private CoreEventPublisher coreEventPublisher;
+
+    // 배치 테스트에서 createEvaluation 만 스텁하기 위해 Spy 사용
+    @Spy
     @InjectMocks
     private EvaluationDomainService service;
 
-    // ===== 공통 픽스처 =====
+    // 공통 픽스처
     private UUID memberId;
     private UUID evaluatorPid;
     private UUID targetPid;
@@ -78,7 +97,7 @@ class EvaluationDomainServiceTest {
             ctor.setAccessible(true);                 // protected 생성자 접근
             Sigungu s = ctor.newInstance();
 
-            // 필요한 최소 필드만 세팅 (엔티티는 @Setter가 있으니 setter 써도 됨)
+            // 필요한 최소 필드만 세팅
             ReflectionTestUtils.setField(s, "id", id);
             ReflectionTestUtils.setField(s, "sidoName", sidoName);
             ReflectionTestUtils.setField(s, "sigunguName", sigunguName);
@@ -120,6 +139,189 @@ class EvaluationDomainServiceTest {
         ReflectionTestUtils.setField(meetup, "status", MeetupStatus.ENDED);
     }
 
+    private EvaluationResponse resp(UUID target, Rating rating) {
+        return new EvaluationResponse(
+            UUID.randomUUID(), meetupId, evaluatorPid, target, rating.name(), LocalDateTime.now()
+        );
+    }
+
+    private void commonBatchStubs(UUID... participantProfileIds) {
+        // 평가자 로드
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        // 참가자 목록 (자기 자신 포함 후 서비스에서 제외)
+        List<Participant> parts = new ArrayList<>();
+        parts.add(Participant.builder().profile(evaluator).role(MeetupRole.MEMBER).meetup(meetup).build());
+        for (UUID pid : participantProfileIds) {
+            Profile p = Profile.create(UUID.randomUUID(), "p", 20, Gender.MALE, null, "", "");
+            ReflectionTestUtils.setField(p, "id", pid);
+            parts.add(Participant.builder().profile(p).role(MeetupRole.MEMBER).meetup(meetup).build());
+        }
+        given(participantService.getAllByMeetupId(meetupId)).willReturn(parts);
+        // 기존 내가 남긴 평가들
+        given(entityService.getByMeetupAndEvaluator(meetupId, evaluatorPid)).willReturn(List.of());
+    }
+
+    @Test
+    @DisplayName("배치 성공: 두 대상 모두 생성 → created=2, already/invalid=0")
+    void batch_success_twoCreated() {
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+        commonBatchStubs(a, b);
+
+        // 단건 생성 성공 스텁
+        doReturn(resp(a, Rating.LIKE))
+            .when(service).createEvaluation(
+                eq(meetupId), eq(memberId),
+                argThat(r -> r.targetProfileId().equals(a) && r.rating() == Rating.LIKE),
+                anyString()
+            );
+
+        doReturn(resp(b, Rating.DISLIKE))
+            .when(service).createEvaluation(
+                eq(meetupId), eq(memberId),
+                argThat(r -> r.targetProfileId().equals(b) && r.rating() == Rating.DISLIKE),
+                anyString()
+            );
+
+        var req = new EvaluationCreateBatchRequest(List.of(
+            new EvaluationCreateRequest(a, Rating.LIKE),
+            new EvaluationCreateRequest(b, Rating.DISLIKE)
+        ));
+
+        EvaluationCreateBatchResponse result = service.createEvaluations(memberId, meetupId, req, "ip#");
+
+        assertThat(result.created()).hasSize(2);
+        assertThat(result.alreadyEvaluated()).isEmpty();
+        assertThat(result.invalid()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("배치: 이미 평가한 대상은 created가 아닌 alreadyEvaluated로 분류")
+    void batch_alreadyEvaluated_isCollected() {
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+        commonBatchStubs(a, b);
+
+        // a는 기존 평가 존재
+        var existing = Evaluation.create(meetupId, evaluatorPid, a, Rating.LIKE, "old");
+        given(entityService.getByMeetupAndEvaluator(meetupId, evaluatorPid)).willReturn(List.of(existing));
+
+        // b는 생성
+        doReturn(resp(b, Rating.DISLIKE))
+            .when(service).createEvaluation(eq(meetupId), eq(memberId), any(EvaluationCreateRequest.class), anyString());
+
+        var req = new EvaluationCreateBatchRequest(List.of(
+            new EvaluationCreateRequest(a, Rating.LIKE),
+            new EvaluationCreateRequest(b, Rating.DISLIKE)
+        ));
+
+        EvaluationCreateBatchResponse result = service.createEvaluations(memberId, meetupId, req, "ip#");
+
+        assertThat(result.created()).extracting(EvaluationResponse::targetProfileId).containsExactly(b);
+        assertThat(result.alreadyEvaluated()).containsExactly(a);
+        assertThat(result.invalid()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("배치: 요청 내 중복 대상 → invalid에 수집 (부분 성공 유지)")
+    void batch_duplicateInRequest_isInvalid() {
+        UUID a = UUID.randomUUID();
+        commonBatchStubs(a);
+
+        // 첫 항목은 성공하도록 스텁
+        doReturn(resp(a, Rating.LIKE))
+            .when(service).createEvaluation(eq(meetupId), eq(memberId), any(EvaluationCreateRequest.class), anyString());
+
+        var req = new EvaluationCreateBatchRequest(List.of(
+            new EvaluationCreateRequest(a, Rating.LIKE),
+            new EvaluationCreateRequest(a, Rating.DISLIKE) // 중복
+        ));
+
+        EvaluationCreateBatchResponse result = service.createEvaluations(memberId, meetupId, req, "ip#");
+
+        assertThat(result.created().size()).isBetween(0, 1);
+        assertThat(result.invalid()).hasSize(1);
+        assertThat(result.invalid().getFirst().targetProfileId()).isEqualTo(a);
+        assertThat(result.invalid().getFirst().message()).contains("중복");
+    }
+
+    @Test
+    @DisplayName("배치: 비참가자 대상 → invalid에 수집")
+    void batch_notParticipant_isInvalid() {
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+
+        // 참가자에는 a만 포함(= b는 비참가자)
+        commonBatchStubs(a);
+
+        // a는 성공
+        doReturn(resp(a, Rating.LIKE))
+            .when(service).createEvaluation(eq(meetupId), eq(memberId), any(EvaluationCreateRequest.class), anyString());
+
+        var req = new EvaluationCreateBatchRequest(List.of(
+            new EvaluationCreateRequest(a, Rating.LIKE),    // 참가자
+            new EvaluationCreateRequest(b, Rating.DISLIKE)  // 참가자가 아님
+        ));
+
+        EvaluationCreateBatchResponse result = service.createEvaluations(memberId, meetupId, req, "ip#");
+
+        assertThat(result.created()).extracting(EvaluationResponse::targetProfileId).containsExactly(a);
+        assertThat(result.invalid()).hasSize(1);
+        assertThat(result.invalid().getFirst().targetProfileId()).isEqualTo(b);
+        assertThat(result.invalid().getFirst().message()).contains("모임 참가자가 아닙니다");
+    }
+
+    @Test
+    @DisplayName("배치: 단건 생성에서 예외 발생 → invalid에 코드/메시지 축적")
+    void batch_singleCreationThrows_isCollectedAsInvalid() {
+        UUID a = UUID.randomUUID();
+        commonBatchStubs(a);
+
+        doThrow(new IllegalStateException("쿨타임 위반"))
+            .when(service).createEvaluation(eq(meetupId), eq(memberId), any(EvaluationCreateRequest.class), anyString());
+
+        var req = new EvaluationCreateBatchRequest(List.of(
+            new EvaluationCreateRequest(a, Rating.LIKE)
+        ));
+
+        EvaluationCreateBatchResponse result = service.createEvaluations(memberId, meetupId, req, "ip#");
+
+        assertThat(result.created()).isEmpty();
+        assertThat(result.invalid()).hasSize(1);
+        assertThat(result.invalid().getFirst().targetProfileId()).isEqualTo(a);
+        assertThat(result.invalid().getFirst().message()).contains("쿨타임");
+    }
+
+    @Test
+    @DisplayName("배치: 혼합 케이스 created 1, already 1, invalid 1")
+    void batch_mixed_allBuckets() {
+        UUID a = UUID.randomUUID(); // already
+        UUID b = UUID.randomUUID(); // created
+        commonBatchStubs(a, b);
+
+        // a는 기존 평가
+        var existing = Evaluation.create(meetupId, evaluatorPid, a, Rating.LIKE, "old");
+        given(entityService.getByMeetupAndEvaluator(meetupId, evaluatorPid)).willReturn(List.of(existing));
+
+        // b는 생성
+        doReturn(resp(b, Rating.DISLIKE))
+            .when(service).createEvaluation(eq(meetupId), eq(memberId), any(EvaluationCreateRequest.class), anyString());
+
+        var req = new EvaluationCreateBatchRequest(List.of(
+            new EvaluationCreateRequest(a, Rating.LIKE),     // already
+            new EvaluationCreateRequest(b, Rating.DISLIKE),  // created
+            new EvaluationCreateRequest(b, Rating.DISLIKE)   // duplicate → invalid
+        ));
+
+        EvaluationCreateBatchResponse result = service.createEvaluations(memberId, meetupId, req, "ip#");
+
+        assertThat(result.created()).extracting(EvaluationResponse::targetProfileId).containsExactly(b);
+        assertThat(result.alreadyEvaluated()).containsExactly(a);
+        assertThat(result.invalid()).hasSize(1);
+        assertThat(result.invalid().getFirst().targetProfileId()).isEqualTo(b);
+        assertThat(result.invalid().getFirst().message()).contains("중복");
+    }
+
     @Test
     @DisplayName("createEvaluation 성공 - LIKE")
     void createEvaluation_success_like() {
@@ -127,6 +329,7 @@ class EvaluationDomainServiceTest {
         given(profileService.getByMemberId(memberId)).willReturn(evaluator);
         given(profileService.getById(targetPid)).willReturn(target);
         given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId)).willReturn(true);
+        given(participantService.existsByProfileIdAndMeetupId(targetPid,    meetupId)).willReturn(true);
 
         given(entityService.existsByMeetupAndPair(meetupId, evaluatorPid, targetPid)).willReturn(false);
         given(entityService.getLastByPair(evaluatorPid, targetPid)).willReturn(Optional.empty());
@@ -138,8 +341,8 @@ class EvaluationDomainServiceTest {
         given(entityService.save(any(Evaluation.class))).willReturn(saved);
 
         // when
-        EvaluationCreateRequest req = new EvaluationCreateRequest(meetupId, targetPid, Rating.LIKE);
-        EvaluationResponse resp = service.createEvaluation(memberId, req, "ipHash");
+        EvaluationCreateRequest req = new EvaluationCreateRequest(targetPid, Rating.LIKE);
+        EvaluationResponse resp = service.createEvaluation(meetupId, memberId, req, "ipHash");
 
         // then
         assertThat(resp.meetupId()).isEqualTo(meetupId);
@@ -157,10 +360,10 @@ class EvaluationDomainServiceTest {
         given(profileService.getById(evaluatorPid)).willReturn(evaluator); // target == evaluator
 
         // when
-        EvaluationCreateRequest req = new EvaluationCreateRequest(meetupId, evaluatorPid, Rating.DISLIKE);
+        EvaluationCreateRequest req = new EvaluationCreateRequest(evaluatorPid, Rating.DISLIKE);
 
         // then
-        assertThatThrownBy(() -> service.createEvaluation(memberId, req, "ipHash"))
+        assertThatThrownBy(() -> service.createEvaluation(meetupId, memberId, req, "ipHash"))
             .isInstanceOf(IllegalArgumentException.class);
         verify(entityService, never()).save(any());
     }
@@ -172,12 +375,11 @@ class EvaluationDomainServiceTest {
         given(profileService.getByMemberId(memberId)).willReturn(evaluator);
         given(profileService.getById(targetPid)).willReturn(target);
         given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId)).willReturn(true);
-        given(entityService.existsByMeetupAndPair(meetupId, evaluatorPid, targetPid)).willReturn(true);
 
-        EvaluationCreateRequest req = new EvaluationCreateRequest(meetupId, targetPid, Rating.LIKE);
+        EvaluationCreateRequest req = new EvaluationCreateRequest(targetPid, Rating.LIKE);
 
         // then
-        assertThatThrownBy(() -> service.createEvaluation(memberId, req, "ipHash"))
+        assertThatThrownBy(() -> service.createEvaluation(meetupId, memberId, req, "ipHash"))
             .isInstanceOf(IllegalStateException.class);
     }
 
@@ -187,17 +389,15 @@ class EvaluationDomainServiceTest {
         // given
         given(profileService.getByMemberId(memberId)).willReturn(evaluator);
         given(profileService.getById(targetPid)).willReturn(target);
-        given(entityService.existsByMeetupAndPair(meetupId, evaluatorPid, targetPid)).willReturn(false);
         given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId)).willReturn(true);
 
         Evaluation last = Evaluation.create(meetupId, evaluatorPid, targetPid, Rating.LIKE, "prev");
         ReflectionTestUtils.setField(last, "createdAt", LocalDateTime.now()); // 지금으로 설정 → 쿨타임 위반
-        given(entityService.getLastByPair(evaluatorPid, targetPid)).willReturn(Optional.of(last));
 
-        EvaluationCreateRequest req = new EvaluationCreateRequest(meetupId, targetPid, Rating.DISLIKE);
+        EvaluationCreateRequest req = new EvaluationCreateRequest(targetPid, Rating.DISLIKE);
 
         // then
-        assertThatThrownBy(() -> service.createEvaluation(memberId, req, "ipHash"))
+        assertThatThrownBy(() -> service.createEvaluation(meetupId, memberId, req, "ipHash"))
             .isInstanceOf(IllegalStateException.class);
     }
 
@@ -208,15 +408,11 @@ class EvaluationDomainServiceTest {
         given(profileService.getByMemberId(memberId)).willReturn(evaluator);
         given(profileService.getById(targetPid)).willReturn(target);
         given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId)).willReturn(true);
-        given(entityService.existsByMeetupAndPair(meetupId, evaluatorPid, targetPid)).willReturn(false);
-        given(entityService.getLastByPair(evaluatorPid, targetPid)).willReturn(Optional.empty());
-        given(entityService.existsByMeetupTargetIpAfter(eq(meetupId), eq(targetPid), eq("ipHash"), any()))
-            .willReturn(true);
 
-        EvaluationCreateRequest req = new EvaluationCreateRequest(meetupId, targetPid, Rating.LIKE);
+        EvaluationCreateRequest req = new EvaluationCreateRequest(targetPid, Rating.LIKE);
 
         // then
-        assertThatThrownBy(() -> service.createEvaluation(memberId, req, "ipHash"))
+        assertThatThrownBy(() -> service.createEvaluation(meetupId, memberId, req, "ipHash"))
             .isInstanceOf(IllegalStateException.class);
     }
 
