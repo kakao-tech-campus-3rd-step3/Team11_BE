@@ -25,7 +25,7 @@ public class SigunguEntityService {
 
         Optional<Sigungu> sigungu =  sigunguRepository.findByPointIn(point);
         if (sigungu.isEmpty()) {
-            log.warn("존재하지 않는 좌표의 시군구 조회 시도. point={}", point);
+            log.info("존재하지 않는 좌표의 시군구 조회 시도. point={}", point);
             throw new NoSuchElementException("해당 좌표의 시군구가 존재하지 않습니다. point=" + point);
         }
 
@@ -39,7 +39,7 @@ public class SigunguEntityService {
 
         Optional<Sigungu> sigungu = sigunguRepository.findById(id);
         if (sigungu.isEmpty()) {
-            log.warn("존재하지 않는 id의 시군구 조회 시도. id={}", id);
+            log.info("존재하지 않는 id의 시군구 조회 시도. id={}", id);
             throw new NoSuchElementException("해당 id의 시군구가 존재하지 않습니다. id=" + id);
         }
 

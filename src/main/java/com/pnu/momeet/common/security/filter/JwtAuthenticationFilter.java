@@ -87,16 +87,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             LocalDateTime tokenIssuedAt = Objects.requireNonNull(userDetails.getTokenIssuedAt());
 
             if (!userDetails.isEnabled()) {
-                log.warn("비활성화된 계정 로그인 시도: {}", userDetails.getUsername());
+                log.info("비활성화된 계정 로그인 시도: {}", userDetails.getUsername());
                 throw new DisabledAccountException("사용자 정보 변경 등으로 인해 일시적으로 비활성화된 계정입니다. 다시 로그인 해주세요.");
             }
             if (!userDetails.isAccountNonLocked()) {
-                log.warn("정지된 계정 로그인 시도: {}", userDetails.getUsername());
+                log.info("정지된 계정 로그인 시도: {}", userDetails.getUsername());
                 throw new BannedAccountException("임시 제한 혹은 영구 정지된 계정입니다. 고객센터에 문의해주세요.");
             }
 
             if (tokenIssuedAt.isAfter(tokenInfo.issuedAt())) {
-                log.warn("동시 로그인 감지: {}, tokenIssuedAt: {}, tokenInfo.issuedAt(): {}",
+                log.info("동시 로그인 감지: {}, tokenIssuedAt: {}, tokenInfo.issuedAt(): {}",
                         userDetails.getUsername(), tokenIssuedAt, tokenInfo.issuedAt());
                 throw new ConcurrentLoginException("다른 위치에서 로그인된 토큰입니다.");
             }
@@ -114,7 +114,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (ExpiredJwtException e) {
             // 토큰이 만료된 경우
-            log.warn("만료된 토큰 사용 시도: {}", e.getMessage());
+            log.info("만료된 토큰 사용 시도: {}", e.getMessage());
             SecurityContextHolder.clearContext();
             authenticationEntryPoint.commence(request, response, new InvalidJwtTokenException("토큰이 만료되었습니다."));
             // 다른 위치에서 로그인 된 경우
@@ -123,7 +123,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             authenticationEntryPoint.commence(request, response, e);
         } catch (Exception e) {
             // 토큰이 없거나, 사용자가 존재하지 않거나, 그 외 토큰이 유효하지 않은 경우
-            log.warn("유효하지 않은 토큰 사용 시도: {}", e.getMessage());
+            log.info("유효하지 않은 토큰 사용 시도: {}", e.getMessage());
             SecurityContextHolder.clearContext();
             authenticationEntryPoint.commence(request, response, new InvalidJwtTokenException("유효하지 않은 토큰입니다."));
         }

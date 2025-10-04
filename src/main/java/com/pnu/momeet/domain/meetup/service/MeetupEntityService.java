@@ -15,6 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -26,16 +27,11 @@ public class MeetupEntityService {
     private final MeetupDslRepository meetupDslRepository;
 
     @Transactional(readOnly = true)
-    public Meetup getReferenceById(UUID meetupId) {
-        return meetupRepository.getReferenceById(meetupId);
-    }
-
-    @Transactional(readOnly = true)
     public Meetup getById(UUID meetupId) {
         log.debug("특정 id의 meetup 조회 시도. id={}", meetupId);
         var meetup = meetupRepository.findById(meetupId);
         if (meetup.isEmpty()) {
-            log.warn("존재하지 않는 id의 meetup 조회 시도. id={}", meetupId);
+            log.info("존재하지 않는 id의 meetup 조회 시도. id={}", meetupId);
             throw new NoSuchElementException("해당 Id의 모임이 존재하지 않습니다. id=" + meetupId);
         }
         log.debug("특정 id의 meetup 조회 성공. id={}", meetupId);
@@ -47,7 +43,7 @@ public class MeetupEntityService {
         log.debug("특정 id의 meetup 상세 조회 시도. id={}", meetupId);
         var meetup = meetupDslRepository.findByIdWithDetails(meetupId);
         if (meetup.isEmpty()) {
-            log.warn("존재하지 않는 id의 meetup 상세 조회 시도. id={}", meetupId);
+            log.info("존재하지 않는 id의 meetup 상세 조회 시도. id={}", meetupId);
             throw new NoSuchElementException("해당 Id의 모임이 존재하지 않습니다. id=" + meetupId);
         }
         log.debug("특정 id의 meetup 상세 조회 성공. id={}", meetupId);
@@ -91,6 +87,14 @@ public class MeetupEntityService {
         log.debug("특정 회원이 소유한 특정 상태의 meetup 목록 조회 시도. ownerId={}, statuses={}", profileId, statuses);
         var meetups = meetupDslRepository.findAllByOwnerIdAndStatusIn(profileId, statuses);
         log.debug("특정 회원이 소유한 특정 상태의 meetup 목록 조회 성공. ownerId={}, size={}", profileId, meetups.size());
+        return meetups;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Meetup> getAllByStatusAndEndAtBefore(MeetupStatus status, LocalDateTime before) {
+        log.debug("특정 상태이면서 특정 시간 이전에 종료된 meetup 목록 조회 시도. status={}, before={}", status, before);
+        var meetups = meetupRepository.findAllByStatusAndEndAtBefore(status, before);
+        log.debug("특정 상태이면서 특정 시간 이전에 종료된 meetup 목록 조회 성공. status={}, size={}", status, meetups.size());
         return meetups;
     }
 
@@ -150,7 +154,7 @@ public class MeetupEntityService {
     public void deleteById(UUID meetupId) {
         log.debug("특정 id의 meetup 삭제 시도. id={}", meetupId);
         if (!this.existsById(meetupId)) {
-            log.warn("존재하지 않는 id의 meetup 삭제 시도. id={}", meetupId);
+            log.info("존재하지 않는 id의 meetup 삭제 시도. id={}", meetupId);
             throw new NoSuchElementException("해당 Id의 모임이 존재하지 않습니다. id=" + meetupId);
         }
         meetupRepository.deleteById(meetupId);

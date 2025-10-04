@@ -17,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,8 +32,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class MeetupController {
 
     private final MeetupDomainService meetupService;
-
-    // TODO : 모임 시작, 모임 종료 API 추가
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping
@@ -88,23 +85,5 @@ public class MeetupController {
         return ResponseEntity.ok(
                 meetupService.updateMeetupByMemberId(request, userDetails.getMemberId())
         );
-    }
-
-    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteMeetup(
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        meetupService.deleteMeetup(userDetails.getMemberId());
-        return ResponseEntity.noContent().build();
-    }
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @DeleteMapping("/{meetupId}")
-    public ResponseEntity<Void> adminDeleteMeetup(
-            @PathVariable UUID meetupId
-    ) {
-        meetupService.deleteMeetupAdmin(meetupId);
-        return ResponseEntity.noContent().build();
     }
 }

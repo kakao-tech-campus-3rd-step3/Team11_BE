@@ -52,14 +52,14 @@ public class BadgeDomainService {
     public BadgeCreateResponse createBadge(BadgeCreateRequest request) {
         String name = request.name().trim();
         if (entityService.existsByNameIgnoreCase(name)) {
-            log.warn("중복 이름으로 배지 생성 시도. name={}", name);
+            log.info("중복 이름으로 배지 생성 시도. name={}", name);
             throw new IllegalArgumentException("이미 존재하는 배지 이름입니다.");
         }
 
         String rawCode = request.code();
         String normalizedCode = rawCode == null ? null : rawCode.trim().toUpperCase();
         if (entityService.existsByCodeIgnoreCase(normalizedCode)) {
-            log.warn("중복 code로 배지 생성 시도. code={}", normalizedCode);
+            log.info("중복 code로 배지 생성 시도. code={}", normalizedCode);
             throw new IllegalArgumentException("이미 존재하는 배지 코드입니다.");
         }
 
@@ -82,7 +82,7 @@ public class BadgeDomainService {
         // 이름 중복 검증 (이름이 변경되는 경우에만)
         if (request.name() != null && !badge.getName().equalsIgnoreCase(request.name().trim())) {
             if (entityService.existsByNameIgnoreCase(request.name().trim())) {
-                log.warn("중복 이름으로 배지 수정 시도. id={}, newName={}", badgeId, request.name());
+                log.info("중복 이름으로 배지 수정 시도. id={}, newName={}", badgeId, request.name());
                 throw new IllegalArgumentException("이미 존재하는 배지 이름입니다.");
             }
         }

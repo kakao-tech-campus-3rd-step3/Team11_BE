@@ -58,7 +58,7 @@ public class ProfileDomainService {
             throw new IllegalStateException("프로필이 이미 존재합니다.");
         }
         if (entityService.existsByNicknameIgnoreCase(request.nickname().trim())) {
-            log.warn("이미 존재하는 닉네임으로 프로필 생성 시도. memberId={}, nickname={}", memberId, request.nickname());
+            log.info("이미 존재하는 닉네임으로 프로필 생성 시도. memberId={}, nickname={}", memberId, request.nickname());
             throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
         }
         String profileImageUrl = null;
@@ -75,7 +75,7 @@ public class ProfileDomainService {
     public ProfileResponse updateMyProfile(UUID memberId, ProfileUpdateRequest request) {
         Profile profile = entityService.getByMemberId(memberId);
         if (request.nickname() != null && entityService.existsByNicknameIgnoreCase(request.nickname().trim())) {
-            log.warn("이미 존재하는 닉네임으로 프로필 수정 시도. id={}, nickname={}", profile.getId(), profile.getNickname());
+            log.info("이미 존재하는 닉네임으로 프로필 수정 시도. id={}, nickname={}", profile.getId(), profile.getNickname());
             throw new IllegalArgumentException("이미 존재하는 닉네임입니다. nickname=" + profile.getNickname());
         }
 

@@ -35,7 +35,7 @@ public class ParticipantDomainService {
     @Transactional(readOnly = true)
     public List<ParticipantResponse> getParticipantsByMeetupId(UUID meetupId) {
         if (!meetupService.existsById(meetupId)) {
-            log.warn("존재하지 않는 모임 ID로 참가자 조회 시도. meetupId={}", meetupId);
+            log.info("존재하지 않는 모임 ID로 참가자 조회 시도. meetupId={}", meetupId);
             throw new NoSuchElementException("해당 모임이 존재하지 않습니다.");
         }
         return entityService.getAllByMeetupId(meetupId)
@@ -52,12 +52,12 @@ public class ParticipantDomainService {
     public ParticipantResponse joinMeetup(UUID meetupId, UUID memberId, MeetupRole role) {
         Profile profile = profileService.getByMemberId(memberId);
         if (entityService.existsByProfileIdAndMeetupId(profile.getId(), meetupId)) {
-            log.warn("이미 참여한 모임에 다시 참여 시도. meetupId={}, profileId={}", meetupId, profile.getId());
+            log.info("이미 참여한 모임에 다시 참여 시도. meetupId={}, profileId={}", meetupId, profile.getId());
             throw new IllegalStateException("이미 참여한 모임입니다.");
         }
         Meetup meetup = meetupService.getById(meetupId);
         if (meetup.getStatus() != MeetupStatus.OPEN) {
-            log.warn("모임에 참여할 수 없는 상태에서 참여 시도. meetupId={}, profileId={}, status={}",
+            log.info("모임에 참여할 수 없는 상태에서 참여 시도. meetupId={}, profileId={}, status={}",
                     meetupId, profile.getId(), meetup.getStatus());
 
             throw new IllegalArgumentException("모임에 참여할 수 없는 상태입니다. 현재 상태: "
@@ -65,7 +65,7 @@ public class ParticipantDomainService {
         }
 
         if (meetup.getParticipantCount() >= meetup.getCapacity()) {
-            log.warn("모임 정원 초과로 인한 참여 시도 실패. meetupId={}, profileId={}", meetupId, profile.getId());
+            log.info("모임 정원 초과로 인한 참여 시도 실패. meetupId={}, profileId={}", meetupId, profile.getId());
             throw new IllegalArgumentException("모임 정원이 초과되었습니다.");
         }
         Participant createdParticipant = entityService.createParticipant(
@@ -87,7 +87,7 @@ public class ParticipantDomainService {
         Participant participant = entityService.getByProfileIDAndMeetupID(profile.getId(), meetupId);
         
         if (meetup.getStatus() != MeetupStatus.OPEN) {
-            log.warn("모임에서 나갈 수 없는 상태에서 나감 시도. meetupId={}, profileId={}, status={}",
+            log.info("모임에서 나갈 수 없는 상태에서 나감 시도. meetupId={}, profileId={}, status={}",
                     meetupId, profile.getId(), meetup.getStatus());
             throw new IllegalArgumentException("모임에서 나갈 수 없는 상태입니다. 현재 상태: "
                     + meetup.getStatus().getDescription());
@@ -120,12 +120,12 @@ public class ParticipantDomainService {
         UUID profileId = profileService.mapToProfileId(memberId);
         Participant requester = entityService.getByProfileIDAndMeetupID(profileId, meetupId);
         if (requester.getRole() != MeetupRole.HOST) {
-            log.warn("호스트가 아닌 참가자가 강퇴 시도. requesterId={}, targetParticipantId={}",
+            log.info("호스트가 아닌 참가자가 강퇴 시도. requesterId={}, targetParticipantId={}",
                     requester.getId(), targetParticipantId);
             throw new SecurityException("호스트만 참가자를 강퇴할 수 있습니다.");
         }
         if (requester.getId().equals(targetParticipantId)) {
-            log.warn("스스로를 강퇴 시도. requesterId={}", requester.getId());
+            log.info("스스로를 강퇴 시도. requesterId={}", requester.getId());
             throw new IllegalArgumentException("스스로를 강퇴할 수 없습니다.");
         }
         Participant targetParticipant = entityService.getByIdAndMeetupId(targetParticipantId, meetupId);
