@@ -3,14 +3,13 @@ package com.pnu.momeet.domain.meetup.service.mapper;
 import com.pnu.momeet.domain.common.dto.response.LocationResponse;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
-import com.pnu.momeet.domain.meetup.dto.response.UnEvaluatedMeetupDto;
+import com.pnu.momeet.domain.meetup.dto.response.MeetupSummaryResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.entity.MeetupHashTag;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.enums.MeetupRole;
 import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
 import com.pnu.momeet.domain.sigungu.service.mapper.SigunguEntityMapper;
-
 import java.util.List;
 
 public class MeetupEntityMapper {
@@ -81,17 +80,16 @@ public class MeetupEntityMapper {
         );
     }
 
-    public static UnEvaluatedMeetupDto unEvaluatedMeetupDto(Meetup meetup, long unEvaluatedCount) {
-        return new UnEvaluatedMeetupDto(
+    public static MeetupSummaryResponse toMeetupSummaryResponse(Meetup meetup, boolean evaluated) {
+        return new MeetupSummaryResponse(
             meetup.getId(),
             meetup.getName(),
-            meetup.getCategory().name(),
-            meetup.getSubCategory().name(),
-            meetup.getCreatedAt(),
+            meetup.getCategory(),
+            meetup.getSubCategory(),
             meetup.getEndAt(),
             meetup.getParticipantCount(),
             meetup.getCapacity(),
-            unEvaluatedCount
+            evaluated
         );
     }
 

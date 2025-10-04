@@ -107,6 +107,16 @@ public class MeetupEntityService {
         return pageResult;
     }
 
+    @Transactional(readOnly = true)
+    public Page<Meetup> getEndedMeetupsByProfileIdAndEvaluated(
+        UUID profileId, Boolean evaluated, Pageable pageable
+    ) {
+        log.debug("특정 회원이 소유한 종료된 meetup 목록 조회 시도. ownerId={}", profileId);
+        var pageResult = meetupDslRepository.findEndedMeetupsByProfileIdAndEvaluated(profileId, evaluated, pageable);
+        log.debug("특정 회원이 소유한 종료된 meetup 목록 조회 성공. ownerId={}, size={}", profileId, pageResult.getNumberOfElements());
+        return pageResult;
+    }
+
     @Transactional
     public Meetup createMeetup(Meetup meetup) {
         log.debug("새로운 meetup 생성 시도. , ownerId={}", meetup.getOwner().getId());

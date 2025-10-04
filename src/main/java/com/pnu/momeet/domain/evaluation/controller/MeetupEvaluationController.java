@@ -1,8 +1,7 @@
 package com.pnu.momeet.domain.evaluation.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
-import com.pnu.momeet.domain.evaluation.entity.Evaluation;
-import com.pnu.momeet.domain.evaluation.service.EvaluationQueryService;
+import com.pnu.momeet.domain.evaluation.service.EvaluationDomainService;
 import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/meetups")
 public class MeetupEvaluationController {
 
-    private final EvaluationQueryService evaluationQueryService;
+    private final EvaluationDomainService evaluationService;
 
     @GetMapping("/{meetupId}/evaluations/candidates")
     public ResponseEntity<List<EvaluatableProfileResponse>> getEvaluatableUsers(
@@ -27,7 +26,7 @@ public class MeetupEvaluationController {
         @PathVariable UUID meetupId
     ) {
         return ResponseEntity.ok(
-            evaluationQueryService.getEvaluatableUsers(meetupId, userDetails.getMemberId())
+            evaluationService.getEvaluatableUsers(meetupId, userDetails.getMemberId())
         );
     }
 }

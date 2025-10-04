@@ -1,0 +1,301 @@
+package com.pnu.momeet.unit.evaluation;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
+import com.pnu.momeet.common.event.CoreEventPublisher;
+import com.pnu.momeet.domain.evaluation.dto.request.EvaluationCreateRequest;
+import com.pnu.momeet.domain.evaluation.dto.response.EvaluationResponse;
+import com.pnu.momeet.domain.evaluation.entity.Evaluation;
+import com.pnu.momeet.domain.evaluation.enums.Rating;
+import com.pnu.momeet.domain.evaluation.service.EvaluationDomainService;
+import com.pnu.momeet.domain.evaluation.service.EvaluationEntityService;
+import com.pnu.momeet.domain.meetup.dto.request.MeetupSummaryPageRequest;
+import com.pnu.momeet.domain.meetup.dto.response.MeetupSummaryResponse;
+import com.pnu.momeet.domain.meetup.entity.Meetup;
+import com.pnu.momeet.domain.meetup.enums.MainCategory;
+import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
+import com.pnu.momeet.domain.meetup.enums.SubCategory;
+import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
+import com.pnu.momeet.domain.participant.entity.Participant;
+import com.pnu.momeet.domain.participant.enums.MeetupRole;
+import com.pnu.momeet.domain.participant.service.ParticipantEntityService;
+import com.pnu.momeet.domain.profile.dto.response.EvaluatableProfileResponse;
+import com.pnu.momeet.domain.profile.entity.Profile;
+import com.pnu.momeet.domain.profile.enums.Gender;
+import com.pnu.momeet.domain.profile.service.ProfileEntityService;
+import com.pnu.momeet.domain.sigungu.entity.Sigungu;
+import java.lang.reflect.Constructor;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.util.ReflectionTestUtils;
+
+@ExtendWith(MockitoExtension.class)
+class EvaluationDomainServiceTest {
+
+    @Mock
+    private EvaluationEntityService entityService;
+    @Mock private ProfileEntityService profileService;
+    @Mock private ParticipantEntityService participantService;
+    @Mock private MeetupEntityService meetupService;
+    @Mock private CoreEventPublisher coreEventPublisher;
+
+    @InjectMocks
+    private EvaluationDomainService service;
+
+    // ===== 공통 픽스처 =====
+    private UUID memberId;
+    private UUID evaluatorPid;
+    private UUID targetPid;
+    private UUID meetupId;
+    private Profile evaluator;
+    private Profile target;
+    private Meetup meetup;
+
+    private Sigungu newSigungu(Long id, String sidoName, String sigunguName) {
+        try {
+            Constructor<Sigungu> ctor = Sigungu.class.getDeclaredConstructor();
+            ctor.setAccessible(true);                 // protected 생성자 접근
+            Sigungu s = ctor.newInstance();
+
+            // 필요한 최소 필드만 세팅 (엔티티는 @Setter가 있으니 setter 써도 됨)
+            ReflectionTestUtils.setField(s, "id", id);
+            ReflectionTestUtils.setField(s, "sidoName", sidoName);
+            ReflectionTestUtils.setField(s, "sigunguName", sigunguName);
+            // 나머지는 테스트에 필요할 때만 추가 세팅
+
+            return s;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @BeforeEach
+    void setUp() {
+        memberId = UUID.randomUUID();
+        evaluatorPid = UUID.randomUUID();
+        targetPid = UUID.randomUUID();
+        meetupId = UUID.randomUUID();
+
+        evaluator = Profile.create(memberId, "평가자", 25, Gender.MALE, null, "소개", "부산");
+        target = Profile.create(UUID.randomUUID(), "대상자", 27, Gender.FEMALE, null, "소개2", "서울");
+        ReflectionTestUtils.setField(evaluator, "id", evaluatorPid);
+        ReflectionTestUtils.setField(target, "id", targetPid);
+
+        Sigungu sgg = newSigungu(26410L, "부산광역시", "남구");
+        meetup = Meetup.builder()
+            .owner(evaluator)
+            .name("종료모임")
+            .category(MainCategory.SPORTS)
+            .subCategory(SubCategory.SOCCER)
+            .description("desc")
+            .capacity(10)
+            .scoreLimit(3.0)
+            .locationPoint(null)
+            .address("어딘가")
+            .sigungu(sgg)
+            .endAt(LocalDateTime.now().minusDays(1))
+            .build();
+        ReflectionTestUtils.setField(meetup, "id", meetupId);
+        ReflectionTestUtils.setField(meetup, "status", MeetupStatus.ENDED);
+    }
+
+    @Test
+    @DisplayName("createEvaluation 성공 - LIKE")
+    void createEvaluation_success_like() {
+        // given
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        given(profileService.getById(targetPid)).willReturn(target);
+        given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId)).willReturn(true);
+
+        given(entityService.existsByMeetupAndPair(meetupId, evaluatorPid, targetPid)).willReturn(false);
+        given(entityService.getLastByPair(evaluatorPid, targetPid)).willReturn(Optional.empty());
+        given(entityService.existsByMeetupTargetIpAfter(eq(meetupId), eq(targetPid), eq("ipHash"), any())).willReturn(false);
+
+        Evaluation toSave = Evaluation.create(meetupId, evaluatorPid, targetPid, Rating.LIKE, "ipHash");
+        Evaluation saved = Evaluation.create(meetupId, evaluatorPid, targetPid, Rating.LIKE, "ipHash");
+        ReflectionTestUtils.setField(saved, "id", UUID.randomUUID());
+        given(entityService.save(any(Evaluation.class))).willReturn(saved);
+
+        // when
+        EvaluationCreateRequest req = new EvaluationCreateRequest(meetupId, targetPid, Rating.LIKE);
+        EvaluationResponse resp = service.createEvaluation(memberId, req, "ipHash");
+
+        // then
+        assertThat(resp.meetupId()).isEqualTo(meetupId);
+        assertThat(resp.targetProfileId()).isEqualTo(targetPid);
+        assertThat(resp.rating()).isEqualTo("LIKE");
+        verify(coreEventPublisher).publish(any());
+        verify(entityService).save(any(Evaluation.class));
+    }
+
+    @Test
+    @DisplayName("createEvaluation 실패 - 자기 자신 평가 금지")
+    void createEvaluation_fail_self() {
+        // given
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        given(profileService.getById(evaluatorPid)).willReturn(evaluator); // target == evaluator
+
+        // when
+        EvaluationCreateRequest req = new EvaluationCreateRequest(meetupId, evaluatorPid, Rating.DISLIKE);
+
+        // then
+        assertThatThrownBy(() -> service.createEvaluation(memberId, req, "ipHash"))
+            .isInstanceOf(IllegalArgumentException.class);
+        verify(entityService, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("createEvaluation 실패 - 동일 모임에서 evaluator→target 중복")
+    void createEvaluation_fail_duplicate_in_meetup() {
+        // given
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        given(profileService.getById(targetPid)).willReturn(target);
+        given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId)).willReturn(true);
+        given(entityService.existsByMeetupAndPair(meetupId, evaluatorPid, targetPid)).willReturn(true);
+
+        EvaluationCreateRequest req = new EvaluationCreateRequest(meetupId, targetPid, Rating.LIKE);
+
+        // then
+        assertThatThrownBy(() -> service.createEvaluation(memberId, req, "ipHash"))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("createEvaluation 실패 - evaluator→target 쿨타임 위반")
+    void createEvaluation_fail_cooltime() {
+        // given
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        given(profileService.getById(targetPid)).willReturn(target);
+        given(entityService.existsByMeetupAndPair(meetupId, evaluatorPid, targetPid)).willReturn(false);
+        given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId)).willReturn(true);
+
+        Evaluation last = Evaluation.create(meetupId, evaluatorPid, targetPid, Rating.LIKE, "prev");
+        ReflectionTestUtils.setField(last, "createdAt", LocalDateTime.now()); // 지금으로 설정 → 쿨타임 위반
+        given(entityService.getLastByPair(evaluatorPid, targetPid)).willReturn(Optional.of(last));
+
+        EvaluationCreateRequest req = new EvaluationCreateRequest(meetupId, targetPid, Rating.DISLIKE);
+
+        // then
+        assertThatThrownBy(() -> service.createEvaluation(memberId, req, "ipHash"))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("createEvaluation 실패 - 동일 IP 해시로 타겟 재평가")
+    void createEvaluation_fail_same_ip_hash() {
+        // given
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        given(profileService.getById(targetPid)).willReturn(target);
+        given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId)).willReturn(true);
+        given(entityService.existsByMeetupAndPair(meetupId, evaluatorPid, targetPid)).willReturn(false);
+        given(entityService.getLastByPair(evaluatorPid, targetPid)).willReturn(Optional.empty());
+        given(entityService.existsByMeetupTargetIpAfter(eq(meetupId), eq(targetPid), eq("ipHash"), any()))
+            .willReturn(true);
+
+        EvaluationCreateRequest req = new EvaluationCreateRequest(meetupId, targetPid, Rating.LIKE);
+
+        // then
+        assertThatThrownBy(() -> service.createEvaluation(memberId, req, "ipHash"))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("getMyRecentMeetupsMixed 성공 - 이번 페이지 id 기준 evaluated 플래그 매핑")
+    void getMyRecentMeetupsMixed_success() {
+        // given
+        ReflectionTestUtils.setField(meetup, "participantCount", 3);
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+
+        PageRequest pr = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("endAt")));
+        Page<Meetup> page = new PageImpl<>(List.of(meetup), pr, 1);
+
+        given(meetupService.getEndedMeetupsByProfileId(evaluatorPid, pr)).willReturn(page);
+        // 이번 페이지에서 내가 평가한 모임 id = meetupId 1개
+        given(entityService.getMeetupIdsEvaluatedBy(evaluatorPid, List.of(meetupId)))
+            .willReturn(Set.of(meetupId));
+
+        // when
+        MeetupSummaryPageRequest req = new MeetupSummaryPageRequest();
+        Page<MeetupSummaryResponse> result = service.getMyRecentMeetupsMixed(memberId, req);
+
+        // then
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().evaluated()).isTrue();
+        verify(entityService).getMeetupIdsEvaluatedBy(eq(evaluatorPid), anyList());
+    }
+
+    @Test
+    @DisplayName("getMyEvaluatedMeetups 성공 - 모두 evaluated=true")
+    void getMyEvaluatedMeetups_success() {
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        PageRequest pr = PageRequest.of(0, 10, Sort.by("endAt").descending());
+        Page<Meetup> page = new PageImpl<>(List.of(meetup), pr, 1);
+        given(meetupService.getEndedMeetupsByProfileIdAndEvaluated(evaluatorPid, true, pr))
+            .willReturn(page);
+
+        MeetupSummaryPageRequest req = new MeetupSummaryPageRequest();
+        Page<MeetupSummaryResponse> result = service.getMyEvaluatedMeetups(memberId, req);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().evaluated()).isTrue();
+    }
+
+    @Test
+    @DisplayName("getMyUnEvaluatedMeetups 성공 - 모두 evaluated=false")
+    void getMyUnEvaluatedMeetups_success() {
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        PageRequest pr = PageRequest.of(0, 10, Sort.by("endAt").descending());
+        Page<Meetup> page = new PageImpl<>(List.of(meetup), pr, 1);
+        given(meetupService.getEndedMeetupsByProfileIdAndEvaluated(evaluatorPid, false, pr)).willReturn(page);
+
+        MeetupSummaryPageRequest req = new MeetupSummaryPageRequest();
+        Page<MeetupSummaryResponse> result = service.getMyUnEvaluatedMeetups(memberId, req);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().evaluated()).isFalse();
+    }
+
+    @Test
+    @DisplayName("getEvaluatableUsers 성공 - 자기 자신 제외 + 기존 평가 매핑")
+    void getEvaluatableUsers_success() {
+        // given
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+
+        Participant meP = Participant.builder().meetup(meetup).profile(evaluator).role(MeetupRole.MEMBER).build();
+        Participant tgP = Participant.builder().meetup(meetup).profile(target).role(MeetupRole.MEMBER).build();
+        given(participantService.getAllByMeetupId(meetupId)).willReturn(List.of(meP, tgP));
+
+        Evaluation existing = Evaluation.create(meetupId, evaluatorPid, targetPid, Rating.LIKE, "h");
+        given(entityService.getByMeetupAndEvaluator(meetupId, evaluatorPid)).willReturn(List.of(existing));
+
+        // when
+        List<EvaluatableProfileResponse> list = service.getEvaluatableUsers(meetupId, memberId);
+
+        // then
+        assertThat(list).hasSize(1);
+        EvaluatableProfileResponse one = list.getFirst();
+        assertThat(one.profileId()).isEqualTo(targetPid);
+        assertThat(one.currentEvaluation()).isEqualTo(Rating.LIKE);
+    }
+}
