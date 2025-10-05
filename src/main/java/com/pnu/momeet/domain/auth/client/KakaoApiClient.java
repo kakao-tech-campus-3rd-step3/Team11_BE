@@ -152,13 +152,13 @@ public class KakaoApiClient {
     }
 
     private String convertToFormUrlEncoded(KakaoTokenRequest request) {
-        return String.format(
-                "grant_type=%s&client_id=%s&client_secret=%s&redirect_uri=%s&code=%s",
-                request.grant_type(),
-                request.client_id(),
-                request.client_secret(),
-                request.redirect_uri(),
-                request.code()
-        );
+        return UriComponentsBuilder.newInstance()
+                .queryParam("grant_type", request.grant_type())
+                .queryParam("client_id", request.client_id())
+                .queryParam("client_secret", request.client_secret())
+                .queryParam("redirect_uri", request.redirect_uri())
+                .queryParam("code", request.code())
+                .build()
+                .getQuery();
     }
 }
