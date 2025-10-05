@@ -62,10 +62,16 @@ public class EvaluationDomainService {
     ) {
         Profile evaluator = profileService.getByMemberId(evaluatorMemberId);
 
+        log.info("배치 평가 생성 시도. meetupId={}, evaluatorPid={}, items={}",
+            meetupId, evaluator.getId(), req.items() != null ? req.items().size() : 0);
+
         Set<UUID> participants = participantService.getAllByMeetupId(meetupId).stream()
             .map(p -> p.getProfile().getId())
             .filter(pid -> !pid.equals(evaluator.getId()))
             .collect(Collectors.toSet());
+
+        log.debug("참가자 로드 완료(자기 자신 제외). meetupId={}, evaluatorPid={}, participants={}",
+            meetupId, evaluator.getId(), participants.size());
 
         // 이미 내가 남긴 평가 대상 캐시
         Set<UUID> already = entityService
@@ -73,6 +79,9 @@ public class EvaluationDomainService {
             .stream()
             .map(Evaluation::getTargetProfileId)
             .collect(Collectors.toSet());
+
+        log.debug("기존 평가 대상 캐시 완료. meetupId={}, evaluatorPid={}, alreadySize={}",
+            meetupId, evaluator.getId(), already.size());
 
         Set<UUID> seen = new HashSet<>();
         List<EvaluationResponse> created = new ArrayList<>();
@@ -83,18 +92,27 @@ public class EvaluationDomainService {
             UUID targetProfileId = item.targetProfileId();
             Rating rating = item.rating();
 
+            log.trace("배치 항목 처리 시작. meetupId={}, evaluatorPid={}, targetPid={}, rating={}",
+                meetupId, evaluator.getId(), targetProfileId, rating);
+
             // 1. 요청 중복/기본 검증
             if (!seen.add(targetProfileId)) {
+                log.info("요청 내 중복 대상. meetupId={}, evaluatorPid={}, targetPid={}",
+                    meetupId, evaluator.getId(), targetProfileId);
                 invalid.add(new InvalidItem(targetProfileId, "요청 내 중복 대상"));
                 continue;
             }
             if (!participants.contains(targetProfileId)) {
+                log.info("모임 참가자 아님. meetupId={}, evaluatorPid={}, targetPid={}",
+                    meetupId, evaluator.getId(), targetProfileId);
                 invalid.add(new InvalidItem(targetProfileId, "모임 참가자가 아닙니다."));
                 continue;
             }
 
             // 2. 이미 평가했으면 스킵
             if (already.contains(targetProfileId)) {
+                log.debug("이미 평가한 대상(멱등 스킵). meetupId={}, evaluatorPid={}, targetPid={}",
+                    meetupId, evaluator.getId(), targetProfileId);
                 alreadyEvaluated.add(targetProfileId);
                 continue;
             }
@@ -109,10 +127,17 @@ public class EvaluationDomainService {
                 );
                 created.add(res);
                 already.add(targetProfileId);
+                log.debug("배치 항목 생성 성공. meetupId={}, evaluatorPid={}, targetPid={}, rating={}, evalId={}",
+                    meetupId, evaluator.getId(), targetProfileId, rating, res.id());
             } catch (IllegalStateException | IllegalArgumentException e) {
+                log.info("배치 항목 생성 실패(부분 성공 처리). meetupId={}, evaluatorPid={}, targetPid={}, reason={}",
+                    meetupId, evaluator.getId(), targetProfileId, e.getMessage());
                 invalid.add(new InvalidItem(targetProfileId, e.getMessage()));
             }
         }
+
+        log.info("배치 평가 생성 완료. meetupId={}, evaluatorPid={}, items={}, created={}, alreadyEvaluated={}, invalid={}",
+            meetupId, evaluator.getId(), req.items().size(), created.size(), alreadyEvaluated.size(), invalid.size());
 
         return new EvaluationCreateBatchResponse(created, alreadyEvaluated, invalid);
     }
