@@ -1,7 +1,6 @@
 package com.pnu.momeet.domain.admin.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -27,5 +26,10 @@ public class AdminViewController {
     @GetMapping("/profiles")
     public String profileManagement() {
         return "admin/profiles";
+    }
+
+    @GetMapping("/ws-test")
+    public String wsTest() {
+        return "admin/ws-test";
     }
 }
