@@ -1,0 +1,21 @@
+spring:
+  jpa:
+    show-sql: false
+app:
+  security:
+    https:
+      enabled: true
+      domain: ${PROD_DOMAIN_NAME}
+      allow-origins:
+        - ${FRONTEND_DOMAIN_NAME}
+        - https://www.${PROD_DOMAIN_NAME}  # www 서브도메인 허용
+        - https://api.${PROD_DOMAIN_NAME} # api 서브도메인 허용
+      secure-cookies: true   
+logging:
+  level:
+    root: WARN
+    com.pnu.momeet: INFO
+  file:
+    path: './logs'
+kakao:
+  redirect-uri: ${PROD_DOMAIN_NAME}/api/auth/kakao/callback
