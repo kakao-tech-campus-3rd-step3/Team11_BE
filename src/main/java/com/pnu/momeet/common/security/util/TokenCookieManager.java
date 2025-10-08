@@ -97,12 +97,12 @@ public class TokenCookieManager {
     }
 
     public void deleteAccessTokenCookie(HttpServletResponse response) {
-        ResponseCookie cookie = createCookie(accessTokenCookieName, null, 0L);
+        ResponseCookie cookie = createCookie(accessTokenCookieName, "", 0L);
         addCookie(response, cookie);
     }
 
     public void deleteRefreshTokenCookie(HttpServletResponse response) {
-        ResponseCookie cookie = createCookie(refreshTokenCookieName, null, 0L);
+        ResponseCookie cookie = createCookie(refreshTokenCookieName, "", 0L);
         addCookie(response, cookie);
     }
 }

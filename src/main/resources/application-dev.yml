@@ -25,4 +25,4 @@ logging:
     path: './logs'
 
 kakao:
-  redirect-uri: ${DEV_DOMAIN_NAME}/api/auth/kakao/callback
+  redirect-uri: https://${DEV_DOMAIN_NAME}/api/auth/kakao/callback

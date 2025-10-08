@@ -92,7 +92,7 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
         var messages = MessageMatcherDelegatingAuthorizationManager.builder();
         messages
                 // Connect 시 인증된 사용자만 허용
-                .nullDestMatcher().permitAll()
+                .nullDestMatcher().authenticated()
                 // 에러 메시지는 모두 허용
                 .simpSubscribeDestMatchers("/user/queue/errors").permitAll()
                 // 채팅방 입장 및 메시지 전송은 USER, ADMIN 권한 허용
