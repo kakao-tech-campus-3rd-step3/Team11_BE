@@ -79,3 +79,6 @@ kakao:
   client-secret: ${KAKAO_CLIENT_SECRET}
   admin-key: ${KAKAO_ADMIN_KEY}
   redirect-uri: http://localhost:8080/api/auth/kakao/callback
+  token-url: https://kauth.kakao.com/oauth/token
+  user-info-url: https://kapi.kakao.com/v2/user/me
+  unlink-url: https://kapi.kakao.com/v1/user/unlink
