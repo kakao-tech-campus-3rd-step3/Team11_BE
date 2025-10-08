@@ -44,19 +44,12 @@ app:
       issuer: momeet
 
     https:
-      # enabled: false
-      # domain: localhost:8080
-      # allow-origins:
-      #   - http://localhost:*
-      #   - http://127.0.0.1:*
-      enabled: false
-      domain: ${DEV_DOMAIN_NAME}
-      secure-cookies: false
-      allow-origins:
-        - http://localhost:*
-        - http://127.0.0.1:*
+       enabled: false
+       domain: localhost:8080
+       allow-origins:
+         - http://localhost:*
+         - http://127.0.0.1:*
 
-    
     whitelist-urls:
       - /api/auth/login
       - /api/auth/signup
@@ -69,7 +62,13 @@ app:
       - /admin/**
       - /ws/**
       - /ws/chat/**
-    
+      - /health
+
+logging:
+  level:
+    root: INFO
+    com.pnu.momeet: DEBUG
+
 ip-hash:
   secret-key: ${IP_HASH_SECRET_KEY:default-secret}
   method: SHA-256
