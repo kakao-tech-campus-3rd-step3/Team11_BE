@@ -133,6 +133,8 @@
         function connect() {
             const baseUrl = getBaseUrl();
             const meetupId = getMeetupId();
+            const accessToken = localStorage.getItem('accessToken');
+
             if (!baseUrl) { alert('Base URL을 입력하세요.'); return; }
             if (!meetupId) { alert('Meetup ID를 입력하세요.'); return; }
 
@@ -151,7 +153,9 @@
             // 로그 과다 방지
             stompClient.debug = function() {};
 
-            stompClient.connect({}, function onConnect() {
+            stompClient.connect({
+                'credentials': 'include'
+            }, function onConnect() {
                 setStatus(true);
                 log('STOMP connected');
 
@@ -159,6 +163,7 @@
                 const msgDest = `/topic/meetups/${meetupId}/messages`;
                 const actDest = `/topic/meetups/${meetupId}/actions`;
                 const errorDest = `/user/queue/errors`;
+                
                 // 에러 구독 추가
                 subscriptions.push(stompClient.subscribe(errorDest, (frame) => {
                     log(`[ERROR] ${frame.body}`);
@@ -169,7 +174,6 @@
                 subscriptions.push(stompClient.subscribe(msgDest, (frame) => {
                     log(`[MESSAGE] ${frame.body}`);
                 }));
-
 
                 log(`Subscribed: ${msgDest}, ${actDest}, ${errorDest}`);
             }, function onError(err) {
@@ -212,6 +216,37 @@
             log(`Sent to ${dest}: ${JSON.stringify(payload)}`);
         }
 
+        async function setSelfMeetupId() {
+            log('setSelfMeetupId');
+            const baseUrl = getBaseUrl();
+            const get_self_meetup_url = baseUrl.replace(/\/$/, '') + '/api/meetups/me';
+
+            try {
+                const res = await fetch(get_self_meetup_url, {
+                    method: 'GET',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'credentials': 'include'
+                    },
+                    credentials: 'include'
+                });
+                
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    log(`Meetup fetch failed (${res.status}): ${errorText}`);
+                    alert(`미팅방 조회 실패: ${res.status} ${errorText}`);
+                    return;
+                }
+                
+                const self_meetup = await res.json();
+                byId('meetupId').value = self_meetup.id;
+                log(`Self meetup ID set: ${self_meetup.id}`);
+            } catch (e) {
+                log(`setSelfMeetupId error: ${e}`);
+                alert('미팅방 ID 조회 중 오류가 발생했습니다.');
+            }
+        }
+
         async function login() {
             const baseUrl = getBaseUrl();
             const email = byId('loginEmail').value.trim();
@@ -222,12 +257,15 @@
             const url = baseUrl.replace(/\/$/, '') + '/api/auth/login';
             log(`POST ${url}`);
             try {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
                 const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password }),
                     credentials: 'include'
                 });
+
                 const text = await res.text();
                 let data = null;
                 try { data = text ? JSON.parse(text) : null; } catch (_) {}
@@ -243,7 +281,10 @@
                         refreshToken: data.refreshToken ? '***' : null
                     };
                     log(`TokenResponse: ${JSON.stringify(masked)}`);
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('refreshToken', data.refreshToken);
                 }
+                await setSelfMeetupId();
             } catch (e) {
                 log(`Login error: ${e}`);
                 alert('로그인 중 오류가 발생했습니다.');

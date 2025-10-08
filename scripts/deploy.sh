@@ -27,7 +27,7 @@ if [ ! -z "$OLD_PIDS" ]; then
   sleep 3
 fi
 
-# 새 프로세스 실행 (로그 파일 지정)
-nohup $JAVA_CMD -jar "$JAR_PATH" > "$LOG_DIR/app.log" 2>&1 &
+# 새 프로세스 실행 (prod 프로파일로 실행, 로그는 logback으로 처리)
+nohup $JAVA_CMD -Dspring.profiles.active=prod -jar "$JAR_PATH"
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Started new process: $JAR_PATH" >> $LOG_DIR/deploy.log
