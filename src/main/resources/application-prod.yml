@@ -19,3 +19,6 @@ logging:
     path: './logs'
 kakao:
   redirect-uri: https://${PROD_DOMAIN_NAME}/api/auth/kakao/callback
+
+server:
+  address: 0.0.0.0

@@ -26,3 +26,6 @@ logging:
 
 kakao:
   redirect-uri: https://${DEV_DOMAIN_NAME}/api/auth/kakao/callback
+
+server:
+  address: 0.0.0.0

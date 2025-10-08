@@ -68,6 +68,8 @@ logging:
   level:
     root: INFO
     com.pnu.momeet: DEBUG
+  file:
+    path: './logs'
 
 ip-hash:
   secret-key: ${IP_HASH_SECRET_KEY:default-secret}
