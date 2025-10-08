@@ -7,9 +7,9 @@ app:
       enabled: true
       domain: ${PROD_DOMAIN_NAME}
       allow-origins:
-        - ${FRONTEND_DOMAIN_NAME}
-        - https://www.${PROD_DOMAIN_NAME}  # www 서브도메인 허용
-        - https://api.${PROD_DOMAIN_NAME} # api 서브도메인 허용
+        - http://${FRONTEND_DOMAIN_NAME} # 프론트엔드 도메인 허용
+        - https://${FRONTEND_DOMAIN_NAME}
+        - https://${PROD_DOMAIN_NAME} # api 서브도메인 허용
       secure-cookies: true   
 logging:
   level:
@@ -18,4 +18,4 @@ logging:
   file:
     path: './logs'
 kakao:
-  redirect-uri: https://api.${PROD_DOMAIN_NAME}/api/auth/kakao/callback
+  redirect-uri: https://${PROD_DOMAIN_NAME}/api/auth/kakao/callback
