@@ -2,6 +2,7 @@ package com.pnu.momeet.domain.profile.entity;
 
 import com.pnu.momeet.domain.common.entity.BaseEntity;
 import com.pnu.momeet.domain.profile.enums.Gender;
+import com.pnu.momeet.domain.profile.service.TemperatureCalculator;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -112,12 +113,14 @@ public class Profile extends BaseEntity {
         this.imageUrl = imageUrl;
     }
 
-    public void increaseLikes() {
-        this.likes++;
+    public void increaseLikesAndRecalc(double priorK) {
+        this.likes = this.likes + 1;
+        this.temperature = TemperatureCalculator.bayesian(this.likes, this.dislikes, priorK);
     }
 
-    public void increaseDislikes() {
-        this.dislikes++;
+    public void increaseDislikesAndRecalc(double priorK) {
+        this.dislikes = this.dislikes + 1;
+        this.temperature = TemperatureCalculator.bayesian(this.likes, this.dislikes, priorK);
     }
 
     public void increaseCompletedJoinMeetups() {

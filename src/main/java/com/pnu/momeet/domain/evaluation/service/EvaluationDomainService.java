@@ -187,28 +187,12 @@ public class EvaluationDomainService {
             throw new IllegalStateException("동일 위치에서 이미 해당 사용자에 대한 평가가 등록되었습니다.");
         }
 
-        // 4. 프로필 집계 반영
-        switch (request.rating()) {
-            case LIKE -> {
-                target.increaseLikes();
-                log.debug("target likes 증가. targetPid={}, likes={}", target.getId(), target.getLikes());
-            }
-            case DISLIKE -> {
-                target.increaseDislikes();
-                log.debug("target dislikes 증가. targetPid={}, dislikes={}", target.getId(), target.getDislikes());
-            }
-            default -> {
-                log.warn("유효하지 않은 평가 타입. rating={}", request.rating());
-                throw new IllegalArgumentException("유효하지 않은 평가입니다.");
-            }
-        }
-
-        // 5. 저장
+        // 4. 저장
         Evaluation saved = entityService.save(Evaluation.create(
             meetupId, evaluator.getId(), target.getId(), request.rating(), ipHash
         ));
 
-        // 6. 이벤트 발행
+        // 5. 이벤트 발행
         coreEventPublisher.publish(new EvaluationSubmittedEvent(
             meetupId, evaluator.getId(), target.getId(), request.rating()
         ));

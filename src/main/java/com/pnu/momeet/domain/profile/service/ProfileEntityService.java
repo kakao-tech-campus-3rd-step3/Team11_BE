@@ -41,6 +41,18 @@ public class ProfileEntityService {
         return profile.get();
     }
 
+    @Transactional
+    public Profile getByIdForUpdate(UUID profileId) {
+        log.debug("특정 id의 프로필 조회 시도. id={}", profileId);
+        var profile = profileRepository.findByIdForUpdate(profileId);
+        if (profile.isEmpty()) {
+            log.info("존재하지 않는 id의 프로필 조회 시도. id={}", profileId);
+            throw new NoSuchElementException("ID에 해당하는 프로필을 찾을 수 없습니다: " + profileId);
+        }
+        log.debug("특정 id의 프로필 조회 성공. id={}", profileId);
+        return profile.get();
+    }
+
     @Transactional(readOnly = true)
     public UUID mapToProfileId(UUID memberId) {
         var profileId = profileRepository.findIdByMemberId(memberId);
