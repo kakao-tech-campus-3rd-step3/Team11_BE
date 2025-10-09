@@ -37,6 +37,7 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
+import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
 import java.lang.reflect.Constructor;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -73,6 +74,9 @@ class EvaluationDomainServiceTest {
 
     @Mock
     private MeetupEntityService meetupService;
+
+    @Mock
+    private SigunguEntityService sigunguService;
 
     @Mock
     private CoreEventPublisher coreEventPublisher;
@@ -116,12 +120,12 @@ class EvaluationDomainServiceTest {
         targetPid = UUID.randomUUID();
         meetupId = UUID.randomUUID();
 
-        evaluator = Profile.create(memberId, "평가자", 25, Gender.MALE, null, "소개", "부산");
-        target = Profile.create(UUID.randomUUID(), "대상자", 27, Gender.FEMALE, null, "소개2", "서울");
+        final Sigungu sgg = sigunguService.getById(26410L);
+        evaluator = Profile.create(memberId, "평가자", 25, Gender.MALE, null, "소개", sgg);
+        target = Profile.create(UUID.randomUUID(), "대상자", 27, Gender.FEMALE, null, "소개2", sgg);
         ReflectionTestUtils.setField(evaluator, "id", evaluatorPid);
         ReflectionTestUtils.setField(target, "id", targetPid);
 
-        Sigungu sgg = newSigungu(26410L, "부산광역시", "남구");
         meetup = Meetup.builder()
             .owner(evaluator)
             .name("종료모임")
@@ -148,11 +152,12 @@ class EvaluationDomainServiceTest {
     private void commonBatchStubs(UUID... participantProfileIds) {
         // 평가자 로드
         given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        final Sigungu sgg = evaluator.getBaseLocation();
         // 참가자 목록 (자기 자신 포함 후 서비스에서 제외)
         List<Participant> parts = new ArrayList<>();
         parts.add(Participant.builder().profile(evaluator).role(MeetupRole.MEMBER).meetup(meetup).build());
         for (UUID pid : participantProfileIds) {
-            Profile p = Profile.create(UUID.randomUUID(), "p", 20, Gender.MALE, null, "", "");
+            Profile p = Profile.create(UUID.randomUUID(), "p", 20, Gender.MALE, null, "", sgg);
             ReflectionTestUtils.setField(p, "id", pid);
             parts.add(Participant.builder().profile(p).role(MeetupRole.MEMBER).meetup(meetup).build());
         }

@@ -37,7 +37,7 @@ VALUES (
         'ROLE_USER'
        );
 
-INSERT INTO profile (member_id, nickname, age, gender, image_url, description, base_location)
+INSERT INTO profile (member_id, nickname, age, gender, image_url, description, base_location_id)
 VALUES (
         (SELECT id FROM member WHERE email = 'alice@test.com'),
         '앨리스',
@@ -45,7 +45,7 @@ VALUES (
         'FEMALE',
         'https://cdn.example.com/profiles/alice.png',
         '보드게임/카페 모임 좋아해요 ☕',
-        '부산 금정구'
+        26410
        );
 
 -- 'chris' 회원, 역할, 프로필 추가
@@ -61,7 +61,7 @@ VALUES (
         'ROLE_USER'
        );
 
-INSERT INTO profile (member_id, nickname, age, gender, image_url, description, base_location)
+INSERT INTO profile (member_id, nickname, age, gender, image_url, description, base_location_id)
 VALUES (
         (SELECT id FROM member WHERE email = 'chris@test.com'),
         '크리스',
@@ -69,5 +69,5 @@ VALUES (
         'MALE',
         'https://cdn.example.com/profiles/bob.png',
         '풋살·등산 러버 🏔️',
-        '부산 남구'
+        26260
        );

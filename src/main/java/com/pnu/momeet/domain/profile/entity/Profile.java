@@ -2,10 +2,14 @@ package com.pnu.momeet.domain.profile.entity;
 
 import com.pnu.momeet.domain.common.entity.BaseEntity;
 import com.pnu.momeet.domain.profile.enums.Gender;
+import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
@@ -44,8 +48,9 @@ public class Profile extends BaseEntity {
     @Column(name = "description", length = 500)
     private String description;
 
-    @Column(name = "base_location", length = 100, nullable = false)
-    private String baseLocation;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "base_location_id", nullable = false)
+    private Sigungu baseLocation;
 
     @Column(name = "temperature", precision = 4, scale = 1, nullable = false)
     private BigDecimal temperature = BigDecimal.valueOf(36.5);
@@ -66,7 +71,7 @@ public class Profile extends BaseEntity {
         Gender gender,
         String imageUrl,
         String description,
-        String baseLocation
+        Sigungu baseLocation
     ) {
         this.memberId = memberId;
         this.nickname = nickname;
@@ -84,7 +89,7 @@ public class Profile extends BaseEntity {
         Gender gender,
         String imageUrl,
         String description,
-        String baseLocation
+        Sigungu baseLocation
     ) {
         return new Profile(memberId, nickname, age, gender, imageUrl, description, baseLocation);
     }
@@ -94,7 +99,7 @@ public class Profile extends BaseEntity {
         Integer age,
         Gender gender,
         String description,
-        String baseLocation
+        Sigungu baseLocation
     ) {
         if (nickname != null) this.nickname = nickname;
         if (age != null) this.age = age;

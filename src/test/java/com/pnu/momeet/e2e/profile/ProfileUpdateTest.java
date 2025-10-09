@@ -164,29 +164,9 @@ public class ProfileUpdateTest extends BaseProfileTest {
     @Test
     @DisplayName("프로필 수정 실패 - 400 BAD_REQUEST (닉네임 중복)")
     void updateMyProfile_fail_duplicateNickname() {
-        // given: 다른 사용자가 사용할 닉네임을 미리 선점
-        String duplicateNickname = "중복된닉네임";
-        Member anotherMember = new Member(
-            "another@test.com",
-            "password",
-            List.of(Role.ROLE_USER)
-        );
-        memberRepository.save(anotherMember);
-        membersToBeDeleted.add(anotherMember.getId());
+        // given: 이미 존재하는 닉네임(관리자)을 중복값으로 사용
+        String duplicateNickname = "관리자";
 
-        Profile anotherProfile = Profile.create(
-            anotherMember.getId(),
-            duplicateNickname,
-            20,
-            Gender.FEMALE,
-            null,
-            "desc",
-            "loc"
-        );
-        profileRepository.save(anotherProfile);
-        profilesToBeDeleted.add(anotherProfile.getId());
-
-        // when: ROLE_USER가 선점된 닉네임으로 변경 시도
         MultiPartSpecification nicknamePart = new MultiPartSpecBuilder(duplicateNickname)
             .controlName("nickname").charset(StandardCharsets.UTF_8).build();
 
@@ -197,10 +177,8 @@ public class ProfileUpdateTest extends BaseProfileTest {
             .multiPart(nicknamePart)
             .when()
             .patch("/me")
-            // then: 400 Bad Request가 발생해야 함
             .then().log().all()
             .statusCode(HttpStatus.BAD_REQUEST.value());
-
     }
 
     @Test

@@ -59,8 +59,6 @@ public class ProfileCreateTest extends BaseProfileTest {
             .controlName("nickname").charset(StandardCharsets.UTF_8).build();
         MultiPartSpecification descriptionPart = new MultiPartSpecBuilder("새로운 자기소개입니다.")
             .controlName("description").charset(StandardCharsets.UTF_8).build();
-        MultiPartSpecification baseLocationPart = new MultiPartSpecBuilder("서울 강남구")
-            .controlName("baseLocation").charset(StandardCharsets.UTF_8).build();
 
         var member = memberService.saveMember(new MemberCreateRequest(
                 "createProfile@test.com",
@@ -77,7 +75,7 @@ public class ProfileCreateTest extends BaseProfileTest {
             .multiPart("age", 25)
             .multiPart("gender", "MALE")
             .multiPart(descriptionPart)
-            .multiPart(baseLocationPart)
+            .multiPart("baseLocation.baseLocationId", 26410)
             .multiPart("image", "/image/badger.png", imageBytes, "image/png") // 이미지 파일 추가
             .when()
             .post()
@@ -134,8 +132,6 @@ public class ProfileCreateTest extends BaseProfileTest {
 
         MultiPartSpecification nicknamePart = new MultiPartSpecBuilder("테스트유저")
             .controlName("nickname").charset(StandardCharsets.UTF_8).build();
-        MultiPartSpecification baseLocationPart = new MultiPartSpecBuilder("서울 강남구")
-            .controlName("baseLocation").charset(StandardCharsets.UTF_8).build();
 
         RestAssured
             .given().log().all()
@@ -144,7 +140,7 @@ public class ProfileCreateTest extends BaseProfileTest {
             .multiPart(nicknamePart)
             .multiPart("age", 30)
             .multiPart("gender", "MALE")
-            .multiPart(baseLocationPart)
+            .multiPart("baseLocation.baseLocationId", 26410)
             .multiPart("image", "/image/badger.png", imageBytes, "image/png")
             .when()
             .post()

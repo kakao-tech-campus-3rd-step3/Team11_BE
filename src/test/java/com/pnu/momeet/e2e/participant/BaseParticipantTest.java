@@ -14,6 +14,8 @@ import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
+import com.pnu.momeet.domain.sigungu.entity.Sigungu;
+import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.AfterEach;
@@ -45,6 +47,8 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
     protected MeetupDomainService meetupService;
     @Autowired
     protected MeetupRepository meetupRepository;
+    @Autowired
+    protected SigunguEntityService sigunguService;
 
     @BeforeEach
     @Override
@@ -112,6 +116,7 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
                 email, TEST_USER_PASSWORD, List.of(Role.ROLE_USER.name())
         )));
         tokens.add(emailAuthService.login(email, TEST_USER_PASSWORD));
+        Sigungu sgg = sigunguService.getById(26410L);
         profiles.add(profileRepository.save(Profile.create(
                 members.getLast().id(),
                 UUID.randomUUID().toString().substring(0, 5) + "User",
@@ -119,7 +124,7 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
                 Gender.MALE,
                 "www.example.com/image.png",
                 "테스트 소개",
-                "부산시 금정구"
+                sgg
         )));
     }
 
