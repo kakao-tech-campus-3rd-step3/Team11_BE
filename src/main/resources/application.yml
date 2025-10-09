@@ -6,7 +6,6 @@ spring:
       enabled: true
       max-file-size: 5MB
       max-request-size: 5MB
-
   cloud:
     aws:
       credentials:
@@ -24,7 +23,6 @@ spring:
 
   jpa:
     database: postgresql
-    show-sql: false
     hibernate:
       ddl-auto: update
     defer-datasource-initialization: true
@@ -33,33 +31,58 @@ spring:
       mode: always
       data-locations: classpath:sql/init_scheme.sql, classpath:sql/init_data.sql
 
-jwt:
-  secret: ${JWT_SECRET}
-  access-token:
-    name_in_cookie: access_token
-    expiration_in_second: 3600
-  refresh-token:
-    name_in_cookie: refresh_token
-    expiration_in_second: 604800
-  issuer: momeet
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      access-token:
+        name_in_cookie: access_token
+        expiration_in_second: 3600
+      refresh-token:
+        name_in_cookie: refresh_token
+        expiration_in_second: 604800
+      issuer: momeet
 
-ip-hash:
-  secret-key: ${IP_HASH_SECRET_KEY:default-secret}
-  method: SHA-256
+    https:
+       enabled: false
+       domain: localhost:8080
+       allow-origins:
+         - http://localhost:*
+         - http://127.0.0.1:*
+
+    whitelist-urls:
+      - /api/auth/login
+      - /api/auth/signup
+      - /api/auth/refresh
+      - /api/auth/kakao
+      - /api/auth/kakao/callback
+      - /api/auth/kakao/withdraw
+      - /error
+      - /admin
+      - /admin/**
+      - /ws/**
+      - /ws/chat/**
+      - /health
 
 logging:
   level:
     root: INFO
-    com.pnu.momeet: DEBUG # 개발 환경에서만 DEBUG 레벨로 설정
+    com.pnu.momeet: DEBUG
   file:
     path: './logs'
 
+ip-hash:
+  secret-key: ${IP_HASH_SECRET_KEY:default-secret}
+  method: SHA-256
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   client-secret: ${KAKAO_CLIENT_SECRET}
   admin-key: ${KAKAO_ADMIN_KEY}
   redirect-uri: http://localhost:8080/api/auth/kakao/callback
+  token-url: https://kauth.kakao.com/oauth/token
+  user-info-url: https://kapi.kakao.com/v2/user/me
+  unlink-url: https://kapi.kakao.com/v1/user/unlink
 
 momeet:
   temperature:
