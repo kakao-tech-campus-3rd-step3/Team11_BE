@@ -6,9 +6,6 @@ import java.util.UUID;
 
 public record EvaluationCreateRequest(
 
-    @NotNull(message = "모임 ID는 필수입니다.")
-    UUID meetupId,
-
     @NotNull(message = "평가할 프로필 ID는 필수입니다.")
     UUID targetProfileId,
 

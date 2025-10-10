@@ -15,4 +15,6 @@ public interface SigunguRepository extends JpaRepository<Sigungu, Long> {
     Optional<Sigungu> findByPointIn(Point point);
 
     Page<Sigungu> findAllBySidoCode(Long sidoCode, Pageable pageable);
+
+    Optional<Sigungu> findBySidoNameAndSigunguName(String sidoName, String sigunguName);
 }

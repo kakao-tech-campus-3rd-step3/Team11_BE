@@ -20,16 +20,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.test.annotation.DirtiesContext;
 
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class BaseMeetupEvaluationTest extends BaseE2ETest {
+public class BaseProfileEvaluationTest extends BaseE2ETest {
 
     protected Map<Role, TokenResponse> testTokens;
     protected List<UUID> evaluationsToBeDeleted;
-    protected UUID evaluator_profile_uuid;       // 테스트유저
-    protected UUID target_admin_profile_uuid;    // 관리자
-    protected UUID test_meetup_id;               // 종료된 테스트 모임
+    protected UUID test_user_profile_uuid;
+    protected UUID test_meetup_id;
 
     @Autowired
     protected EmailAuthService emailAuthService;
@@ -41,37 +38,31 @@ public class BaseMeetupEvaluationTest extends BaseE2ETest {
     protected ProfileDomainService profileService;
 
     @Autowired
-    protected MeetupDomainService meetupService;
+    protected EvaluationRepository evaluationRepository;
 
     @Autowired
-    protected EvaluationRepository evaluationRepository;
+    protected MeetupDomainService meetupService;
 
     @BeforeEach
     protected void setup() {
         super.setup();
-        RestAssured.basePath = "/api/meetups";
+        RestAssured.basePath = "/api/profiles";
         testTokens = new HashMap<>();
         evaluationsToBeDeleted = new ArrayList<>();
         testTokens.put(Role.ROLE_ADMIN, emailAuthService.login(TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD));
         testTokens.put(Role.ROLE_USER, emailAuthService.login(TEST_USER_EMAIL, TEST_USER_PASSWORD));
 
         // 테스트용 프로필 ID 설정
-        // evaluator = user@test.com
-        var user = memberService.getMemberByEmail(TEST_USER_EMAIL);
-        evaluator_profile_uuid = profileService.getMyProfile(user.id()).id();
+        var testMember = memberService.getMemberByEmail(TEST_USER_EMAIL);
+        test_user_profile_uuid = profileService.getMyProfile(testMember.id()).id();
 
-        // target = admin@test.com (동일 모임 참가자)
-        var admin = memberService.getMemberByEmail(TEST_ADMIN_EMAIL);
-        target_admin_profile_uuid = profileService.getMyProfile(admin.id()).id();
-
-        // 종료된 모임 1건
-        Page<Meetup> ended = meetupService.findEndedMeetupsByProfileId(
-            evaluator_profile_uuid, PageRequest.of(0, 1)
+        Page<Meetup> meetups = meetupService.findEndedMeetupsByProfileId(
+            test_user_profile_uuid, PageRequest.of(0, 1)
         );
-        if (ended.isEmpty()) {
-            throw new IllegalStateException("종료된 모임이 필요합니다. test_init_data.sql 확인 필요");
+        if (meetups.isEmpty()) {
+            throw new IllegalStateException("종료된 모임을 찾을 수 없습니다. 테스트 데이터 확인 필요");
         }
-        test_meetup_id = ended.getContent().getFirst().getId();
+        test_meetup_id = meetups.getContent().getFirst().getId();
     }
 
     @AfterEach

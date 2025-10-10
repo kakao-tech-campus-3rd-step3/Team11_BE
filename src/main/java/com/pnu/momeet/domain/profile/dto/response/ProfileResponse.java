@@ -12,6 +12,7 @@ public record ProfileResponse(
     Gender gender,
     String imageUrl,
     String description,
+    Long baseLocationId,
     String baseLocation,
     BigDecimal temperature,
     int likes,

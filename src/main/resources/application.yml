@@ -31,7 +31,7 @@ spring:
       mode: always
       data-locations: classpath:sql/init_scheme.sql, classpath:sql/init_data.sql
 
-app:  
+app:
   security:
     jwt:
       secret: ${JWT_SECRET}
@@ -83,3 +83,8 @@ kakao:
   token-url: https://kauth.kakao.com/oauth/token
   user-info-url: https://kapi.kakao.com/v2/user/me
   unlink-url: https://kapi.kakao.com/v1/user/unlink
+
+momeet:
+  temperature:
+    bayesian:
+      prior-k: 5.0

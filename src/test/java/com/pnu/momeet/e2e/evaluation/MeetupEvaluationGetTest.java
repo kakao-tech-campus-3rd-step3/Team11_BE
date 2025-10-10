@@ -55,7 +55,7 @@ public class MeetupEvaluationGetTest extends BaseMeetupEvaluationTest {
             .body("profileId", everyItem(notNullValue()))
             .body("nickname", everyItem(notNullValue()))
             // 자기 자신은 후보에서 제외되었는지 확인
-            .body("profileId", not(hasItem(test_user_profile_uuid.toString())));
+            .body("profileId", not(hasItem(evaluator_profile_uuid.toString())));
     }
 
     @Test

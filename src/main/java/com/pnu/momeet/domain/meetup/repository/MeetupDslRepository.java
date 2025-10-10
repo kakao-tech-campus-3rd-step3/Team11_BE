@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.meetup.repository;
 
+import com.pnu.momeet.domain.evaluation.entity.QEvaluation;
 import com.pnu.momeet.domain.meetup.entity.QMeetupHashTag;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
@@ -9,11 +10,13 @@ import com.pnu.momeet.domain.sigungu.entity.QSigungu;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.entity.QMeetup;
 import com.pnu.momeet.domain.profile.entity.QProfile;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -119,17 +122,42 @@ public class MeetupDslRepository {
     }
 
     public Page<Meetup> findEndedMeetupsByProfileId(UUID profileId, Pageable pageable) {
+        return findEndedMeetupsByProfileIdAndEvaluated(profileId, null, pageable);
+    }
+
+    public Page<Meetup> findEndedMeetupsByProfileIdAndEvaluated(
+        UUID profileId,
+        Boolean evaluated,
+        Pageable pageable
+    ) {
         QMeetup m = QMeetup.meetup;
         QParticipant p = QParticipant.participant;
+        QEvaluation e = QEvaluation.evaluation;
+
+        // 기본 조건: 종료 + 종료 3일 이내 + 참가자에 자신 포함
+        BooleanExpression base = m.status.eq(MeetupStatus.ENDED)
+            .and(m.endAt.goe(LocalDateTime.now().minusDays(EVALUATION_VALID_DAYS)))
+            .and(p.profile.id.eq(profileId));
+
+        // 평가 여부 조건
+        BooleanExpression evalCond = null;
+        if (evaluated != null) {
+            BooleanExpression existsMine = JPAExpressions
+                .selectOne()
+                .from(e)
+                .where(e.meetupId.eq(m.id)
+                    .and(e.evaluatorProfileId.eq(profileId)))
+                .exists();
+            evalCond = (evaluated) ? existsMine : existsMine.not();
+        }
+
+        // 최종 조건
+        BooleanExpression where = (evalCond == null) ? base : base.and(evalCond);
 
         List<Meetup> content = jpaQueryFactory
             .selectFrom(m)
             .join(m.participants, p).fetchJoin()
-            .where(
-                m.status.eq(MeetupStatus.ENDED),
-                m.endAt.goe(LocalDateTime.now().minusDays(EVALUATION_VALID_DAYS)),
-                p.profile.id.eq(profileId)
-            )
+            .where(where)
             .distinct()
             .orderBy(m.endAt.desc())
             .offset(pageable.getOffset())
@@ -140,12 +168,9 @@ public class MeetupDslRepository {
             .select(m.countDistinct())
             .from(m)
             .join(m.participants, p)
-            .where(
-                m.status.eq(MeetupStatus.ENDED),
-                p.profile.id.eq(profileId)
-            )
+            .where(where)
             .fetchOne();
 
-        return new PageImpl<>(content, pageable, total != null ? total : 0);
+        return new PageImpl<>(content, pageable, (total == null) ? 0 : total);
     }
 }

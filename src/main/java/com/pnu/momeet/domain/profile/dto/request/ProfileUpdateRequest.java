@@ -1,6 +1,8 @@
 package com.pnu.momeet.domain.profile.dto.request;
 
 import com.pnu.momeet.common.validation.annotation.ValidImage;
+import com.pnu.momeet.common.validation.annotation.ValidLocation;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
@@ -28,7 +30,8 @@ public record ProfileUpdateRequest(
     @Size(max = 500, message = "소개글은 최대 500자까지 입력할 수 있습니다.")
     String description,
 
-    @Size(max = 100, message = "지역은 최대 100자까지 입력할 수 있습니다.")
-    String baseLocation
+    @Valid
+    @ValidLocation(mode = ValidLocation.Mode.OPTIONAL)
+    LocationInput baseLocation
 ) {
 }

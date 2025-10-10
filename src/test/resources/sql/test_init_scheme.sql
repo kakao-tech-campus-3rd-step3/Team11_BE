@@ -48,7 +48,7 @@ CREATE TABLE public_test.profile (
     gender                   VARCHAR(10) NOT NULL,
     image_url                VARCHAR(255),
     description              VARCHAR(500),
-    base_location            VARCHAR(100) NOT NULL,
+    base_location_id         BIGINT NOT NULL,
     temperature              NUMERIC(4,1) NOT NULL DEFAULT 36.5,
     likes                    INTEGER      NOT NULL DEFAULT 0,
     dislikes                 INTEGER      NOT NULL DEFAULT 0,
@@ -60,11 +60,14 @@ CREATE TABLE public_test.profile (
     CONSTRAINT ck_profile_gender              CHECK (gender IN ('MALE','FEMALE')),
     CONSTRAINT ck_profile_temperature_range   CHECK (temperature BETWEEN 0.0 AND 100.0),
     CONSTRAINT ck_profile_likes_nonneg        CHECK (likes    >= 0),
-CONSTRAINT ck_profile_dislikes_nonneg     CHECK (dislikes >= 0)
+    CONSTRAINT ck_profile_dislikes_nonneg     CHECK (dislikes >= 0),
+    CONSTRAINT fk_profile_base_location
+        FOREIGN KEY (base_location_id) REFERENCES public.sigungu_boundary(sgg_code)
 );
 
 -- 닉네임 대소문자 무시 유니크
 CREATE UNIQUE INDEX IF NOT EXISTS uq_profile_nickname_ci ON public_test.profile (LOWER(btrim(nickname)));
+CREATE INDEX IF NOT EXISTS idx_profile_base_location_id ON profile(base_location_id);
 
 
 CREATE TABLE public_test.meetup (

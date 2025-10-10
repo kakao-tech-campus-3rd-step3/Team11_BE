@@ -1,6 +1,8 @@
 package com.pnu.momeet.domain.profile.dto.request;
 
+import com.pnu.momeet.common.validation.annotation.ValidLocation;
 import com.pnu.momeet.common.validation.annotation.ValidImage;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +26,7 @@ public record ProfileCreateRequest (
     Integer age,
 
     @NotBlank(message = "성별은 필수입니다.")
+    @Pattern(regexp = "^(MALE|FEMALE)$", message = "성별은 MALE 또는 FEMALE만 가능합니다.")
     String gender,
 
     @ValidImage
@@ -32,7 +35,9 @@ public record ProfileCreateRequest (
     @Size(max = 500, message = "최대 500자까지 작성할 수 있습니다.")
     String description,
 
-    @NotBlank(message = "지역은 반드시 입력해야 합니다. (예: '부산 금정구', '서울 마포구')")
-    String baseLocation
+    @NotNull
+    @Valid
+    @ValidLocation(mode = ValidLocation.Mode.REQUIRED)
+    LocationInput baseLocation
     ) {
 }
