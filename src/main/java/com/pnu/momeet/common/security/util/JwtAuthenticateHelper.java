@@ -26,16 +26,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class JwtAuhenticationHelper {
+public class JwtAuthenticateHelper {
     private final Pattern[] whitelistPatterns;
-    private final String accessTokenCookieName;
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailService userDetailsService;
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
 
-    public JwtAuhenticationHelper(
+    public JwtAuthenticateHelper(
         SecurityProperties securityProperties,
         JwtTokenProvider jwtTokenProvider,
         CustomUserDetailService userDetailsService
@@ -43,7 +42,6 @@ public class JwtAuhenticationHelper {
         this.jwtTokenProvider = jwtTokenProvider;
         String[] whitelistUrls = securityProperties.getWhitelistUrls().toArray(new String[0]);
         this.whitelistPatterns = new Pattern[whitelistUrls.length];
-        this.accessTokenCookieName = securityProperties.getJwt().getAccessToken().getNameInCookie();
         this.userDetailsService = userDetailsService;
         for (int i = 0; i < whitelistUrls.length; i++) {
             String regex = whitelistUrls[i]
@@ -67,28 +65,21 @@ public class JwtAuhenticationHelper {
         if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
-        Object tokenAttr = request.getAttribute(accessTokenCookieName);
-        if (tokenAttr instanceof String token && !token.isEmpty()) {
-            return token;
-        }
+        // 헤더에 토큰이 없으면 null 반환
         return null;
     }
 
     public String resolveToken(ServerHttpRequest request) {
-        if (request.getHeaders() != null) {
-            HttpHeaders headers = request.getHeaders();
-            List<String> authorizationHeaders = headers.get(AUTHORIZATION_HEADER);
-            if (authorizationHeaders != null && !authorizationHeaders.isEmpty()) {
-                String bearerToken = authorizationHeaders.getFirst();
-                if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
-                    return bearerToken.substring(BEARER_PREFIX.length());
-                }
+        request.getHeaders();
+        HttpHeaders headers = request.getHeaders();
+        List<String> authorizationHeaders = headers.get(AUTHORIZATION_HEADER);
+        if (authorizationHeaders != null && !authorizationHeaders.isEmpty()) {
+            String bearerToken = authorizationHeaders.getFirst();
+            if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
+                return bearerToken.substring(BEARER_PREFIX.length());
             }
         }
-        Object tokenAttr = request.getAttributes().get(accessTokenCookieName);
-        if (tokenAttr instanceof String token && !token.isEmpty()) {
-            return token;
-        }
+        // 헤더에 토큰이 없으면 null 반환
         return null;
     }
 

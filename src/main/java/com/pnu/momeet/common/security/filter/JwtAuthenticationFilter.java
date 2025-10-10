@@ -1,6 +1,6 @@
 package com.pnu.momeet.common.security.filter;
 
-import com.pnu.momeet.common.security.util.JwtAuhenticationHelper;
+import com.pnu.momeet.common.security.util.JwtAuthenticateHelper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final JwtAuhenticationHelper jwtAuhenticationHelper;
+    private final JwtAuthenticateHelper jwtAuthenticateHelper;
     private final AuthenticationEntryPoint authenticationEntryPoint;
 
     @Override
@@ -35,13 +35,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestPath = request.getRequestURI();
 
         // 화이트리스트 경로는 토큰 검사 없이 통과
-        if (jwtAuhenticationHelper.isWhitelisted(requestPath)) {
+        if (jwtAuthenticateHelper.isWhitelisted(requestPath)) {
             filterChain.doFilter(request, response);
             return;
         }
         try {
-            String token = jwtAuhenticationHelper.resolveToken(request);
-            var authenticationToken = jwtAuhenticationHelper.createAuthenticationToken(token);
+            String token = jwtAuthenticateHelper.resolveToken(request);
+            var authenticationToken = jwtAuthenticateHelper.createAuthenticationToken(token);
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 

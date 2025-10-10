@@ -13,13 +13,13 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 
-import com.pnu.momeet.common.security.util.JwtAuhenticationHelper;
+import com.pnu.momeet.common.security.util.JwtAuthenticateHelper;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class WebSocketHandShakeInterceptor implements HandshakeInterceptor {
-    private final JwtAuhenticationHelper jwtAuhenticationHelper;
+    private final JwtAuthenticateHelper jwtAuthenticateHelper;
     
     @Override
     public boolean beforeHandshake(
@@ -29,8 +29,8 @@ public class WebSocketHandShakeInterceptor implements HandshakeInterceptor {
         @NonNull java.util.Map<String, Object> attributes
     ) throws Exception {
         try {
-            String token = jwtAuhenticationHelper.resolveToken(request);
-            var authenticationToken = jwtAuhenticationHelper.createAuthenticationToken(token);
+            String token = jwtAuthenticateHelper.resolveToken(request);
+            var authenticationToken = jwtAuthenticateHelper.createAuthenticationToken(token);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             return true;
         } catch (AuthenticationException e) {

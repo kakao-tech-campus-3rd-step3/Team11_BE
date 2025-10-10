@@ -28,14 +28,12 @@ public class SecurityProperties {
         @Getter
         @Setter
         public static class AccessToken {
-            private String nameInCookie;
             private int expirationInSecond;
         }
 
         @Getter
         @Setter
         public static class RefreshToken {
-            private String nameInCookie;
             private int expirationInSecond;
         }
     }
@@ -46,6 +44,5 @@ public class SecurityProperties {
         private boolean enabled;
         private String domain;
         private List<String> allowOrigins;
-        private boolean secureCookies = false;
     }
 }
