@@ -39,6 +39,8 @@ app:
         expiration_in_second: 3600
       refresh-token:
         expiration_in_second: 604800
+      ws-upgrade-token:
+        expiration_in_second: 30 # 30초
       issuer: momeet
 
     https:

@@ -19,12 +19,14 @@ public class JwtTokenProvider {
     private final String issuer;
     private final Long accessTokenExpirationSeconds;
     private final Long refreshTokenExpirationSeconds;
+    private final Long upgradeTokenExpirationSeconds;
 
     public JwtTokenProvider(SecurityProperties securityProperties) {
         this.secretKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(securityProperties.getJwt().getSecret().getBytes());
         this.issuer = securityProperties.getJwt().getIssuer();
         this.accessTokenExpirationSeconds = (long) securityProperties.getJwt().getAccessToken().getExpirationInSecond();
         this.refreshTokenExpirationSeconds = (long) securityProperties.getJwt().getRefreshToken().getExpirationInSecond();
+        this.upgradeTokenExpirationSeconds = (long) securityProperties.getJwt().getWsUpgradeToken().getExpirationInSecond();
     }
 
     public String generateToken(String sub, Long expirationSeconds) {
@@ -46,6 +48,10 @@ public class JwtTokenProvider {
 
     public String generateRefreshToken(UUID memberId) {
         return generateToken(memberId.toString(), refreshTokenExpirationSeconds);
+    }
+
+    public String generateWsUpgradeToken(UUID memberId) {
+        return generateToken(memberId.toString(), upgradeTokenExpirationSeconds);
     }
 
     public Jws<Claims> getClaims(String token) {

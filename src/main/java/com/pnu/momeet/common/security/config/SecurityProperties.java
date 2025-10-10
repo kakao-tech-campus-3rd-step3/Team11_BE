@@ -23,6 +23,7 @@ public class SecurityProperties {
         private String secret;
         private AccessToken accessToken;
         private RefreshToken refreshToken;
+        private WsUpgradeToken wsUpgradeToken;
         private String issuer;
 
         @Getter
@@ -34,6 +35,12 @@ public class SecurityProperties {
         @Getter
         @Setter
         public static class RefreshToken {
+            private int expirationInSecond;
+        }
+
+        @Getter
+        @Setter
+        public static class WsUpgradeToken {
             private int expirationInSecond;
         }
     }
