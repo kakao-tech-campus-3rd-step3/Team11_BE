@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import com.pnu.momeet.common.model.enums.TokenType;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -67,7 +68,10 @@ public class JwtAuthenticateHelper {
         if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
+        return null;
+    }
 
+    public String resolveTokenFromQueryParam(HttpServletRequest request) {
         // WebSocket 연결 요청인 경우 쿼리 파라미터에서 토큰 추출
         if (request.getRequestURI().startsWith(webSocketEndpoint)) {
             String token = request.getParameter(tokenQueryParameter);
@@ -115,17 +119,30 @@ public class JwtAuthenticateHelper {
         }
     }
 
-    public void verifyToken(String token) throws AuthenticationException {
-        verifyAndGetUserDetails(token);
+    public UserDetails verifyAndGetUserDetails(String token, TokenType validType) throws AuthenticationException {
+        TokenInfo tokenInfo = jwtTokenProvider.parseToken(Objects.requireNonNull(token));
+        if (tokenInfo.tokenType() != validType) {
+            log.info("잘못된 토큰 타입: {}, 기대 타입: {}", tokenInfo.tokenType(), validType);
+            throw new InvalidJwtTokenException("유효하지 않은 타입의 토큰입니다. 기대 타입: " + validType);
+        }
+        return verifyAndGetUserDetails(token);
     }
 
     public UsernamePasswordAuthenticationToken createAuthenticationToken(String token) throws AuthenticationException {
-        UserDetails userDetails = verifyAndGetUserDetails(token);
+        return createAuthenticationToken(token, TokenType.ACCESS);
+    }
+
+    public UsernamePasswordAuthenticationToken createAuthenticationToken(String token, TokenType validType) throws AuthenticationException {
+        UserDetails userDetails = verifyAndGetUserDetails(token, validType);
 
         return new UsernamePasswordAuthenticationToken(
                 userDetails,
                 token,
                 userDetails.getAuthorities()
         );
+    }
+
+    public void verifyToken(String token) throws AuthenticationException {
+        verifyAndGetUserDetails(token);
     }
 }
