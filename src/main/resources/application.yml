@@ -46,9 +46,15 @@ app:
     https:
        enabled: false
        domain: localhost:8080
-       allow-origins:
-         - http://localhost:*
-         - http://127.0.0.1:*
+
+    websocket:
+      endpoint: /ws/chat
+      handshake-header: token
+
+    cors:
+      allowed-origins:
+        - http://localhost:*
+        - http://127.0.0.1:*
 
     whitelist-urls:
       - /api/auth/login
@@ -60,8 +66,6 @@ app:
       - /error
       - /admin
       - /admin/**
-      - /ws/**
-      - /ws/chat/**
       - /health
 
 logging:

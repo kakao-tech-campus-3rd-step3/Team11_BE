@@ -6,10 +6,13 @@ app:
     https:
       enabled: true
       domain: ${PROD_DOMAIN_NAME}
-      allow-origins:
+    cors:
+      allowed-origins:
         - http://${FRONTEND_DOMAIN_NAME} # 프론트엔드 도메인 허용
         - https://${FRONTEND_DOMAIN_NAME}
         - https://${PROD_DOMAIN_NAME} # api 서브도메인 허용
+
+
 logging:
   level:
     root: WARN

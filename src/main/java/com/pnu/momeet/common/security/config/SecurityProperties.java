@@ -16,6 +16,8 @@ public class SecurityProperties {
     private List<String> whitelistUrls;
     private Jwt jwt;
     private Https https;
+    private Websocket websocket;
+    private Cors cors;
 
     @Getter
     @Setter
@@ -50,6 +52,18 @@ public class SecurityProperties {
     public static class Https {
         private boolean enabled;
         private String domain;
-        private List<String> allowOrigins;
+    }
+
+    @Getter
+    @Setter
+    public static class Websocket {
+        private String endpoint;
+        private String handshakeHeader;
+    }
+
+    @Getter
+    @Setter
+    public static class Cors {
+        private List<String> allowedOrigins;
     }
 }

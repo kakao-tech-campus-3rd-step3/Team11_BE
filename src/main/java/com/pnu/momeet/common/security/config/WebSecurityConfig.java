@@ -68,7 +68,7 @@ public class WebSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // 개발 환경에서 허용할 origin들
-        configuration.setAllowedOriginPatterns(securityProperties.getHttps().getAllowOrigins());
+        configuration.setAllowedOriginPatterns(securityProperties.getCors().getAllowedOrigins());
         
         // 허용할 HTTP 메서드
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
