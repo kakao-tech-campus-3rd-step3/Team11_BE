@@ -4,10 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import java.util.List;
-
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import com.pnu.momeet.common.exception.BannedAccountException;
@@ -21,6 +18,7 @@ import com.pnu.momeet.common.security.details.CustomUserDetails;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +28,8 @@ public class JwtAuthenticateHelper {
     private final Pattern[] whitelistPatterns;
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailService userDetailsService;
+    private final String webSocketEndpoint;
+    private final String tokenQueryParameter;
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
@@ -49,6 +49,8 @@ public class JwtAuthenticateHelper {
                     .replace("*", "[^/]*"); // '*'를 '[^/]*'로 변경
             this.whitelistPatterns[i] = Pattern.compile(regex);
         }
+        this.tokenQueryParameter = securityProperties.getWebsocket().getHandshakeHeader();
+        this.webSocketEndpoint = securityProperties.getWebsocket().getEndpoint();
     }
 
     public boolean isWhitelisted(String path) {
@@ -65,25 +67,27 @@ public class JwtAuthenticateHelper {
         if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
-        // 헤더에 토큰이 없으면 null 반환
-        return null;
-    }
 
-    public String resolveToken(ServerHttpRequest request) {
-        request.getHeaders();
-        HttpHeaders headers = request.getHeaders();
-        List<String> authorizationHeaders = headers.get(AUTHORIZATION_HEADER);
-        if (authorizationHeaders != null && !authorizationHeaders.isEmpty()) {
-            String bearerToken = authorizationHeaders.getFirst();
-            if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
-                return bearerToken.substring(BEARER_PREFIX.length());
+        // WebSocket 연결 요청인 경우 쿼리 파라미터에서 토큰 추출
+        if (request.getRequestURI().startsWith(webSocketEndpoint)) {
+            String token = request.getParameter(tokenQueryParameter);
+            if (token != null && !token.isEmpty()) {
+                return token;
             }
         }
-        // 헤더에 토큰이 없으면 null 반환
         return null;
     }
 
-    public UsernamePasswordAuthenticationToken createAuthenticationToken(String token) throws AuthenticationException {
+    public String resolveToken(StompHeaderAccessor accessor) {
+        // message 헤더에서 nativeHeaders 추출
+        String rawToken = accessor.getFirstNativeHeader(AUTHORIZATION_HEADER);
+        if (rawToken instanceof String token && token.startsWith(BEARER_PREFIX)) {
+            return token.substring(BEARER_PREFIX.length());
+        }
+        return null;
+    }
+
+    public UserDetails verifyAndGetUserDetails(String token) throws AuthenticationException {
         try {
             TokenInfo tokenInfo = jwtTokenProvider.parseToken(Objects.requireNonNull(token));
             CustomUserDetails userDetails = userDetailsService.loadUserByUsername(tokenInfo.subject());
@@ -103,11 +107,25 @@ public class JwtAuthenticateHelper {
                         userDetails.getUsername(), tokenIssuedAt, tokenInfo.issuedAt());
                 throw new ConcurrentLoginException("다른 위치에서 로그인된 토큰입니다.");
             }
-            return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            return userDetails;
         } catch (ExpiredJwtException e) {
             throw new InvalidJwtTokenException("토큰이 만료되었습니다.");
         } catch (Exception e) {
             throw new InvalidJwtTokenException("유효하지 않은 토큰입니다.");
         }
+    }
+
+    public void verifyToken(String token) throws AuthenticationException {
+        verifyAndGetUserDetails(token);
+    }
+
+    public UsernamePasswordAuthenticationToken createAuthenticationToken(String token) throws AuthenticationException {
+        UserDetails userDetails = verifyAndGetUserDetails(token);
+
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                token,
+                userDetails.getAuthorities()
+        );
     }
 }
