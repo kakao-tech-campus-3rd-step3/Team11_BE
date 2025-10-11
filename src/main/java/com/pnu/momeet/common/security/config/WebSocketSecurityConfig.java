@@ -1,8 +1,6 @@
 package com.pnu.momeet.common.security.config;
 
-import com.pnu.momeet.common.security.interceptor.LoggingChannelInterceptor;
-import com.pnu.momeet.common.security.interceptor.WebSocketHandShakeInterceptor;
-
+import com.pnu.momeet.common.security.interceptor.MessageAuthenticateInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -34,9 +32,8 @@ import static org.springframework.messaging.simp.SimpMessageType.SUBSCRIBE;
 @EnableWebSocketMessageBroker
 public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer {
     private final SecurityProperties securityProperties;
-    private final WebSocketHandShakeInterceptor webSocketHandShakeInterceptor;
-
     private final ApplicationContext applicationContext;
+    private final MessageAuthenticateInterceptor messageAuthenticateInterceptor;
 
     @Bean
     public ThreadPoolTaskScheduler customMessageBrokerTaskScheduler() {
@@ -63,14 +60,12 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
 
     @Override
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
-        String[] allowOrigins = securityProperties.getHttps().getAllowOrigins().toArray(new String[0]);
+        String[] allowOrigins = securityProperties.getCors().getAllowedOrigins().toArray(new String[0]);
 
         registry.addEndpoint("/ws/chat")
-                .addInterceptors(webSocketHandShakeInterceptor)
                 .setAllowedOriginPatterns(allowOrigins)
                 .withSockJS()
-                .setHeartbeatTime(25000)
-                .setSuppressCors(false);
+                .setHeartbeatTime(25000);
     }
 
     @Override
@@ -83,7 +78,12 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
         AuthorizationChannelInterceptor authorizationChannelInterceptor = new AuthorizationChannelInterceptor(authorizationManager());
         AuthorizationEventPublisher publisher = new SpringAuthorizationEventPublisher(applicationContext);
         authorizationChannelInterceptor.setAuthorizationEventPublisher(publisher);
-        registration.interceptors(new SecurityContextChannelInterceptor(), authorizationChannelInterceptor);
+
+        registration.interceptors(
+                messageAuthenticateInterceptor,
+                new SecurityContextChannelInterceptor(),
+                authorizationChannelInterceptor
+        );
     }
 
     @Bean
@@ -104,10 +104,5 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
                 .anyMessage().denyAll();
 
         return messages.build();
-    }
-
-    @Override
-    public void configureClientOutboundChannel(@NonNull ChannelRegistration registration) {
-        registration.interceptors(new LoggingChannelInterceptor());
     }
 }

@@ -3,6 +3,7 @@ package com.pnu.momeet.common.advice;
 import com.pnu.momeet.common.exception.MessageSendFailureException;
 import com.pnu.momeet.domain.common.dto.response.CustomErrorResponse;
 import com.pnu.momeet.domain.common.enums.ErrorCode;
+import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.simp.annotation.SendToUser;
@@ -39,6 +40,13 @@ public class GlobalWebSocketExceptionHandler {
     @SendToUser("/queue/errors")
     public CustomErrorResponse handleMessageSendFailureException(MessageSendFailureException exception) {
         ErrorCode code = ErrorCode.SEND_FAILURE;
+        return CustomErrorResponse.from(exception, code);
+    }
+
+    @MessageExceptionHandler(AuthenticationException.class)
+    @SendToUser("/queue/errors")
+    public CustomErrorResponse handleAuthenticationException(AuthenticationException exception) {
+        ErrorCode code = ErrorCode.UNAUTHORIZED_ACCESS;
         return CustomErrorResponse.from(exception, code);
     }
 
