@@ -92,10 +92,19 @@ public class JwtAuthenticateHelper {
     }
 
     public UserDetails verifyAndGetUserDetails(String token) throws AuthenticationException {
+        return verifyAndGetUserDetails(token, TokenType.ACCESS);
+    }
+
+    public UserDetails verifyAndGetUserDetails(String token, TokenType validType) throws AuthenticationException {
         try {
             TokenInfo tokenInfo = jwtTokenProvider.parseToken(Objects.requireNonNull(token));
             CustomUserDetails userDetails = userDetailsService.loadUserByUsername(tokenInfo.subject());
             LocalDateTime tokenIssuedAt = Objects.requireNonNull(userDetails.getTokenIssuedAt());
+
+            if (tokenInfo.tokenType() != validType) {
+                log.info("잘못된 토큰 타입: {}, 기대 타입: {}", tokenInfo.tokenType(), validType);
+                throw new InvalidJwtTokenException("유효하지 않은 타입의 토큰입니다. 기대 타입: " + validType);
+            }
 
             if (!userDetails.isEnabled()) {
                 log.info("비활성화된 계정 로그인 시도: {}", userDetails.getUsername());
@@ -111,6 +120,7 @@ public class JwtAuthenticateHelper {
                         userDetails.getUsername(), tokenIssuedAt, tokenInfo.issuedAt());
                 throw new ConcurrentLoginException("다른 위치에서 로그인된 토큰입니다.");
             }
+
             return userDetails;
         } catch (ExpiredJwtException e) {
             throw new InvalidJwtTokenException("토큰이 만료되었습니다.");
@@ -119,30 +129,12 @@ public class JwtAuthenticateHelper {
         }
     }
 
-    public UserDetails verifyAndGetUserDetails(String token, TokenType validType) throws AuthenticationException {
-        TokenInfo tokenInfo = jwtTokenProvider.parseToken(Objects.requireNonNull(token));
-        if (tokenInfo.tokenType() != validType) {
-            log.info("잘못된 토큰 타입: {}, 기대 타입: {}", tokenInfo.tokenType(), validType);
-            throw new InvalidJwtTokenException("유효하지 않은 타입의 토큰입니다. 기대 타입: " + validType);
-        }
-        return verifyAndGetUserDetails(token);
-    }
-
     public UsernamePasswordAuthenticationToken createAuthenticationToken(String token) throws AuthenticationException {
         return createAuthenticationToken(token, TokenType.ACCESS);
     }
 
     public UsernamePasswordAuthenticationToken createAuthenticationToken(String token, TokenType validType) throws AuthenticationException {
         UserDetails userDetails = verifyAndGetUserDetails(token, validType);
-
-        return new UsernamePasswordAuthenticationToken(
-                userDetails,
-                token,
-                userDetails.getAuthorities()
-        );
-    }
-
-    public void verifyToken(String token) throws AuthenticationException {
-        verifyAndGetUserDetails(token);
+        return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
     }
 }

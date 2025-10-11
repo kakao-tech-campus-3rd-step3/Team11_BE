@@ -8,7 +8,6 @@ import com.pnu.momeet.domain.auth.dto.request.SignupRequest;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.DefaultAuthService;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +26,6 @@ import java.util.UUID;
 public class AuthController {
     private final EmailAuthService emailAuthService;
     private final DefaultAuthService authService;
-
-    // TODO: swagger 적용하기
 
     @PostMapping("/signup")
     public ResponseEntity<TokenResponse> MemberSignUp(
