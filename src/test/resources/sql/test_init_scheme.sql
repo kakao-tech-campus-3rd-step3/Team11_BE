@@ -37,7 +37,7 @@ granted_at TIMESTAMP NOT NULL DEFAULT NOW()
 
 CREATE TABLE public_test.refresh_token (
     member_id uuid PRIMARY KEY REFERENCES public_test.member(id) ON DELETE CASCADE,
-    token_value varchar(255) NOT NULL
+    token_value varchar(500) NOT NULL
 );
 
 CREATE TABLE public_test.profile (

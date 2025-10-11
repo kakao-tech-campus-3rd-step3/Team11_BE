@@ -36,19 +36,25 @@ app:
     jwt:
       secret: ${JWT_SECRET}
       access-token:
-        name_in_cookie: access_token
         expiration_in_second: 3600
       refresh-token:
-        name_in_cookie: refresh_token
         expiration_in_second: 604800
+      ws-upgrade-token:
+        expiration_in_second: 30 # 30초
       issuer: momeet
 
     https:
        enabled: false
        domain: localhost:8080
-       allow-origins:
-         - http://localhost:*
-         - http://127.0.0.1:*
+
+    websocket:
+      endpoint: /ws/chat
+      handshake-header: token
+
+    cors:
+      allowed-origins:
+        - http://localhost:*
+        - http://127.0.0.1:*
 
     whitelist-urls:
       - /api/auth/login
@@ -60,8 +66,6 @@ app:
       - /error
       - /admin
       - /admin/**
-      - /ws/**
-      - /ws/chat/**
       - /health
 
 logging:

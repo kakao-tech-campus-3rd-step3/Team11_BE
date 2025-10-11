@@ -1,8 +1,6 @@
 package com.pnu.momeet.domain.auth.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
-import com.pnu.momeet.common.security.util.JwtTokenProvider;
-import com.pnu.momeet.common.security.util.TokenCookieManager;
 import com.pnu.momeet.domain.auth.dto.request.KakaoCallbackRequest;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.dto.response.WithdrawResponse;
@@ -21,8 +19,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class KakaoAuthController {
     private final KakaoAuthService kakaoAuthService;
-    private final TokenCookieManager tokenCookieManager;
-    private final JwtTokenProvider jwtTokenProvider;
 
     // 카카오 로그인 시작
     @GetMapping
@@ -34,34 +30,24 @@ public class KakaoAuthController {
     // 카카오 로그인 콜백
     @GetMapping("/callback")
     public ResponseEntity<TokenResponse> kakaoCallback(
-            @ModelAttribute KakaoCallbackRequest request,
-            HttpServletResponse response
+            @ModelAttribute KakaoCallbackRequest request
     ) {
         if (request.error() != null) {
             throw new IllegalArgumentException("카카오 로그인 실패: " + request.error_description());
         }
 
         TokenResponse tokenResponse = kakaoAuthService.kakaoLogin(request.code());
-
-        tokenCookieManager.saveAccessTokenToCookie(response, tokenResponse.accessToken());
-        tokenCookieManager.saveRefreshTokenToCookie(response, tokenResponse.refreshToken());
-
         return ResponseEntity.ok(tokenResponse);
     }
 
     // 카카오 회원 탈퇴
     @PostMapping("/withdraw")
     public ResponseEntity<WithdrawResponse> kakaoWithdraw(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            HttpServletResponse response
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         UUID memberId = userDetails.getMemberId();
 
         kakaoAuthService.withdrawKakaoMember(memberId);
-
-        tokenCookieManager.deleteAccessTokenCookie(response);
-        tokenCookieManager.deleteRefreshTokenCookie(response);
-
         return ResponseEntity.ok(new WithdrawResponse("카카오 회원 탈퇴가 완료되었습니다."));
     }
 }

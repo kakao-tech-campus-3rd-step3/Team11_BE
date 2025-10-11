@@ -6,11 +6,15 @@ app:
     https:
       enabled: true
       domain: ${PROD_DOMAIN_NAME}
-      allow-origins:
-        - http://${FRONTEND_DOMAIN_NAME} # 프론트엔드 도메인 허용
+    cors:
+      allowed-origins:
+        - http://localhost:* # 아직 개발 단계이므로 테스팅을 위해 로컬호스트 허용
+        - http://127.0.0.1:*
+        - http://${FRONTEND_ㅎDOMAIN_NAME} # 프론트엔드 도메인 허용
         - https://${FRONTEND_DOMAIN_NAME}
         - https://${PROD_DOMAIN_NAME} # api 서브도메인 허용
-      secure-cookies: true   
+
+
 logging:
   level:
     root: WARN
