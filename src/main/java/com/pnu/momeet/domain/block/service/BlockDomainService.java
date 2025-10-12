@@ -43,15 +43,15 @@ public class BlockDomainService {
 
     @Transactional
     public BlockResponse createUserBlock(UUID me, UUID targetId) {
-        // 1. 대상 회원 존재 검증
-        if (!memberService.existsById(targetId)) {
-            log.info("차단 대상 사용자 조회 실패. blockerId={}, blockedId={}", me, targetId);
-            throw new NoSuchElementException("대상 사용자를 찾을 수 없습니다.");
-        }
-        // 2. 자기 자신 차단 금지
+        // 1. 자기 자신 차단 금지
         if (me.equals(targetId)) {
             log.info("자기 자신 차단 시도. blockerId={}, blockedId={}", me, targetId);
             throw new IllegalArgumentException("자기 자신은 차단할 수 없습니다.");
+        }
+        // 2. 대상 회원 존재 검증
+        if (!memberService.existsById(targetId)) {
+            log.info("차단 대상 사용자 조회 실패. blockerId={}, blockedId={}", me, targetId);
+            throw new NoSuchElementException("대상 사용자를 찾을 수 없습니다.");
         }
         // 3. 이미 차단한 사용자면 금지
         if (entityService.exists(me, targetId)) {
