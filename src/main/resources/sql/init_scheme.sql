@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS meetup_hash_tag CASCADE;
 DROP TABLE IF EXISTS meetup_participant CASCADE;
 DROP TABLE IF EXISTS badge CASCADE;
 DROP TABLE IF EXISTS profile_badge CASCADE;
+DROP TABLE IF EXISTS user_block CASCADE;
 
 CREATE TABLE member (
     id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -190,3 +191,16 @@ CREATE INDEX IF NOT EXISTS idx_profile_badge_profile ON profile_badge(profile_id
 CREATE INDEX IF NOT EXISTS idx_profile_badge_badge   ON profile_badge(badge_id);
 CREATE INDEX IF NOT EXISTS idx_profile_rep_only
     ON profile_badge(profile_id) WHERE is_representative = TRUE;
+
+CREATE TABLE IF NOT EXISTS user_block (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    blocker_id UUID NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    blocked_id UUID NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_user_block UNIQUE (blocker_id, blocked_id),
+    CONSTRAINT ck_user_block_self CHECK (blocker_id <> blocked_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_block_blocker ON user_block (blocker_id);
+CREATE INDEX IF NOT EXISTS idx_user_block_blocked ON user_block (blocked_id);

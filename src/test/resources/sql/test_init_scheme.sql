@@ -1,6 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS public_test;
 
 -- 외래키 의존성 순서대로 DROP
+DROP TABLE IF EXISTS public_test.user_block CASCADE;
 DROP TABLE IF EXISTS public_test.evaluation CASCADE;
 DROP TABLE IF EXISTS public_test.profile_badge CASCADE;
 DROP TABLE IF EXISTS public_test.badge CASCADE;
@@ -168,3 +169,16 @@ CREATE INDEX IF NOT EXISTS idx_profile_badge_profile ON public_test.profile_badg
 CREATE INDEX IF NOT EXISTS idx_profile_badge_badge   ON public_test.profile_badge(badge_id);
 CREATE INDEX IF NOT EXISTS idx_profile_rep_only
     ON public_test.profile_badge(profile_id) WHERE is_representative = TRUE;
+
+CREATE TABLE IF NOT EXISTS public_test.user_block (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    blocker_id UUID NOT NULL REFERENCES public_test.member(id) ON DELETE CASCADE,
+    blocked_id UUID NOT NULL REFERENCES public_test.member(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_user_block UNIQUE (blocker_id, blocked_id),
+    CONSTRAINT ck_user_block_self CHECK (blocker_id <> blocked_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_block_blocker ON public_test.user_block (blocker_id);
+CREATE INDEX IF NOT EXISTS idx_user_block_blocked ON public_test.user_block (blocked_id);
