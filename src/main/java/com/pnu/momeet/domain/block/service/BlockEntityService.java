@@ -28,4 +28,9 @@ public class BlockEntityService {
         log.debug("특정 사용자 차단 성공. blockerId={}, blockedId={}", blockerId, blockedId);
         return saved;
     }
+
+    @Transactional
+    public long delete(UUID blockerId, UUID blockedId) {
+        return userBlockRepository.deleteByBlockerIdAndBlockedId(blockerId, blockedId);
+    }
 }

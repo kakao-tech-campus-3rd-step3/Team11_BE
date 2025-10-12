@@ -49,4 +49,10 @@ public class BlockDomainService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 차단한 사용자입니다.");
         }
     }
+
+    @Transactional
+    public void deleteBlock(UUID me, UUID targetId) {
+        entityService.delete(me, targetId);
+        log.info("차단 해제 완료. blockerId={}, blockedId={}", me, targetId);
+    }
 }
