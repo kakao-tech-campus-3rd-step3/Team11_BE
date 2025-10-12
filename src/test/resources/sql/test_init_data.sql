@@ -13,7 +13,7 @@ VALUES (
 
 -- Admin용 프로필 생성
 INSERT INTO public_test.profile (
-    member_id, nickname, age, gender, image_url, description, base_location
+    member_id, nickname, age, gender, image_url, description, base_location_id
 ) VALUES (
     (SELECT id FROM public_test.member WHERE email = 'admin@test.com'),
     '관리자',
@@ -21,7 +21,7 @@ INSERT INTO public_test.profile (
     'MALE',
     'https://cdn.example.com/profiles/admin.png',
     '테스트 환경용 관리자 프로필',
-    '부산 해운대구'
+    26350
 );
 
 -- password: testpass1212!
@@ -37,17 +37,18 @@ VALUES (
            'ROLE_USER'
        );
 
+-- User용 프로필 생성
 INSERT INTO public_test.profile (
-    member_id, nickname, age, gender, image_url, description, base_location
+    member_id, nickname, age, gender, image_url, description, base_location_id
 ) VALUES (
-             (SELECT id FROM public_test.member WHERE email = 'user@test.com'),
-             '테스트유저',
-             25,
-             'MALE',
-             'https://cdn.example.com/profiles/user.png',
-             '테스트 환경용 기본 프로필',
-             '부산 금정구'
-         );
+    (SELECT id FROM public_test.member WHERE email = 'user@test.com'),
+    '테스트유저',
+    25,
+    'MALE',
+    'https://cdn.example.com/profiles/user.png',
+    '테스트 환경용 기본 프로필',
+    26410
+);
 
 -- 종료된 모임 추가 (관리자가 owner)
 INSERT INTO public_test.meetup (

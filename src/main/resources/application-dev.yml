@@ -1,0 +1,31 @@
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  security:
+    https:
+      enabled: true
+      domain: ${DEV_DOMAIN_NAME}
+      secure-cookies: true
+      allow-origins:
+        - http://localhost:*
+        - http://127.0.0.1:*
+        - http://${DEV_DOMAIN_NAME}
+        - https://${DEV_DOMAIN_NAME}
+
+logging:
+  level:
+    root: INFO
+    com.pnu.momeet: DEBUG
+  file:
+    path: './logs'
+
+kakao:
+  redirect-uri: https://${DEV_DOMAIN_NAME}/api/auth/kakao/callback
+
+server:
+  address: 0.0.0.0

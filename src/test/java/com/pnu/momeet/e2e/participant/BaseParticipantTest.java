@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.auth.service.EmailAuthService;
 import com.pnu.momeet.domain.meetup.dto.request.LocationRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
+import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
@@ -13,6 +14,8 @@ import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
+import com.pnu.momeet.domain.sigungu.entity.Sigungu;
+import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.AfterEach;
@@ -42,6 +45,10 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
     protected ProfileRepository profileRepository;
     @Autowired
     protected MeetupDomainService meetupService;
+    @Autowired
+    protected MeetupRepository meetupRepository;
+    @Autowired
+    protected SigunguEntityService sigunguService;
 
     @BeforeEach
     @Override
@@ -66,7 +73,7 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
         if (meetups != null) {
             for (MeetupDetail meetup : meetups.values()) {
                 try {
-                    meetupService.deleteMeetupAdmin(meetup.id());
+                    meetupRepository.deleteById(meetup.id());
                 } catch (Exception e) {
                     // 이미 삭제되었거나 오류가 발생한 경우 무시
                 }
@@ -109,6 +116,7 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
                 email, TEST_USER_PASSWORD, List.of(Role.ROLE_USER.name())
         )));
         tokens.add(emailAuthService.login(email, TEST_USER_PASSWORD));
+        Sigungu sgg = sigunguService.getById(26410L);
         profiles.add(profileRepository.save(Profile.create(
                 members.getLast().id(),
                 UUID.randomUUID().toString().substring(0, 5) + "User",
@@ -116,7 +124,7 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
                 Gender.MALE,
                 "www.example.com/image.png",
                 "테스트 소개",
-                "부산시 금정구"
+                sgg
         )));
     }
 

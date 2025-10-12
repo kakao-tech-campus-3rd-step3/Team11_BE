@@ -1,10 +1,10 @@
 package com.pnu.momeet.common.security.util;
 
 import com.pnu.momeet.common.model.TokenInfo;
+import com.pnu.momeet.common.security.config.SecurityProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -20,16 +20,11 @@ public class JwtTokenProvider {
     private final Long accessTokenExpirationSeconds;
     private final Long refreshTokenExpirationSeconds;
 
-    public JwtTokenProvider(
-        @Value("${jwt.secret}") String secret,
-        @Value("${jwt.issuer}") String issuer,
-        @Value("${jwt.access-token.expiration_in_second}") Long accessTokenExpirationSeconds,
-        @Value("${jwt.refresh-token.expiration_in_second}") Long refreshTokenExpirationSeconds
-    ) {
-        this.secretKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(secret.getBytes());
-        this.issuer = issuer;
-        this.accessTokenExpirationSeconds = accessTokenExpirationSeconds;
-        this.refreshTokenExpirationSeconds = refreshTokenExpirationSeconds;
+    public JwtTokenProvider(SecurityProperties securityProperties) {
+        this.secretKey = io.jsonwebtoken.security.Keys.hmacShaKeyFor(securityProperties.getJwt().getSecret().getBytes());
+        this.issuer = securityProperties.getJwt().getIssuer();
+        this.accessTokenExpirationSeconds = (long) securityProperties.getJwt().getAccessToken().getExpirationInSecond();
+        this.refreshTokenExpirationSeconds = (long) securityProperties.getJwt().getRefreshToken().getExpirationInSecond();
     }
 
     public String generateToken(String sub, Long expirationSeconds) {

@@ -11,22 +11,17 @@ import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
-import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupDtoMapper;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
-import com.pnu.momeet.domain.participant.service.ParticipantEntityService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,8 +40,6 @@ public class MeetupDomainService {
     private final MeetupEntityService entityService;
     private final ProfileEntityService profileService;
     private final SigunguEntityService sigunguService;
-    private final ParticipantEntityService participantService;
-    private final ApplicationEventPublisher publisher;
 
     private void validateCategories(String mainCategory, String subCategory) {
         if (mainCategory == null || subCategory == null) {
@@ -99,9 +92,14 @@ public class MeetupDomainService {
                 profileId, List.of(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS)
         );
         if (activeMeetups.isEmpty()) {
-            log.warn("진행 중이거나 모집 중인 모임이 없음. memberId={}", memberId);
+            log.info("진행 중이거나 모집 중인 모임이 없음. memberId={}", memberId);
             throw new NoSuchElementException("진행 중이거나 모집 중인 모임이 없습니다.");
         }
+        if (activeMeetups.size() > 1) {
+            // 비정상적인 상황
+            log.warn("진행 중이거나 모집 중인 모임이 2개 이상임. memberId={}, count={}", memberId, activeMeetups.size());
+        }
+
         return MeetupEntityMapper.toDetail(activeMeetups.getFirst());
     }
 
@@ -117,7 +115,7 @@ public class MeetupDomainService {
                 profileService.mapToProfileId(memberId),
                 List.of(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS)
         )) {
-            log.warn("이미 진행 중이거나 모집 중인 모임이 있음. memberId={}", memberId);
+            log.info("이미 진행 중이거나 모집 중인 모임이 있음. memberId={}", memberId);
             throw new CustomValidationException(Map.of(
                     "owner", List.of("이미 진행 중이거나 모집 중인 모임이 있습니다. 하나의 모임만 생성할 수 있습니다.")
             ));
@@ -129,7 +127,7 @@ public class MeetupDomainService {
 
         Profile profile = profileService.getByMemberId(memberId);
         if (profile.getTemperature().doubleValue() < request.scoreLimit()) {
-            log.warn("회원님의 모임 참여 점수가 모임의 제한 점수보다 낮음. memberId={}, profileId={}, scoreLimit={}, temperature={}",
+            log.info("회원님의 모임 참여 점수가 모임의 제한 점수보다 낮음. memberId={}, profileId={}, scoreLimit={}, temperature={}",
                     memberId, profile.getId(), request.scoreLimit(), profile.getTemperature());
             throw new CustomValidationException(Map.of(
                     "scoreLimit", List.of("회원님의 모임 참여 점수가 모임의 제한 점수보다 낮습니다.")
@@ -150,7 +148,7 @@ public class MeetupDomainService {
         UUID profileId = profileService.mapToProfileId(memberId);
         var meetups = entityService.getAllByOwnerIdAndStatusIn(profileId, List.of(MeetupStatus.OPEN));
         if (meetups.isEmpty()) {
-            log.warn("수정 가능한 모임이 없음. memberId={}", memberId);
+            log.info("수정 가능한 모임이 없음. memberId={}", memberId);
             throw new NoSuchElementException("수정 가능한 모임이 없습니다.");
         }
         Meetup meetup = meetups.getFirst();
@@ -172,59 +170,5 @@ public class MeetupDomainService {
         // fetch join을 사용하기 위해 다시 조회
         log.info("모임 수정 성공. id={}, ownerId={}", updatedMeetup.getId(), profileId);
         return getById(updatedMeetup.getId());
-    }
-
-    @Transactional
-    public void deleteMeetupAdmin(UUID meetupId) {
-        entityService.deleteById(meetupId);
-        log.info("관리자에 의해 모임 삭제 성공. id={}", meetupId);
-    }
-
-    @Transactional
-    public void deleteMeetup(UUID memberId) {
-        UUID profileId = profileService.mapToProfileId(memberId);
-        var meetups = entityService.getAllByOwnerIdAndStatusIn(profileId, List.of(MeetupStatus.OPEN));
-        if (meetups.isEmpty()) {
-            log.warn("삭제 가능한 모임이 없음. memberId={}", memberId);
-            throw new NoSuchElementException("삭제 가능한 모임이 없습니다.");
-        }
-        Meetup meetup = meetups.getFirst();
-        entityService.deleteById(meetup.getId());
-        log.info("사용자 본인의 모임 삭제 성공. id={}, ownerId={}", meetup.getId(), profileId);
-    }
-
-    @Transactional
-    public void finishMeetupByMemberId(UUID memberId, UUID meetupId) {
-        // 1) 소유자 검증: memberId -> profileId -> 소유한 IN_PROGRESS 모임 중 해당 id 확인
-        UUID ownerProfileId = profileService.mapToProfileId(memberId);
-        Meetup meetup = entityService.getById(meetupId);
-        if (!meetup.getOwner().getId().equals(ownerProfileId)) {
-            throw new IllegalStateException("방장만 종료할 수 있습니다.");
-        }
-        if (meetup.getStatus() != MeetupStatus.IN_PROGRESS) {
-            throw new IllegalStateException("종료할 수 있는 상태가 아닙니다.");
-        }
-
-        // 2) 상태 전이: ENDED (엔티티 메서드로 캡슐화 권장)
-        entityService.updateMeetup(meetup, m -> {
-            m.setStatus(MeetupStatus.ENDED);
-            m.setEndAt(LocalDateTime.now()); // 스펙의 ISO 8601 UTC 권장
-        });
-
-        // 3) 완주자 조회 -> 프로필 집계 필드 증가
-        var participants = participantService.getAllByMeetupId(meetupId); // 이미 사용 중인 쿼리 흐름
-        List<UUID> finisherIds = new ArrayList<>();
-        for (var p : participants) {
-            UUID profileId = p.getProfile().getId();
-            Profile profile = profileService.getById(profileId);
-            profile.increaseCompletedJoinMeetups();
-            finisherIds.add(profileId);
-        }
-
-        // 4) 종료 이벤트 발행 (커밋 후 배지 부여)
-        publisher.publishEvent(new MeetupFinishedEvent(meetupId, finisherIds, LocalDateTime.now()));
-
-        log.info("모임 종료 완료. meetupId={}, ownerProfileId={}, finisherCount={}",
-            meetupId, ownerProfileId, finisherIds.size());
     }
 }

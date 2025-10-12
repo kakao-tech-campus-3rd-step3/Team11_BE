@@ -39,7 +39,7 @@ public abstract class BaseProfileTest extends BaseE2ETest {
     protected ProfileRepository profileRepository;
 
     public static final String TEST_USER_PROFILE_NICKNAME = "테스트유저";
-    public static final String TEST_USER_PROFILE_LOCATION = "부산 금정구";
+    public static final String TEST_USER_PROFILE_LOCATION = "부산광역시 금정구";
     public static final int TEST_USER_PROFILE_AGE = 25;
 
     @BeforeEach

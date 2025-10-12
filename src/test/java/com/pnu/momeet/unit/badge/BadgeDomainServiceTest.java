@@ -25,6 +25,8 @@ import com.pnu.momeet.domain.badge.service.BadgeEntityService;
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.service.ProfileDomainService;
+import com.pnu.momeet.domain.sigungu.entity.Sigungu;
+import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
@@ -56,6 +58,9 @@ class BadgeDomainServiceTest {
     @Mock
     private S3StorageService s3StorageService;
 
+    @Mock
+    private SigunguEntityService sigunguService;
+
     @InjectMocks
     private BadgeDomainService badgeService;
 
@@ -66,8 +71,10 @@ class BadgeDomainServiceTest {
         UUID memberId = UUID.randomUUID();
         UUID profileId = UUID.randomUUID();
 
+        Sigungu sgg = sigunguService.getById(26410L);
         ProfileResponse profile = new ProfileResponse(
-            profileId, "닉", 20, Gender.MALE, null, "소개", "부산",
+            profileId, "닉", 20, Gender.MALE, null, "소개", sgg.getId(),
+            sgg.getSidoName() + " " + sgg.getSigunguName(),
             BigDecimal.valueOf(36.5), 0, 0,
             LocalDateTime.now().minusDays(2), LocalDateTime.now()
         );
@@ -135,8 +142,10 @@ class BadgeDomainServiceTest {
     @DisplayName("특정 사용자 배지 조회 성공 - 프로필 존재 검증 후 EntityService 위임")
     void getUserBadges_success() {
         UUID profileId = UUID.randomUUID();
+        Sigungu sgg = sigunguService.getById(26410L);
         ProfileResponse dummy = new ProfileResponse(
-            profileId, "닉", 20, Gender.FEMALE, null, "소개", "부산",
+            profileId, "닉", 20, Gender.FEMALE, null, "소개", sgg.getId(),
+            sgg.getSidoName() + " " + sgg.getSigunguName(),
             BigDecimal.valueOf(36.5), 0, 0,
             LocalDateTime.now().minusDays(3), LocalDateTime.now()
         );

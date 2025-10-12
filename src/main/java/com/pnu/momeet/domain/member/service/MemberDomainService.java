@@ -69,7 +69,7 @@ public class MemberDomainService {
     public MemberResponse validateAndUpdatePasswordById(UUID id, ChangePasswordRequest request) {
         Member member = entityService.getById(id);
         if (!passwordEncoder.matches(request.oldPassword(), member.getPassword())) {
-            log.warn("기존 비밀번호 불일치로 인한 비밀번호 변경 실패. id={}", id);
+            log.info("기존 비밀번호 불일치로 인한 비밀번호 변경 실패. id={}", id);
             throw new IllegalArgumentException("기존 비밀번호가 일치하지 않습니다.");
         }
         member = entityService.updateMember(member, m -> {

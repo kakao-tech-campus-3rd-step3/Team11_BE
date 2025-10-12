@@ -3,6 +3,7 @@ package com.pnu.momeet.domain.meetup.service.mapper;
 import com.pnu.momeet.domain.common.mapper.PageMapper;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupPageRequest;
+import com.pnu.momeet.domain.meetup.dto.request.MeetupSummaryPageRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
@@ -10,12 +11,11 @@ import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
+import java.time.LocalDateTime;
+import java.util.function.Consumer;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
-
-import java.time.LocalDateTime;
-import java.util.function.Consumer;
 
 public class MeetupDtoMapper {
     private MeetupDtoMapper() {
@@ -83,6 +83,14 @@ public class MeetupDtoMapper {
                 request.getPage(),
                 request.getSize(),
                 PageMapper.toSort(request.getSort())
+        );
+    }
+
+    public static PageRequest toPageRequest(MeetupSummaryPageRequest request) {
+        return PageRequest.of(
+            request.getPage(),
+            request.getSize(),
+            PageMapper.toSort(request.getSort())
         );
     }
 

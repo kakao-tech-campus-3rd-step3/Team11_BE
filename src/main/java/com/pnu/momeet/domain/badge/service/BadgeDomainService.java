@@ -34,7 +34,7 @@ public class BadgeDomainService {
 
     @Transactional(readOnly = true)
     public Page<ProfileBadgeResponse> getMyBadges(UUID memberId, ProfileBadgePageRequest request) {
-        PageRequest pageRequest = BadgeDtoMapper.toProfileBadgePageRequest(request);
+        PageRequest pageRequest = request.toPageRequest();
         ProfileResponse profile = profileService.getProfileByMemberId(memberId);
         log.debug("내 배지 조회. memberId={}, profileId={}", memberId, profile.id());
         return entityService.findBadgesByProfileId(profile.id(), pageRequest);
@@ -42,7 +42,7 @@ public class BadgeDomainService {
 
     @Transactional(readOnly = true)
     public Page<ProfileBadgeResponse> getUserBadges(UUID profileId, ProfileBadgePageRequest request) {
-        PageRequest pageRequest = BadgeDtoMapper.toProfileBadgePageRequest(request);
+        PageRequest pageRequest = request.toPageRequest();
         profileService.getProfileById(profileId); // 존재 검증
         log.debug("특정 사용자 배지 조회. profileId={}", profileId);
         return entityService.findBadgesByProfileId(profileId, pageRequest);
@@ -52,14 +52,14 @@ public class BadgeDomainService {
     public BadgeCreateResponse createBadge(BadgeCreateRequest request) {
         String name = request.name().trim();
         if (entityService.existsByNameIgnoreCase(name)) {
-            log.warn("중복 이름으로 배지 생성 시도. name={}", name);
+            log.info("중복 이름으로 배지 생성 시도. name={}", name);
             throw new IllegalArgumentException("이미 존재하는 배지 이름입니다.");
         }
 
         String rawCode = request.code();
         String normalizedCode = rawCode == null ? null : rawCode.trim().toUpperCase();
         if (entityService.existsByCodeIgnoreCase(normalizedCode)) {
-            log.warn("중복 code로 배지 생성 시도. code={}", normalizedCode);
+            log.info("중복 code로 배지 생성 시도. code={}", normalizedCode);
             throw new IllegalArgumentException("이미 존재하는 배지 코드입니다.");
         }
 
@@ -82,7 +82,7 @@ public class BadgeDomainService {
         // 이름 중복 검증 (이름이 변경되는 경우에만)
         if (request.name() != null && !badge.getName().equalsIgnoreCase(request.name().trim())) {
             if (entityService.existsByNameIgnoreCase(request.name().trim())) {
-                log.warn("중복 이름으로 배지 수정 시도. id={}, newName={}", badgeId, request.name());
+                log.info("중복 이름으로 배지 수정 시도. id={}, newName={}", badgeId, request.name());
                 throw new IllegalArgumentException("이미 존재하는 배지 이름입니다.");
             }
         }
@@ -118,7 +118,7 @@ public class BadgeDomainService {
 
     @Transactional(readOnly = true)
     public Page<BadgeResponse> getBadges(BadgePageRequest request) {
-        var pageRequest = BadgeDtoMapper.toBadgePageRequest(request);
+        var pageRequest = request.toPageRequest();
         var page = entityService.findAll(pageRequest);
         log.debug("배지 목록 조회. page={}, size={}, total={}",
             pageRequest.getPageNumber(), pageRequest.getPageSize(), page.getTotalElements());

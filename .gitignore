@@ -42,3 +42,5 @@ out/
 
 ### Logs ###
 logs
+
+scripts/deploy_local.sh

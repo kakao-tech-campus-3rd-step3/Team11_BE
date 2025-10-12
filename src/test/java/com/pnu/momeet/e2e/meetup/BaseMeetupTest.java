@@ -2,6 +2,7 @@ package com.pnu.momeet.e2e.meetup;
 
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.response.MemberResponse;
@@ -10,6 +11,10 @@ import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
+import com.pnu.momeet.domain.sigungu.entity.Sigungu;
+import com.pnu.momeet.domain.sigungu.repository.SigunguRepository;
+import com.pnu.momeet.domain.sigungu.service.SigunguDomainService;
+import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
 import java.util.ArrayList;
@@ -17,6 +22,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,11 +50,15 @@ public abstract class BaseMeetupTest extends BaseE2ETest {
 
     @Autowired
     protected MeetupDomainService meetupService;
-    
+
     @Autowired
     protected MemberDomainService memberService;
     @Autowired
     private ProfileRepository profileRepository;
+    @Autowired
+    private MeetupRepository meetupRepository;
+    @Autowired
+    private SigunguEntityService sigunguService;
 
     @BeforeEach
     @Override
@@ -87,6 +97,7 @@ public abstract class BaseMeetupTest extends BaseE2ETest {
         String baseNickname = email.split("@")[0];
         String nickname = baseNickname.length() > 20 ? baseNickname.substring(0, 20) : baseNickname;
 
+        Sigungu sgg = sigunguService.getById(26410L);
         userProfiles.put(email, profileRepository.save(Profile.create(
                 users.get(email).id(),
                 nickname,
@@ -94,7 +105,7 @@ public abstract class BaseMeetupTest extends BaseE2ETest {
                 Gender.MALE,
                 "https://example.com/profile.png",
                 "안녕하세요, 자기소개입니다.",
-                "서울 강남구"
+                sgg
         )));
         profilesToBeDeleted.add(userProfiles.get(email).getId());
     }
@@ -103,7 +114,7 @@ public abstract class BaseMeetupTest extends BaseE2ETest {
     protected void tearDown() {
         if (toBeDeleted != null && !toBeDeleted.isEmpty()) {
             for (UUID meetupId : toBeDeleted) {
-                meetupService.deleteMeetupAdmin(meetupId);
+                meetupRepository.deleteById(meetupId);
             }
             toBeDeleted.clear();
         }
