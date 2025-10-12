@@ -175,7 +175,6 @@ CREATE TABLE IF NOT EXISTS public_test.user_block (
     blocker_id UUID NOT NULL REFERENCES public_test.member(id) ON DELETE CASCADE,
     blocked_id UUID NOT NULL REFERENCES public_test.member(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT uq_user_block UNIQUE (blocker_id, blocked_id),
     CONSTRAINT ck_user_block_self CHECK (blocker_id <> blocked_id)
 );

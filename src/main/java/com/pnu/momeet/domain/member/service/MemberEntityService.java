@@ -56,6 +56,11 @@ public class MemberEntityService {
         return memberRepository.existsByEmail(email);
     }
 
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID id) {
+        return memberRepository.existsById(id);
+    }
+
     @Transactional
     public Member createMember(Member member) {
         log.debug("사용자 생성 시도. email={}", member.getEmail());

@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.block.entity;
 
+import com.pnu.momeet.domain.common.entity.BaseCreatedEntity;
 import com.pnu.momeet.domain.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class UserBlock extends BaseEntity {
+public class UserBlock extends BaseCreatedEntity {
 
     @Column(name = "blocker_id", nullable = false)
     private UUID blockerId;
