@@ -1,14 +1,20 @@
 package com.pnu.momeet.domain.block.service;
 
+import com.pnu.momeet.domain.block.dto.request.BlockPageRequest;
 import com.pnu.momeet.domain.block.dto.response.BlockResponse;
 import com.pnu.momeet.domain.block.entity.UserBlock;
 import com.pnu.momeet.domain.block.mapper.BlockEntityMapper;
+import com.pnu.momeet.domain.block.service.mapper.BlockDtoMapper;
 import com.pnu.momeet.domain.member.service.MemberEntityService;
+import com.pnu.momeet.domain.profile.dto.response.BlockedProfileResponse;
+import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +27,19 @@ public class BlockDomainService {
 
     private final BlockEntityService entityService;
     private final MemberEntityService memberService;
+    private final ProfileEntityService profileService;
+
+    @Transactional(readOnly = true)
+    public Page<BlockedProfileResponse> getMyBlockedProfiles(
+        UUID me,
+        BlockPageRequest pageRequest
+    ) {
+        log.debug("차단 목록 조회 시도. blockerId={}", me);
+        PageRequest page = BlockDtoMapper.toPageRequest(pageRequest);
+        Page<BlockedProfileResponse> blockedProfiles = profileService.getBlockedProfiles(me, page);
+        log.debug("차단 목록 조회 성공. blockerId={}", me);
+        return blockedProfiles;
+    }
 
     @Transactional
     public BlockResponse createUserBlock(UUID me, UUID targetId) {
