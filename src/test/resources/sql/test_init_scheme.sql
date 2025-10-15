@@ -1,6 +1,8 @@
 CREATE SCHEMA IF NOT EXISTS public_test;
 
 -- 외래키 의존성 순서대로 DROP
+DROP TABLE IF EXISTS public_test.report_attachment CASCADE;
+DROP TABLE IF EXISTS public_test.user_report CASCADE;
 DROP TABLE IF EXISTS public_test.user_block CASCADE;
 DROP TABLE IF EXISTS public_test.evaluation CASCADE;
 DROP TABLE IF EXISTS public_test.profile_badge CASCADE;
@@ -181,3 +183,28 @@ CREATE TABLE IF NOT EXISTS public_test.user_block (
 
 CREATE INDEX IF NOT EXISTS idx_user_block_blocker ON public_test.user_block (blocker_id);
 CREATE INDEX IF NOT EXISTS idx_user_block_blocked ON public_test.user_block (blocked_id);
+
+CREATE TABLE public_test.user_report (
+    id           UUID PRIMARY KEY,
+    reporter_id  UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
+    target_id    UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
+    category     VARCHAR(30) NOT NULL,
+    status       VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    detail       TEXT,
+    ip_hash      VARCHAR(128),
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT ck_reporter_ne_target CHECK (reporter_id <> target_id)
+);
+
+CREATE TABLE public_test.report_attachment (
+    id           UUID PRIMARY KEY,
+    report_id    UUID NOT NULL REFERENCES public_test.user_report(id) ON DELETE CASCADE,
+    url          TEXT NOT NULL,
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_report_reporter_created_at
+    ON public_test.user_report (reporter_id, created_at DESC);
+CREATE INDEX idx_report_attachment_report
+    ON public_test.report_attachment (report_id);

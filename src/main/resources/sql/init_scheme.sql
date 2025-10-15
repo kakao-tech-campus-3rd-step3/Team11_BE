@@ -13,6 +13,8 @@ DROP TABLE IF EXISTS meetup_participant CASCADE;
 DROP TABLE IF EXISTS badge CASCADE;
 DROP TABLE IF EXISTS profile_badge CASCADE;
 DROP TABLE IF EXISTS user_block CASCADE;
+DROP TABLE IF EXISTS user_report CASCADE;
+DROP TABLE IF EXISTS report_attachment CASCADE;
 
 CREATE TABLE member (
     id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -203,3 +205,28 @@ CREATE TABLE IF NOT EXISTS user_block (
 
 CREATE INDEX IF NOT EXISTS idx_user_block_blocker ON user_block (blocker_id);
 CREATE INDEX IF NOT EXISTS idx_user_block_blocked ON user_block (blocked_id);
+
+CREATE TABLE user_report (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    reporter_id  UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    target_id    UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    category     VARCHAR(30) NOT NULL,
+    status       VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    detail       TEXT,
+    ip_hash      VARCHAR(128),
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT ck_reporter_ne_target CHECK (reporter_id <> target_id)
+);
+
+CREATE TABLE report_attachment (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    report_id    UUID NOT NULL REFERENCES user_report(id) ON DELETE CASCADE,
+    url          TEXT NOT NULL,
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_report_reporter_created_at
+    ON user_report (reporter_id, created_at DESC);
+CREATE INDEX idx_report_attachment_report
+    ON report_attachment (report_id);
