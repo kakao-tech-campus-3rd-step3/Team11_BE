@@ -1,9 +1,10 @@
 package com.pnu.momeet.domain.auth.service;
 
+import com.pnu.momeet.common.event.CoreEventPublisher;
 import com.pnu.momeet.common.security.config.SecurityProperties;
-import com.pnu.momeet.common.service.MailSenderService;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.VerificationCode;
+import com.pnu.momeet.domain.auth.event.SendVerificationEmailEvent;
 import com.pnu.momeet.domain.auth.repository.VerificationCodeRepository;
 import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.entity.Member;
@@ -16,8 +17,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,10 +31,9 @@ public class EmailAuthService {
     private final BaseAuthService authService;
     private final MemberEntityService memberService;
     private final PasswordEncoder passwordEncoder;
-    private final MailSenderService mailSenderService;
-    private final TemplateEngine templateEngine;
     private final VerificationCodeRepository verificationCodeRepository;
     private final SecurityProperties securityProperties;
+    private final CoreEventPublisher eventPublisher;
 
     @Transactional
     public void signUp(String email, String password) {
@@ -62,23 +60,13 @@ public class EmailAuthService {
         VerificationCode verificationCode = new VerificationCode(savedMember.getId(), expiresInMinutes);
         
         verificationCodeRepository.save(verificationCode);
-        sendVerificationEmail(email, verificationCode.getCode().toString());
-        log.info("인증 메일 발송 완료: {}", email);
+        eventPublisher.publish(new SendVerificationEmailEvent(
+                savedMember.getEmail(),
+                verificationCode.getCode()
+        ));
     }
 
-    private void sendVerificationEmail(String email, String code) {
-        log.debug("인증 메일 발송 시도: {} - {}", email, code);
-        Context context = new Context();
-        context.setVariable("title", "MoMeet 회원가입 인증");
-        String verificationUrl = securityProperties.getHttps().getUrl() + "/auth/verify?code=" + code;
-        context.setVariable("verificationUrl", verificationUrl);
-        String htmlContent = templateEngine.process("mail/email-verification.html", context);
-        mailSenderService.sendHtmlMail(
-                email,
-                "MoMeet 회원가입 인증 메일입니다.",
-                htmlContent
-        );
-    }
+
 
     @Transactional
     public TokenResponse login(String email, String password) {
