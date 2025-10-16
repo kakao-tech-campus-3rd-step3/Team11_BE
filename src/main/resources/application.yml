@@ -16,8 +16,8 @@ spring:
       region:
         static: ap-northeast-2
   mail:
-    host: ${BREVO_STMP_HOST}
-    port: ${BREVO_STMP_PORT}
+    host: ${BREVO_SMTP_HOST}
+    port: ${BREVO_SMTP_PORT}
     username: ${BREVO_USERNAME}
     password: ${BREVO_PASSWORD}
     from-domain: ${EMAIL_FROM_DOMAIN}
