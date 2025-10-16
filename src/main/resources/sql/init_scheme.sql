@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS member_role CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
 DROP TABLE IF EXISTS profile CASCADE;
 DROP TABLE IF EXISTS member CASCADE;
+DROP TABLE IF EXISTS member_verification CASCADE;
 DROP TABLE IF EXISTS badge CASCADE;
 DROP TABLE IF EXISTS profile_badge CASCADE;
 DROP TABLE IF EXISTS meetup CASCADE;
@@ -23,9 +24,19 @@ CREATE TABLE member (
     updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
     token_issued_at  TIMESTAMP DEFAULT NULL,
     enabled        BOOLEAN NOT NULL DEFAULT TRUE,
+    verified       BOOLEAN NOT NULL DEFAULT FALSE,
     is_account_non_locked BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE(provider, provider_id)
 );
+
+CREATE TABLE member_verification (
+    code uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    member_id uuid UNIQUE NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMP NOT NULL
+);
+
+create index if not exists idx_verification_expires_at on member_verification(expires_at);
 
 
 CREATE TABLE member_role (
