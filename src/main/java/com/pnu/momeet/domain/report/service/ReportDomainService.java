@@ -1,12 +1,14 @@
 package com.pnu.momeet.domain.report.service;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.domain.member.service.MemberEntityService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
 import com.pnu.momeet.domain.report.dto.response.ReportResponse;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
 import com.pnu.momeet.domain.report.entity.UserReport;
+import com.pnu.momeet.domain.report.enums.ReportStatus;
 import com.pnu.momeet.domain.report.service.mapper.ReportDtoMapper;
 import com.pnu.momeet.domain.report.service.mapper.ReportEntityMapper;
 import java.time.Duration;
@@ -17,6 +19,7 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +34,7 @@ public class ReportDomainService {
 
     private final ReportEntityService entityService;
     private final ProfileEntityService profileService;
+    private final MemberEntityService memberService;
     private final S3StorageService s3StorageService;
 
     @Transactional
@@ -91,5 +95,34 @@ public class ReportDomainService {
         log.info("신고 생성 성공. reportId={}, reporterProfileId={}, targetProfileId={}",
             report.getId(), reporterProfile.getId(), request.targetProfileId());
         return ReportEntityMapper.toReportResponse(report, uploadedUrls);
+    }
+
+    @Transactional
+    public void deleteReport(UUID memberId, UUID reportId) {
+        Profile reporterProfile = profileService.getByMemberId(memberId);
+        UserReport report = entityService.getById(reportId);
+        if (!report.getReporterProfileId().equals(reporterProfile.getId())) {
+            log.info("신고 작성자가 아닌 사용자가 신고 삭제 시도. reportId={}, reporterPId={}",
+                reportId, reporterProfile.getId()
+            );
+            throw new IllegalStateException("신고 작성자가 아닙니다.");
+        }
+        if (report.getStatus() != ReportStatus.OPEN) {
+            log.info("OPEN 상태가 아닌 신고 삭제 시도. reportId={}", reportId);
+            throw new IllegalStateException("OPEN 상태가 아닌 신고는 삭제할 수 없습니다.");
+        }
+
+        List<ReportAttachment> attachments = entityService.getAttachmentsByReportId(reportId);
+        for (var att : attachments) {
+            try {
+                s3StorageService.deleteImage(att.getUrl());
+            } catch (Exception e) {
+                log.warn("S3 삭제 실패. reportId={}, url={}", reportId, att.getUrl(), e);
+            }
+        }
+
+        entityService.deleteReport(memberId, reportId);
+
+        log.info("신고 삭제 성공. memberId={}, reportId={}", memberId, reportId);
     }
 }

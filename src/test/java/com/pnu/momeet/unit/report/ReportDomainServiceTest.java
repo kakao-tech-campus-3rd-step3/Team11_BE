@@ -1,6 +1,7 @@
 package com.pnu.momeet.unit.report;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -23,6 +24,7 @@ import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
 import com.pnu.momeet.domain.report.entity.UserReport;
 import com.pnu.momeet.domain.report.enums.ReportCategory;
+import com.pnu.momeet.domain.report.enums.ReportStatus;
 import com.pnu.momeet.domain.report.service.ReportDomainService;
 import com.pnu.momeet.domain.report.service.ReportEntityService;
 import java.math.BigDecimal;
@@ -205,5 +207,83 @@ class ReportDomainServiceTest {
 
         assertThat(resp.images()).hasSize(2);
         verify(entityService, times(2)).save(any(ReportAttachment.class));
+    }
+
+    @Test
+    @DisplayName("삭제 성공 - 작성자 본인 + OPEN → S3 첨부 정리 후 DB 삭제")
+    void deleteReport_success_ownerOpen() {
+        UUID memberId = UUID.randomUUID();
+        UUID callerPid = UUID.randomUUID();
+        UUID reportId = UUID.randomUUID();
+
+        // reporter 프로필
+        Profile reporter = mock(Profile.class);
+        given(profileService.getByMemberId(memberId)).willReturn(reporter);
+        given(reporter.getId()).willReturn(callerPid);
+
+        // 조회된 신고 (작성자 = callerPid, 상태 OPEN)
+        UserReport report = UserReport.create(callerPid, UUID.randomUUID(),
+            ReportCategory.SPAM, "삭제", "ip");
+        ReflectionTestUtils.setField(report, "id", reportId);
+        given(entityService.getById(reportId)).willReturn(report);
+
+        // 첨부 2개 반환 + S3 삭제 OK
+        var att1 = ReportAttachment.create(reportId, "https://cdn/reports/a.png");
+        var att2 = ReportAttachment.create(reportId, "https://cdn/reports/b.png");
+        given(entityService.getAttachmentsByReportId(reportId)).willReturn(List.of(att1, att2));
+
+        // when
+        assertThatCode(() -> reportService.deleteReport(memberId, reportId)).doesNotThrowAnyException();
+
+        // then
+        verify(s3StorageService).deleteImage("https://cdn/reports/a.png");
+        verify(s3StorageService).deleteImage("https://cdn/reports/b.png");
+        verify(entityService).deleteReport(memberId, reportId);
+    }
+
+    @Test
+    @DisplayName("삭제 실패 - 작성자 아님 → 예외")
+    void deleteReport_fail_notOwner() {
+        UUID memberId = UUID.randomUUID();
+        UUID callerPid = UUID.randomUUID();
+        UUID ownerPid = UUID.randomUUID();
+        UUID reportId = UUID.randomUUID();
+
+        Profile caller = mock(Profile.class);
+        given(profileService.getByMemberId(memberId)).willReturn(caller);
+        given(caller.getId()).willReturn(callerPid);
+
+        UserReport report = UserReport.create(ownerPid, UUID.randomUUID(),
+            ReportCategory.ABUSE, "신고", "ip");
+        ReflectionTestUtils.setField(report, "id", reportId);
+        given(entityService.getById(reportId)).willReturn(report);
+
+        assertThatThrownBy(() -> reportService.deleteReport(memberId, reportId))
+            .isInstanceOf(IllegalStateException.class);
+
+        verify(entityService, never()).deleteReport(any(), any());
+    }
+
+    @Test
+    @DisplayName("삭제 실패 - 상태 ENDED → 예외")
+    void deleteReport_fail_notOpen() {
+        UUID memberId = UUID.randomUUID();
+        UUID callerPid = UUID.randomUUID();
+        UUID reportId = UUID.randomUUID();
+
+        Profile caller = mock(Profile.class);
+        given(profileService.getByMemberId(memberId)).willReturn(caller);
+        given(caller.getId()).willReturn(callerPid);
+
+        UserReport report = UserReport.create(callerPid, UUID.randomUUID(),
+            ReportCategory.ETC, "신고", "ip");
+        ReflectionTestUtils.setField(report, "id", reportId);
+        report.close();
+        given(entityService.getById(reportId)).willReturn(report);
+
+        assertThatThrownBy(() -> reportService.deleteReport(memberId, reportId))
+            .isInstanceOf(IllegalStateException.class);
+
+        verify(entityService, never()).deleteReport(any(), any());
     }
 }

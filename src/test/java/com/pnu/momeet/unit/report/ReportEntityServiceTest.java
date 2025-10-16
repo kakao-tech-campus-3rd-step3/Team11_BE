@@ -1,6 +1,7 @@
 package com.pnu.momeet.unit.report;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -11,6 +12,7 @@ import com.pnu.momeet.domain.report.repository.ReportAttachmentRepository;
 import com.pnu.momeet.domain.report.repository.ReportRepository;
 import com.pnu.momeet.domain.report.service.ReportEntityService;
 import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -25,7 +27,9 @@ class ReportEntityServiceTest {
 
     @Mock
     private ReportRepository reportRepository;
-    @Mock private ReportAttachmentRepository attachmentRepository;
+
+    @Mock
+    private ReportAttachmentRepository attachmentRepository;
 
     @InjectMocks
     private ReportEntityService entityService;
@@ -90,5 +94,36 @@ class ReportEntityServiceTest {
 
         assertThat(saved).isSameAs(att);
         verify(attachmentRepository).save(att);
+    }
+
+    @Test
+    @DisplayName("getById - 존재하지 않으면 NoSuchElementException")
+    void getById_notFound_throws() {
+        UUID id = UUID.randomUUID();
+        given(reportRepository.findById(id)).willReturn(java.util.Optional.empty());
+
+        assertThatThrownBy(() -> entityService.getById(id))
+            .isInstanceOf(NoSuchElementException.class);
+    }
+
+    @Test
+    @DisplayName("deleteReport(memberId, reportId) - 레포 deleteById 위임")
+    void deleteReport_delegatesToRepository() {
+        UUID memberId = UUID.randomUUID();
+        UUID reportId = UUID.randomUUID();
+
+        entityService.deleteReport(memberId, reportId);
+
+        verify(reportRepository).deleteById(reportId);
+    }
+
+    @Test
+    @DisplayName("getAttachmentsByReportId - 첨부 조회 위임")
+    void getAttachmentsByReportId_delegates() {
+        UUID reportId = UUID.randomUUID();
+
+        entityService.getAttachmentsByReportId(reportId);
+
+        verify(attachmentRepository).findByReportId(reportId);
     }
 }
