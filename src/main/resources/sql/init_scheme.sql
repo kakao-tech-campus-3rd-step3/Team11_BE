@@ -208,15 +208,15 @@ CREATE INDEX IF NOT EXISTS idx_user_block_blocked ON user_block (blocked_id);
 
 CREATE TABLE user_report (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    reporter_id  UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
-    target_id    UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    reporter_profile_id  UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    target_profile_id    UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
     category     VARCHAR(30) NOT NULL,
     status       VARCHAR(20) NOT NULL DEFAULT 'OPEN',
     detail       TEXT,
     ip_hash      VARCHAR(128),
     created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT ck_reporter_ne_target CHECK (reporter_id <> target_id)
+    CONSTRAINT ck_reporter_ne_target CHECK (reporter_profile_id <> target_profile_id)
 );
 
 CREATE TABLE report_attachment (
@@ -227,6 +227,6 @@ CREATE TABLE report_attachment (
 );
 
 CREATE INDEX idx_user_report_reporter_created_at
-    ON user_report (reporter_id, created_at DESC);
+    ON user_report (reporter_profile_id, created_at DESC);
 CREATE INDEX idx_report_attachment_report
     ON report_attachment (report_id);

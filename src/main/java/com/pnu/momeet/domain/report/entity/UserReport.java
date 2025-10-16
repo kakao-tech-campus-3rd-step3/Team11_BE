@@ -20,11 +20,11 @@ import lombok.NoArgsConstructor;
 @Table(name = "user_report")
 public class UserReport extends BaseEntity {
 
-    @Column(name = "reporter_id", nullable = false)
-    private UUID reporterId;
+    @Column(name = "reporter_profile_id", nullable = false)
+    private UUID reporterProfileId;
 
-    @Column(name = "target_id", nullable = false)
-    private UUID targetId;
+    @Column(name = "target_profile_id", nullable = false)
+    private UUID targetProfileId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "category", nullable = false, length = 30)
@@ -48,8 +48,8 @@ public class UserReport extends BaseEntity {
         String ipHash
     ) {
         UserReport entity = new UserReport();
-        entity.reporterId = reporterId;
-        entity.targetId = targetId;
+        entity.reporterProfileId = reporterId;
+        entity.targetProfileId = targetId;
         entity.category = category;
         entity.status = ReportStatus.OPEN;
         entity.detail = detail;

@@ -186,15 +186,15 @@ CREATE INDEX IF NOT EXISTS idx_user_block_blocked ON public_test.user_block (blo
 
 CREATE TABLE public_test.user_report (
     id           UUID PRIMARY KEY,
-    reporter_id  UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
-    target_id    UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
+    reporter_profile_id  UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
+    target_profile_id    UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
     category     VARCHAR(30) NOT NULL,
     status       VARCHAR(20) NOT NULL DEFAULT 'OPEN',
     detail       TEXT,
     ip_hash      VARCHAR(128),
     created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT ck_reporter_ne_target CHECK (reporter_id <> target_id)
+    CONSTRAINT ck_reporter_ne_target CHECK (reporter_profile_id <> target_profile_id)
 );
 
 CREATE TABLE public_test.report_attachment (
@@ -205,6 +205,6 @@ CREATE TABLE public_test.report_attachment (
 );
 
 CREATE INDEX idx_user_report_reporter_created_at
-    ON public_test.user_report (reporter_id, created_at DESC);
+    ON public_test.user_report (reporter_profile_id, created_at DESC);
 CREATE INDEX idx_report_attachment_report
     ON public_test.report_attachment (report_id);

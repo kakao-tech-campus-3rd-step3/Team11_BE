@@ -79,6 +79,11 @@ public class ProfileEntityService {
     }
 
     @Transactional(readOnly = true)
+    public boolean existsById(UUID memberId) {
+        return profileRepository.existsById(memberId);
+    }
+
+    @Transactional(readOnly = true)
     public boolean existsByNicknameIgnoreCase(String nickname) {
         return profileRepository.existsByNicknameIgnoreCase(nickname);
     }
