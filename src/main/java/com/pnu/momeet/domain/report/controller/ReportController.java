@@ -3,17 +3,23 @@ package com.pnu.momeet.domain.report.controller;
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.common.util.IpHashUtil;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
+import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
+import com.pnu.momeet.domain.report.dto.response.MyReportSummaryResponse;
 import com.pnu.momeet.domain.report.dto.response.ReportResponse;
 import com.pnu.momeet.domain.report.service.ReportDomainService;
+import com.pnu.momeet.domain.report.service.mapper.ReportDtoMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +33,18 @@ public class ReportController {
 
     private final ReportDomainService reportService;
     private final IpHashUtil ipHashUtil;
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping
+    public ResponseEntity<Page<MyReportSummaryResponse>> getMyReports(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @Valid @ModelAttribute ReportPageRequest reportPageRequest
+    ) {
+        Page<MyReportSummaryResponse> result = reportService.getMyReports(
+            userDetails.getMemberId(), reportPageRequest
+        );
+        return ResponseEntity.ok(result);
+    }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PostMapping()

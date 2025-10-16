@@ -26,9 +26,11 @@ public class BaseReportTest extends BaseE2ETest {
 
     protected UUID testUserMemberId;
     protected UUID testAdminMemberId;
+    protected UUID testAliceUserMemberId;
 
     protected UUID testUserProfileId;
     protected UUID testAdminProfileId;
+    protected UUID testAliceUserProfileId;
 
     @Autowired
     protected EmailAuthService emailAuthService;
@@ -51,13 +53,16 @@ public class BaseReportTest extends BaseE2ETest {
         testTokens.put(Role.ROLE_ADMIN, emailAuthService.login(TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD));
         testTokens.put(Role.ROLE_USER,  emailAuthService.login(TEST_USER_EMAIL,  TEST_USER_PASSWORD));
 
-        // 테스트 계정(Admin, User)들의 memberId / profileId 확보
+        // 테스트 계정(Admin, User, Alice)들의 memberId / profileId 확보
         var testAdminMember = memberService.getByEmail(TEST_ADMIN_EMAIL);
         testAdminMemberId = testAdminMember.getId();
         testAdminProfileId = profileService.getMyProfile(testAdminMemberId).id();
         var testUserMember = memberService.getByEmail(TEST_USER_EMAIL);
         testUserMemberId = testUserMember.getId();
         testUserProfileId = profileService.getMyProfile(testUserMemberId).id();
+        var testAliceUserMember = memberService.getByEmail(TEST_ALICE_USER_EMAIL);
+        testAliceUserMemberId = testAliceUserMember.getId();
+        testAliceUserProfileId = profileService.getMyProfile(testAliceUserMemberId).id();
     }
 
     @AfterEach

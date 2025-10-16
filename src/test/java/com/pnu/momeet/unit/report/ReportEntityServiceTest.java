@@ -2,6 +2,7 @@ package com.pnu.momeet.unit.report;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -12,6 +13,7 @@ import com.pnu.momeet.domain.report.repository.ReportAttachmentRepository;
 import com.pnu.momeet.domain.report.repository.ReportRepository;
 import com.pnu.momeet.domain.report.service.ReportEntityService;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +23,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @ExtendWith(MockitoExtension.class)
 class ReportEntityServiceTest {
@@ -33,6 +38,28 @@ class ReportEntityServiceTest {
 
     @InjectMocks
     private ReportEntityService entityService;
+
+    @Test
+    @DisplayName("getMyReports - 레포지토리 위임 및 Pageable 전달 검증(createdAt DESC)")
+    void getMyReports_delegates_withSortDesc() {
+        // given
+        UUID reporterPid = UUID.randomUUID();
+        PageRequest pr = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        UserReport r1 = UserReport.create(reporterPid, UUID.randomUUID(), ReportCategory.SPAM, "d1", "ip");
+        UserReport r2 = UserReport.create(reporterPid, UUID.randomUUID(), ReportCategory.ABUSE, "d2", "ip");
+
+        given(reportRepository.findByReporterProfileId(eq(reporterPid), eq(pr)))
+            .willReturn(new PageImpl<>(List.of(r2, r1), pr, 2));
+
+        // when
+        var page = entityService.getMyReports(reporterPid, pr);
+
+        // then
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getContent()).containsExactly(r2, r1);
+        verify(reportRepository).findByReporterProfileId(reporterPid, pr);
+    }
 
     @Test
     @DisplayName("getLastByPair - 최신 신고 Optional 반환")

@@ -11,6 +11,8 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class ReportEntityService {
     private final ReportRepository reportRepository;
     private final ReportAttachmentRepository reportAttachmentRepository;
 
+    @Transactional(readOnly = true)
     public UserReport getById(UUID reportId) {
         log.debug("신고 조회 시도. reportId={}", reportId);
         Optional<UserReport> report = reportRepository.findById(reportId);
@@ -31,6 +34,22 @@ public class ReportEntityService {
         }
         log.debug("신고 조회 성공. reportId={}", reportId);
         return report.get();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserReport> getMyReports(UUID id, PageRequest pageRequest) {
+        log.debug("신고 목록 조회 시도. reporterPid={}", id);
+        Page<UserReport> reports = reportRepository.findByReporterProfileId(id, pageRequest);
+        log.debug("신고 목록 조회 성공. reporterPid={}, count={}", id, reports.getTotalElements());
+        return reports;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReportAttachment> getAttachmentsByReportId(UUID reportId) {
+        log.debug("신고 첨부파일 조회 시도. reportId={}", reportId);
+        List<ReportAttachment> attachments = reportAttachmentRepository.findByReportId(reportId);
+        log.debug("신고 첨부파일 조회 성공. reportId={}, count={}", reportId, attachments.size());
+        return attachments;
     }
 
     @Transactional(readOnly = true)
@@ -108,16 +127,10 @@ public class ReportEntityService {
         return saved;
     }
 
+    @Transactional
     public void deleteReport(UUID memberId, UUID reportId) {
         log.debug("신고 삭제 시도. memberId={}, reportId={}", memberId, reportId);
         reportRepository.deleteById(reportId);
         log.debug("신고 삭제 성공. memberId={}, reportId={}", memberId, reportId);
-    }
-
-    public List<ReportAttachment> getAttachmentsByReportId(UUID reportId) {
-        log.debug("신고 첨부파일 조회 시도. reportId={}", reportId);
-        List<ReportAttachment> attachments = reportAttachmentRepository.findByReportId(reportId);
-        log.debug("신고 첨부파일 조회 성공. reportId={}, count={}", reportId, attachments.size());
-        return attachments;
     }
 }

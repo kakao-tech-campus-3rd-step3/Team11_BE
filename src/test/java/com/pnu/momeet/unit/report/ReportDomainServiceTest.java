@@ -21,6 +21,7 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
+import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
 import com.pnu.momeet.domain.report.entity.UserReport;
 import com.pnu.momeet.domain.report.enums.ReportCategory;
@@ -36,9 +37,14 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -52,6 +58,50 @@ class ReportDomainServiceTest {
 
     @InjectMocks
     private ReportDomainService reportService;
+
+    @Test
+    @DisplayName("getMyReports - 멤버→프로필 매핑 후, createdAt DESC 정렬로 조회/매핑")
+    void getMyReports_success_createdAtDesc() {
+        // given
+        UUID memberId = UUID.randomUUID();
+        UUID reporterPid = UUID.randomUUID();
+
+        ReportPageRequest req = new ReportPageRequest();
+        req.setPage(0);
+        req.setSize(5);
+
+        Profile reporter = Mockito.mock(Profile.class);
+        given(profileService.getByMemberId(memberId)).willReturn(reporter);
+        given(reporter.getId()).willReturn(reporterPid);
+
+        UserReport r1 = UserReport.create(reporterPid, UUID.randomUUID(), ReportCategory.SPAM, "d1", "ip");
+        UserReport r2 = UserReport.create(reporterPid, UUID.randomUUID(), ReportCategory.ABUSE, "d2", "ip");
+        // r2가 더 최신
+        ReflectionTestUtils.setField(r1, "createdAt", LocalDateTime.now().minusMinutes(1));
+        ReflectionTestUtils.setField(r2, "createdAt", LocalDateTime.now());
+
+        ArgumentCaptor<PageRequest> pageCaptor = ArgumentCaptor.forClass(PageRequest.class);
+        given(entityService.getMyReports(eq(reporterPid), pageCaptor.capture()))
+            .willReturn(new PageImpl<>(List.of(r2, r1),
+                PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt")),
+                2)
+            );
+
+        // when
+        var page = reportService.getMyReports(memberId, req);
+
+        // then: 정렬 및 크기/매핑 확인
+        PageRequest used = pageCaptor.getValue();
+        assertThat(used.getSort().getOrderFor("createdAt").getDirection())
+            .isEqualTo(Sort.Direction.DESC);
+
+        assertThat(page.getContent()).hasSize(2);
+        assertThat(page.getContent().get(0).category()).isEqualTo(ReportCategory.ABUSE);
+        assertThat(page.getContent().get(1).category()).isEqualTo(ReportCategory.SPAM);
+
+        verify(profileService).getByMemberId(memberId);
+        verify(entityService).getMyReports(eq(reporterPid), any(PageRequest.class));
+    }
 
     @Test
     @DisplayName("신고 생성 성공 - 도메인 검증 후 저장, 이미지 업로드/첨부 저장")

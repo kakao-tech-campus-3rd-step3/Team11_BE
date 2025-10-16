@@ -1,10 +1,13 @@
 package com.pnu.momeet.domain.report.service;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.domain.block.service.mapper.BlockDtoMapper;
 import com.pnu.momeet.domain.member.service.MemberEntityService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
+import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
+import com.pnu.momeet.domain.report.dto.response.MyReportSummaryResponse;
 import com.pnu.momeet.domain.report.dto.response.ReportResponse;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
 import com.pnu.momeet.domain.report.entity.UserReport;
@@ -20,6 +23,8 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,8 +39,16 @@ public class ReportDomainService {
 
     private final ReportEntityService entityService;
     private final ProfileEntityService profileService;
-    private final MemberEntityService memberService;
     private final S3StorageService s3StorageService;
+
+    @Transactional(readOnly = true)
+    public Page<MyReportSummaryResponse> getMyReports(UUID memberId, ReportPageRequest reportPageRequest) {
+        PageRequest pageRequest = ReportDtoMapper.toPageRequest(reportPageRequest);
+        Profile reporterProfile = profileService.getByMemberId(memberId);
+        Page<UserReport> reports = entityService.getMyReports(reporterProfile.getId(), pageRequest);
+        log.debug("신고 목록 조회 성공. reporterPid={}", reporterProfile.getId());
+        return reports.map(ReportDtoMapper::toMyReportSummaryResponse);
+    }
 
     @Transactional
     public ReportResponse createReport(UUID memberId, ReportCreateRequest request, String ipHash) {
