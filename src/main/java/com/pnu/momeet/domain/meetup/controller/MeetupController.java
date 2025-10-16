@@ -36,25 +36,28 @@ public class MeetupController {
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping
     public Page<MeetupResponse> meetupPage(
-            @Valid  @ModelAttribute MeetupPageRequest request
+        @Valid  @ModelAttribute MeetupPageRequest request,
+        @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return meetupService.getAllBySpecification(request);
+        return meetupService.getAllBySpecification(request, userDetails.getMemberId());
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/geo")
     public ResponseEntity<List<MeetupResponse>> meetupGeoSearch(
-            @Valid @ModelAttribute MeetupGeoSearchRequest request
-            ) {
-        return ResponseEntity.ok(meetupService.getAllByLocation(request));
+        @Valid @ModelAttribute MeetupGeoSearchRequest request,
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(meetupService.getAllByLocation(request, userDetails.getMemberId()));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/{meetupId}")
     public ResponseEntity<MeetupDetail> meetupResponse(
-            @PathVariable UUID meetupId
+        @PathVariable UUID meetupId,
+        @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ResponseEntity.ok(meetupService.getById(meetupId));
+        return ResponseEntity.ok(meetupService.getById(meetupId, userDetails.getMemberId()));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")

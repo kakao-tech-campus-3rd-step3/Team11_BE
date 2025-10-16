@@ -23,6 +23,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -53,7 +54,8 @@ public class MeetupDomainService {
     }
     @Transactional(readOnly = true)
     public List<MeetupResponse> getAllByLocation(
-            MeetupGeoSearchRequest request
+        MeetupGeoSearchRequest request,
+        UUID viewerMemberId
     ) {
         Point locationPoint = geometryFactory.createPoint(new Coordinate(request.longitude(), request.latitude()));
         Optional<MainCategory> mainCategory = Optional.ofNullable(request.category()).map(MainCategory::valueOf);
@@ -61,7 +63,7 @@ public class MeetupDomainService {
         Optional<String> search = Optional.ofNullable(request.search());
 
         return entityService.getAllByLocationAndCondition(
-            locationPoint, request.radius(), mainCategory, subCategory, search
+            locationPoint, request.radius(), mainCategory, subCategory, search, viewerMemberId
         )
             .stream()
             .map(MeetupEntityMapper::toResponse)
@@ -70,17 +72,35 @@ public class MeetupDomainService {
 
     @Transactional(readOnly = true)
     public Page<MeetupResponse> getAllBySpecification(
-            MeetupPageRequest request
+        MeetupPageRequest request,
+        UUID viewerMemberId
     ) {
         PageRequest pageRequest = MeetupDtoMapper.toPageRequest(request);
         Specification<Meetup> specification = MeetupDtoMapper.toSpecification(request);
 
-        return entityService.getAllBySpecificationWithPagination(specification, pageRequest)
-                .map(MeetupEntityMapper::toResponse);
+        // 기존 페이지 조회
+        Page<Meetup> raw = entityService.getAllBySpecificationWithPagination(specification, pageRequest);
+
+        // 페이지 내에서만 차단 모임 필터 ( Meetup 총 개수는 차단 여부와 상관없이 유지 )
+        List<MeetupResponse> filtered = raw.getContent().stream()
+            .filter(m -> !entityService.isBlockedInMeetup(m.getId(), viewerMemberId))
+            .map(MeetupEntityMapper::toResponse)
+            .toList();
+        return new PageImpl<>(filtered, pageRequest, raw.getTotalElements());
     }
 
     @Transactional(readOnly = true)
     public MeetupDetail getById(UUID meetupId) {
+        var meetup =  entityService.getByIdWithDetails(meetupId);
+        return MeetupEntityMapper.toDetail(meetup);
+    }
+
+    @Transactional(readOnly = true)
+    public MeetupDetail getById(UUID meetupId, UUID viewerMemberId) {
+        if (entityService.isBlockedInMeetup(meetupId, viewerMemberId)) {
+            log.info("차단 관계의 사용자가 있는 모임 조회 시도. id={}", meetupId);
+            throw new NoSuchElementException("해당 Id의 모임이 존재하지 않습니다. id=" + meetupId);
+        }
         var meetup =  entityService.getByIdWithDetails(meetupId);
         return MeetupEntityMapper.toDetail(meetup);
     }

@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.meetup.repository;
 
+import com.pnu.momeet.domain.block.entity.QUserBlock;
 import com.pnu.momeet.domain.evaluation.entity.QEvaluation;
 import com.pnu.momeet.domain.meetup.entity.QMeetupHashTag;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
@@ -49,9 +50,12 @@ public class MeetupDslRepository {
             double radius,
             Optional<MainCategory> category,
             Optional<SubCategory> subCategory,
-            Optional<String> keyword
+            Optional<String> keyword,
+            UUID viewerMemberId
     ) {
         QMeetup meetup = QMeetup.meetup;
+        QParticipant participant = QParticipant.participant;
+        QUserBlock userBlock = QUserBlock.userBlock;
 
         BooleanBuilder builder = new BooleanBuilder();
 
@@ -65,10 +69,28 @@ public class MeetupDslRepository {
                 .or(meetup.description.containsIgnoreCase(kw))
         ));
 
+        // 차단 제외 조건
+        BooleanExpression blockedWithOwner = JPAExpressions.selectOne().from(userBlock)
+            .where(
+                userBlock.blockerId.eq(viewerMemberId).and(userBlock.blockedId.eq(meetup.owner.memberId))
+                    .or(userBlock.blockerId.eq(meetup.owner.memberId).and(userBlock.blockedId.eq(viewerMemberId)))
+            ).exists();
+
+        BooleanExpression blockedWithAnyParticipant = JPAExpressions.selectOne()
+            .from(participant)
+            .join(userBlock).on(
+                userBlock.blockerId.eq(viewerMemberId).and(userBlock.blockedId.eq(participant.profile.memberId))
+                    .or(userBlock.blockerId.eq(participant.profile.memberId).and(userBlock.blockedId.eq(viewerMemberId)))
+            )
+            .where(participant.meetup.id.eq(meetup.id))
+            .exists();
+
+        BooleanExpression blockCondition = blockedWithOwner.or(blockedWithAnyParticipant).not();
+
         return jpaQueryFactory
                 .selectFrom(meetup)
                 .leftJoin(meetup.hashTags).fetchJoin()
-                .where(builder)
+                .where(builder.and(blockCondition))
                 .orderBy(meetup.createdAt.desc())
                 .fetch();
     }
@@ -172,5 +194,37 @@ public class MeetupDslRepository {
             .fetchOne();
 
         return new PageImpl<>(content, pageable, (total == null) ? 0 : total);
+    }
+
+    public boolean existsBlockedInMeetup(UUID meetupId, UUID viewerMemberId) {
+        QMeetup m = QMeetup.meetup;
+        QParticipant p = QParticipant.participant;
+        QUserBlock ub = QUserBlock.userBlock;
+
+        // owner 차단
+        BooleanExpression ownerBlocked = JPAExpressions.selectOne().from(m).join(ub)
+            .on(
+                ub.blockerId.eq(viewerMemberId).and(ub.blockedId.eq(m.owner.memberId))
+                    .or(ub.blockerId.eq(m.owner.memberId).and(ub.blockedId.eq(viewerMemberId)))
+            )
+            .where(m.id.eq(meetupId))
+            .exists();
+
+        // 참가자 중 1명이라도 차단
+        BooleanExpression anyParticipantBlocked = JPAExpressions.selectOne().from(p).join(ub)
+            .on(
+                ub.blockerId.eq(viewerMemberId).and(ub.blockedId.eq(p.profile.memberId))
+                    .or(ub.blockerId.eq(p.profile.memberId).and(ub.blockedId.eq(viewerMemberId)))
+            )
+            .where(p.meetup.id.eq(meetupId))
+            .exists();
+
+        BooleanExpression condition = m.id.eq(meetupId).and(ownerBlocked.or(anyParticipantBlocked));
+
+        Integer one = jpaQueryFactory.selectOne()
+            .from(m)
+            .where(condition)
+            .fetchFirst();
+        return one != null;
     }
 }
