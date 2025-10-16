@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.member.service;
 
+import com.pnu.momeet.common.security.config.SecurityProperties;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -21,6 +23,7 @@ import java.util.function.Consumer;
 public class MemberEntityService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SecurityProperties securityProperties;
 
     @Transactional(readOnly = true)
     public Page<Member> getAllByPagination(Pageable pageable) {
@@ -105,5 +108,15 @@ public class MemberEntityService {
         }
         memberRepository.deleteById(id);
         log.debug("사용자 삭제 성공. id={}", id);
+    }
+
+    @Transactional
+    public long deleteUnverifiedMembers() {
+        log.debug("미인증 회원 삭제 시도.");
+        long delayMinutes = securityProperties.getVerification().getExpirationInMinute();
+        var cutoffDateTime = LocalDateTime.now().minusMinutes(delayMinutes + 1); // 만료 시간보다 1분 더 이전(안전 마진)
+        long deletedCount = memberRepository.deleteAllByVerifiedIsFalseAndCreatedAtBefore(cutoffDateTime);
+        log.debug("미인증 회원 삭제 완료. 삭제된 회원 수: {}", deletedCount);
+        return deletedCount;
     }
 }

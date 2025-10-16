@@ -17,7 +17,6 @@ import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.entity.QMeetup;
 import com.pnu.momeet.domain.profile.entity.QProfile;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -109,8 +108,25 @@ public class MeetupDslRepository {
                 .fetch();
     }
 
+    public Optional<Meetup> findParticipatedMeetupsByProfileId(UUID profileId) {
+        QMeetup meetup = QMeetup.meetup;
+        QParticipant participant = QParticipant.participant;
 
-    public boolean existsByOwnerIdAndStatusIn(UUID profileId, List<MeetupStatus> statuses) {
+        return Optional.ofNullable(
+                jpaQueryFactory
+                    .select(meetup)
+                    .from(meetup)
+                    .join(meetup.participants, participant)
+                    .where(
+                        participant.profile.id.eq(profileId)
+                        .and(meetup.status.in(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS))
+                    )
+                    .fetchFirst()
+        );
+    }
+
+
+    public boolean existsParticipatedMeetupByProfileId(UUID profileId) {
         QMeetup meetup = QMeetup.meetup;
 
         Integer result = jpaQueryFactory
@@ -118,7 +134,7 @@ public class MeetupDslRepository {
                 .from(meetup)
                 .where(
                     meetup.owner.id.eq(profileId)
-                    .and(meetup.status.in(statuses))
+                    .and(meetup.status.in(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS))
                 )
                 .limit(1)
                 .fetchFirst();

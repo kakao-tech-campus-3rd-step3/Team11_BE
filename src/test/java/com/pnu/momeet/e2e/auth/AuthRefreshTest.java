@@ -86,7 +86,7 @@ public class AuthRefreshTest extends BaseAuthTest {
         // 리프레시 토큰을 강제로 만료시킴
         RefreshToken refreshToken = new RefreshToken(
             loggedInMember.id(),
-            jwtTokenProvider.generateToken(loggedInMember.id().toString(), -1000L, TokenType.REFRESH) // 이미 만료된 토큰 생성
+            jwtTokenProvider.generateToken(loggedInMember.id().toString(), -1000L, TokenType.ACCESS) // 이미 만료된 토큰 생성
         );
         refreshTokenRepository.save(refreshToken); // DB에 저장
 

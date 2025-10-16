@@ -1,8 +1,9 @@
 -- password: testpass1212!
-INSERT INTO member (email, password)
+INSERT INTO member (email, password, verified)
 VALUES (
            'admin@test.com',
-           '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G'
+           '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G',
+              TRUE
        );
 
 INSERT INTO member_role (member_id, name)
@@ -12,10 +13,11 @@ VALUES (
        );
 
 -- password: testpass1212!
-INSERT INTO member (email, password)
+INSERT INTO member (email, password, verified)
 VALUES (
            'user@test.com',
-           '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G'
+           '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G',
+                TRUE
        );
 
 INSERT INTO member_role (member_id, name)
@@ -25,10 +27,11 @@ VALUES (
        );
 
 -- 'alice' 회원, 역할, 프로필 추가
-INSERT INTO member (email, password)
+INSERT INTO member (email, password, verified)
 VALUES (
         'alice@test.com',
-        '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G'
+        '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G',
+        TRUE
        );
 
 INSERT INTO member_role (member_id, name)
@@ -49,10 +52,11 @@ VALUES (
        );
 
 -- 'chris' 회원, 역할, 프로필 추가
-INSERT INTO member (email, password)
+INSERT INTO member (email, password, verified)
 VALUES (
         'chris@test.com',
-        '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G'
+        '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G',
+        TRUE
        );
 
 INSERT INTO member_role (member_id, name)
