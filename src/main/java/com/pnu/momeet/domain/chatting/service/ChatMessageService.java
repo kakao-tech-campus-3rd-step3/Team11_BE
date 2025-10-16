@@ -36,7 +36,7 @@ public class ChatMessageService {
         if (!participantService.existsByProfileIdAndMeetupId(profileId, meetupId)) {
             throw new NoSuchElementException("해당 모임의 참가자가 아닙니다.");
         }
-        CursorInfo<ChatMessage> histories = entityService.getHistories(meetupId, memberId, size, cursorId);
+        CursorInfo<ChatMessage> histories = entityService.getHistories(meetupId, size, cursorId);
         return CursorInfo.convert(histories, ChatEntityMapper::toMessage);
     }
 

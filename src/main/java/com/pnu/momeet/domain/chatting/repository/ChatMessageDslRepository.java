@@ -18,26 +18,17 @@ import java.util.UUID;
 public class ChatMessageDslRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
-    public CursorInfo<ChatMessage> findHistoriesByMeetupId(UUID meetupId, UUID memberId, int size, Long cursorId) {
+    public CursorInfo<ChatMessage> findHistoriesByMeetupId(UUID meetupId, int size, Long cursorId) {
         QChatMessage chatMessage = QChatMessage.chatMessage;
-        QUserBlock userBlock = QUserBlock.userBlock;
 
         BooleanExpression condition = chatMessage.meetup.id.eq(meetupId);
         if (cursorId != null) {
             condition = condition.and(chatMessage.id.lt(cursorId));
         }
-        BooleanExpression viewerBlocksSender =
-            userBlock.blockerId.eq(memberId).and(userBlock.blockedId.eq(chatMessage.profile.memberId));
-        BooleanExpression senderBlocksViewer =
-            userBlock.blockerId.eq(chatMessage.profile.memberId).and(userBlock.blockedId.eq(memberId));
-        BooleanExpression notBlockedEither = JPAExpressions
-            .selectOne().from(userBlock)
-            .where(viewerBlocksSender.or(senderBlocksViewer))
-            .notExists();
 
         List<ChatMessage> content = jpaQueryFactory
                 .selectFrom(chatMessage)
-                .where(condition.and(notBlockedEither))
+                .where(condition)
                 .orderBy(chatMessage.id.desc())
                 .limit(size + 1)
                 .fetch();
