@@ -1,10 +1,6 @@
 package com.pnu.momeet.common.advice;
 
-import com.pnu.momeet.common.exception.BannedAccountException;
-import com.pnu.momeet.common.exception.CustomValidationException;
-import com.pnu.momeet.common.exception.IpHashGenerationException;
-import com.pnu.momeet.common.exception.StorageException;
-import com.pnu.momeet.common.exception.UnMatchedPasswordException;
+import com.pnu.momeet.common.exception.*;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -133,4 +129,19 @@ public class GlobalRestExceptionHandler {
         problemDetail.setTitle("IP 해시 오류");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
     }
+
+    @ExceptionHandler(MailSendFailureException.class)
+    public ResponseEntity<ProblemDetail> handleMailSendFailureException(MailSendFailureException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        problemDetail.setTitle("메일 전송 오류");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ProblemDetail> handleGenericException(Exception e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류: " + e.getMessage());
+        problemDetail.setTitle("서버 내부 오류");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
+    }
+
 }

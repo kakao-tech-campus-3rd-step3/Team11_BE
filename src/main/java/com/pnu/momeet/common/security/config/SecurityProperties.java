@@ -18,6 +18,7 @@ public class SecurityProperties {
     private Https https;
     private Websocket websocket;
     private Cors cors;
+    private Verification verification;
 
     @Getter
     @Setter
@@ -52,6 +53,10 @@ public class SecurityProperties {
     public static class Https {
         private boolean enabled;
         private String domain;
+
+        public String getUrl() {
+            return (enabled ? "https://" : "http://") + domain;
+        }
     }
 
     @Getter
@@ -65,5 +70,11 @@ public class SecurityProperties {
     @Setter
     public static class Cors {
         private List<String> allowedOrigins;
+    }
+
+    @Getter
+    @Setter
+    public static class Verification {
+        private int expirationInMinute;
     }
 }

@@ -15,6 +15,21 @@ spring:
         bucket: ${AWS_S3_BUCKET_NAME}
       region:
         static: ap-northeast-2
+  mail:
+    host: ${BREVO_SMTP_HOST}
+    port: ${BREVO_SMTP_PORT}
+    username: ${BREVO_USERNAME}
+    password: ${BREVO_PASSWORD}
+    from-domain: ${EMAIL_FROM_DOMAIN}
+    properties:
+        mail:
+            smtp:
+            auth: true
+            starttls:
+                enable: true
+            connectiontimeout: 5000
+            timeout: 5000
+            writetimeout: 5000
 
   datasource:
     url: ${DB_URL}
@@ -42,6 +57,8 @@ app:
       ws-upgrade-token:
         expiration_in_second: 30 # 30초
       issuer: momeet
+    verification:
+      expiration_in_minute: 10
 
     https:
        enabled: false
@@ -60,6 +77,7 @@ app:
       - /api/auth/login
       - /api/auth/signup
       - /api/auth/refresh
+      - /api/auth/verify
       - /api/auth/kakao
       - /api/auth/kakao/callback
       - /api/auth/kakao/withdraw
@@ -92,3 +110,6 @@ momeet:
   temperature:
     bayesian:
       prior-k: 5.0
+
+frontend:
+  url: https://${FRONTEND_DOMAIN_NAME:localhost:3000}

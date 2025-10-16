@@ -11,6 +11,7 @@ import org.springframework.security.core.AuthenticationException;
 import com.pnu.momeet.common.exception.BannedAccountException;
 import com.pnu.momeet.common.exception.ConcurrentLoginException;
 import com.pnu.momeet.common.exception.DisabledAccountException;
+import com.pnu.momeet.common.exception.UnVerifiedAccountException;
 import com.pnu.momeet.common.exception.InvalidJwtTokenException;
 import com.pnu.momeet.common.model.TokenInfo;
 import com.pnu.momeet.common.security.config.SecurityProperties;
@@ -100,12 +101,10 @@ public class JwtAuthenticateHelper {
             TokenInfo tokenInfo = jwtTokenProvider.parseToken(Objects.requireNonNull(token));
             CustomUserDetails userDetails = userDetailsService.loadUserByUsername(tokenInfo.subject());
             LocalDateTime tokenIssuedAt = Objects.requireNonNull(userDetails.getTokenIssuedAt());
-
             if (tokenInfo.tokenType() != validType) {
                 log.info("잘못된 토큰 타입: {}, 기대 타입: {}", tokenInfo.tokenType(), validType);
                 throw new InvalidJwtTokenException("유효하지 않은 타입의 토큰입니다. 기대 타입: " + validType);
             }
-
             if (!userDetails.isEnabled()) {
                 log.info("비활성화된 계정 로그인 시도: {}", userDetails.getUsername());
                 throw new DisabledAccountException("사용자 정보 변경 등으로 인해 일시적으로 비활성화된 계정입니다. 다시 로그인 해주세요.");
@@ -113,6 +112,11 @@ public class JwtAuthenticateHelper {
             if (!userDetails.isAccountNonLocked()) {
                 log.info("정지된 계정 로그인 시도: {}", userDetails.getUsername());
                 throw new BannedAccountException("임시 제한 혹은 영구 정지된 계정입니다. 고객센터에 문의해주세요.");
+            }
+
+            if (!userDetails.isVerified()) {
+                log.info("미인증 계정 로그인 시도: {}", userDetails.getUsername());
+                throw new UnVerifiedAccountException("이메일 인증이 완료되지 않은 계정입니다. 이메일 인증 후 다시 로그인 해주세요.");
             }
 
             if (tokenIssuedAt.isAfter(tokenInfo.issuedAt())) {

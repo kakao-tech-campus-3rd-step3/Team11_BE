@@ -83,11 +83,24 @@ public class MeetupEntityService {
     }
 
     @Transactional(readOnly = true)
-    public List<Meetup> getAllByOwnerIdAndStatusIn(UUID profileId, List<MeetupStatus> statuses) {
-        log.debug("특정 회원이 소유한 특정 상태의 meetup 목록 조회 시도. ownerId={}, statuses={}", profileId, statuses);
-        var meetups = meetupDslRepository.findAllByOwnerIdAndStatusIn(profileId, statuses);
-        log.debug("특정 회원이 소유한 특정 상태의 meetup 목록 조회 성공. ownerId={}, size={}", profileId, meetups.size());
+    public List<Meetup> getAllByOwnerIdAndStatusIn(UUID ownerId, List<MeetupStatus> statuses) {
+        log.debug("특정 회원이 소유한 특정 상태의 meetup 목록 조회 시도. ownerId={}, statuses={}", ownerId, statuses);
+        var meetups = meetupDslRepository.findAllByOwnerIdAndStatusIn(ownerId, statuses);
+        log.debug("특정 회원이 소유한 특정 상태의 meetup 목록 조회 성공. ownerId={}, size={}", ownerId, meetups.size());
         return meetups;
+    }
+
+
+    @Transactional(readOnly = true)
+    public Meetup getParticipatedMeetupByProfileId(UUID profileId) {
+        log.debug("특정 프로필 ID가 참여한 meetup 조회 시도. profileId={}", profileId);
+        var meetup = meetupDslRepository.findParticipatedMeetupsByProfileId(profileId);
+        if (meetup.isEmpty()) {
+            log.info("특정 프로필 ID가 참여한 meetup이 없음. profileId={}", profileId);
+            throw new NoSuchElementException("참여한 모임이 없습니다.");
+        }
+        log.debug("특정 프로필 ID가 참여한 meetup 조회 성공. profileId={}", profileId);
+        return meetup.get();
     }
 
     @Transactional(readOnly = true)
@@ -99,8 +112,8 @@ public class MeetupEntityService {
     }
 
     @Transactional(readOnly = true)
-    public boolean existsByOwnerIdAndStatusIn(UUID profileId, List<MeetupStatus> statuses) {
-        return meetupDslRepository.existsByOwnerIdAndStatusIn(profileId, statuses);
+    public boolean existsParticipatedMeetupByProfileId(UUID profileId) {
+        return meetupDslRepository.existsParticipatedMeetupByProfileId(profileId);
     }
 
     @Transactional(readOnly = true)

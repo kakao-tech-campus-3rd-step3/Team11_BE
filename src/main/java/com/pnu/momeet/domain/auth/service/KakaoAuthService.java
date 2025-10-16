@@ -9,7 +9,7 @@ import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.service.MemberEntityService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
@@ -23,7 +23,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class KakaoAuthService {
-    private final DefaultAuthService defaultAuthService;
+    private final BaseAuthService baseAuthService;
     private final MemberEntityService memberEntityService;
     private final KakaoApiClient kakaoApiClient;
 
@@ -41,7 +41,7 @@ public class KakaoAuthService {
     public TokenResponse kakaoLogin(String code) {
         KakaoUserInfo kakaoUserInfo = getKakaoUserInfo(code);
         UUID memberId = findOrCreateKakaoMember(kakaoUserInfo);
-        TokenResponse tokenResponse = defaultAuthService.generateTokenPair(memberId);
+        TokenResponse tokenResponse = baseAuthService.generateTokenPair(memberId);
 
         log.info("카카오 로그인 성공: {}", kakaoUserInfo.email());
         return tokenResponse;
@@ -69,7 +69,7 @@ public class KakaoAuthService {
 
     private UUID signupKakaoMember(KakaoUserInfo kakaoUserInfo) {
         Member newMember = memberEntityService.saveMember(
-                new Member(kakaoUserInfo.email(), "", Provider.KAKAO, kakaoUserInfo.kakaoId(), List.of(Role.ROLE_USER))
+                new Member(kakaoUserInfo.email(), "", Provider.KAKAO, kakaoUserInfo.kakaoId(), List.of(Role.ROLE_USER), true)
         );
         log.info("카카오 회원가입 성공: {}", kakaoUserInfo.email());
         return newMember.getId();

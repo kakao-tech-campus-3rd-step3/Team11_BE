@@ -88,19 +88,8 @@ public class MeetupDomainService {
     @Transactional(readOnly = true)
     public MeetupDetail getOwnedActiveMeetupByMemberID(UUID memberId) {
         UUID profileId = profileService.mapToProfileId(memberId);
-        List<Meetup> activeMeetups = entityService.getAllByOwnerIdAndStatusIn(
-                profileId, List.of(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS)
-        );
-        if (activeMeetups.isEmpty()) {
-            log.info("진행 중이거나 모집 중인 모임이 없음. memberId={}", memberId);
-            throw new NoSuchElementException("진행 중이거나 모집 중인 모임이 없습니다.");
-        }
-        if (activeMeetups.size() > 1) {
-            // 비정상적인 상황
-            log.warn("진행 중이거나 모집 중인 모임이 2개 이상임. memberId={}, count={}", memberId, activeMeetups.size());
-        }
-
-        return MeetupEntityMapper.toDetail(activeMeetups.getFirst());
+        Meetup activeMeetups = entityService.getParticipatedMeetupByProfileId(profileId);
+        return MeetupEntityMapper.toDetail(activeMeetups);
     }
 
     @Transactional(readOnly = true)
@@ -111,13 +100,11 @@ public class MeetupDomainService {
     @Transactional
     public MeetupDetail createMeetup(MeetupCreateRequest request, UUID memberId) {
         validateCategories(request.category(), request.subCategory());
-        if (entityService.existsByOwnerIdAndStatusIn(
-                profileService.mapToProfileId(memberId),
-                List.of(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS)
-        )) {
-            log.info("이미 진행 중이거나 모집 중인 모임이 있음. memberId={}", memberId);
+        UUID profileId = profileService.mapToProfileId(memberId);
+        if (entityService.existsParticipatedMeetupByProfileId(profileId)) {
+            log.info("이미 참여중인 모임이 있음. memberId={}", memberId);
             throw new CustomValidationException(Map.of(
-                    "owner", List.of("이미 진행 중이거나 모집 중인 모임이 있습니다. 하나의 모임만 생성할 수 있습니다.")
+                    "owner", List.of("이미 참여중인 모임이 있습니다. 모임이 종료된 후에 새 모임을 생성할 수 있습니다.")
             ));
         }
         Point locationPoint = geometryFactory.createPoint(new Coordinate(

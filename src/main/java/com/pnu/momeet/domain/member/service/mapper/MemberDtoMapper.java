@@ -43,7 +43,8 @@ public class MemberDtoMapper {
                 request.roles()
                         .stream()
                         .map(Role::valueOf)
-                        .collect(Collectors.toSet())
+                        .collect(Collectors.toSet()),
+                true // 관리자 생성은 모두 인증된 상태로
         );
     }
 
