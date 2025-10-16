@@ -135,13 +135,8 @@ sequenceDiagram
     EventBus-->>CEL: handleOnMeetupCanceled(event)
     Note over CEL: @Async AFTER_COMMIT
 
-    alt requestedBy == ROLE_USER
-        CEL->>CEL: cancelMeetup(meetupId)
-        CEL->>DB: "모임이 취소되었습니다"
-    else requestedBy == ROLE_ADMIN
-        CEL->>CEL: cancelByAdminMeetup(meetupId)
-        CEL->>DB: "관리자에 의해 모임이 취소되었습니다"
-    end
+    CEL->>CEL: cancelByAdminMeetup(meetupId)
+    CEL->>DB: WebSocket으로<br/>"관리자에 의해 모임이 취소되었습니다" 메시지
 ```
 
 **이벤트 데이터**:
@@ -151,15 +146,15 @@ class MeetupCanceledEvent {
     UUID eventId;
     LocalDateTime occurredAt;
     UUID meetupId;             // 취소된 모임 ID
-    Role requestedBy;          // ROLE_USER or ROLE_ADMIN
+    Role requestedBy;          // ROLE_ADMIN (관리자만 발행)
 }
 ```
 
 **리스너 처리**:
 
-| 리스너                | 처리 내용                                    | 트랜잭션 | 비동기 |
-| --------------------- | -------------------------------------------- | -------- | ------ |
-| ChattingEventListener | 채팅방 취소 메시지 발송 (역할별 메시지 다름) | 별도     | ✅     |
+| 리스너                | 처리 내용                        | 트랜잭션 | 비동기 |
+| --------------------- | -------------------------------- | -------- | ------ |
+| ChattingEventListener | 채팅방에 관리자 취소 메시지 발송 | 별도     | ✅     |
 
 ---
 
