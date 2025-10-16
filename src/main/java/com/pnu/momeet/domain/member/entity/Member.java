@@ -39,6 +39,7 @@ public class Member extends BaseEntity {
     @OneToMany(mappedBy = "member",fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberRole> roles = new ArrayList<>();
 
+    private boolean verified = false;
 
     private boolean enabled = true;
 
@@ -46,20 +47,21 @@ public class Member extends BaseEntity {
 
     private LocalDateTime tokenIssuedAt;
 
-    public Member(String email, String password, Provider provider, String providerId, Collection<Role> roles) {
+    public Member(String email, String password, Provider provider, String providerId, Collection<Role> roles, boolean verified) {
         this.email = email;
         this.password = password;
         this.provider = provider;
         this.providerId = providerId;
         setRoles(roles);
+        this.verified = verified;
     }
 
-    public Member(String email, String password, Collection<Role> roles) {
-        this(email, password, Provider.EMAIL, null, roles);
+    public Member(String email, String password, Collection<Role> roles, boolean verified) {
+        this(email, password, Provider.EMAIL, null, roles, verified);
     }
 
-    public Member(String email, Provider provider, String providerId, Collection<Role> roles) {
-        this(email, null, provider, providerId, roles);
+    public Member(String email, Provider provider, String providerId, Collection<Role> roles, boolean verified) {
+        this(email, null, provider, providerId, roles, verified);
     }
 
     public void setRoles(Collection<Role> roles) {

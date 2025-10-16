@@ -13,6 +13,7 @@ public record MemberInfo(
         String password,
         String providerId,
         List<String> roles,
+        boolean verified,
         boolean enabled,
         boolean isAccountNonLocked,
         LocalDateTime tokenIssuedAt

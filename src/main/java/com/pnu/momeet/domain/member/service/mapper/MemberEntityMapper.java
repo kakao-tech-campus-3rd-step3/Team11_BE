@@ -28,6 +28,7 @@ public class MemberEntityMapper {
                 member.getPassword(),
                 member.getProviderId(),
                 extractRoleNames(member.getRoles()),
+                member.isVerified(),
                 member.isEnabled(),
                 member.isAccountNonLocked(),
                 member.getTokenIssuedAt()
@@ -40,6 +41,7 @@ public class MemberEntityMapper {
                 member.getEmail(),
                 member.getProvider(),
                 extractRoleNames(member.getRoles()),
+                member.isVerified(),
                 member.isEnabled(),
                 member.isAccountNonLocked(),
                 member.getCreatedAt(),
