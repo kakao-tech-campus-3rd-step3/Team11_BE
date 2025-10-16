@@ -1,5 +1,6 @@
 package com.pnu.momeet.e2e.auth;
 
+import com.pnu.momeet.common.model.enums.TokenType;
 import com.pnu.momeet.domain.auth.dto.request.RefreshRequest;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.entity.RefreshToken;
@@ -85,7 +86,7 @@ public class AuthRefreshTest extends BaseAuthTest {
         // 리프레시 토큰을 강제로 만료시킴
         RefreshToken refreshToken = new RefreshToken(
             loggedInMember.id(),
-            jwtTokenProvider.generateToken(loggedInMember.id().toString(), -1000L) // 이미 만료된 토큰 생성
+            jwtTokenProvider.generateToken(loggedInMember.id().toString(), -1000L, TokenType.ACCESS) // 이미 만료된 토큰 생성
         );
         refreshTokenRepository.save(refreshToken); // DB에 저장
 
