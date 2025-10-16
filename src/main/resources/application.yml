@@ -48,6 +48,8 @@ app:
       ws-upgrade-token:
         expiration_in_second: 30 # 30초
       issuer: momeet
+    verification:
+      expiration_in_minute: 10
 
     https:
        enabled: false

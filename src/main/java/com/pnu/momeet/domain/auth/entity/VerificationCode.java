@@ -15,7 +15,6 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VerificationCode {
-    private static final long EXPIRATION_MINUTES = 10;
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,9 +29,9 @@ public class VerificationCode {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
-    public VerificationCode(UUID memberId) {
+    public VerificationCode(UUID memberId, int expirationInMinutes) {
         this.memberId = memberId;
         this.createdAt = LocalDateTime.now();
-        this.expiresAt = this.createdAt.plusMinutes(EXPIRATION_MINUTES);
+        this.expiresAt = this.createdAt.plusMinutes(expirationInMinutes);
     }
 }
