@@ -151,4 +151,12 @@ public class ReportEntityService {
         reportRepository.deleteById(reportId);
         log.debug("신고 삭제 성공. memberId={}, reportId={}", memberId, reportId);
     }
+
+    @Transactional
+    public void processReport(UserReport report, UUID adminProifleId, String reply) {
+        log.debug("신고 처리 시도. reportId={}, adminProfileId={}", report.getId(), adminProifleId);
+        report.processReport(adminProifleId, reply);
+        reportRepository.save(report);
+        log.debug("신고 처리 성공. reportId={}, adminProfileId={}", report.getId(), adminProifleId);
+    }
 }

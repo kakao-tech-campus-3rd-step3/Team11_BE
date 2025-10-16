@@ -10,6 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,6 +41,15 @@ public class UserReport extends BaseEntity {
     @Column(name = "ip_hash", length = 128)
     private String ipHash;
 
+    @Column(name = "admin_reply")
+    private String adminReply;
+
+    @Column(name = "processed_by")
+    private UUID processedBy;
+
+    @Column(name = "processed_at")
+    private LocalDateTime processedAt;
+
     public static UserReport create(
         UUID reporterId,
         UUID targetId,
@@ -57,8 +67,10 @@ public class UserReport extends BaseEntity {
         return entity;
     }
 
-    public void close() {
-        if (this.status == ReportStatus.ENDED) return;
+    public void processReport(UUID adminProfileId, String reply) {
         this.status = ReportStatus.ENDED;
+        this.adminReply = (reply == null || reply.isBlank()) ? null : reply.strip();
+        this.processedBy = adminProfileId;
+        this.processedAt = LocalDateTime.now();
     }
 }

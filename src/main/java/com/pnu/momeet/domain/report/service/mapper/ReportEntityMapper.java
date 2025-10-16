@@ -29,7 +29,10 @@ public class ReportEntityMapper {
             report.getStatus(),
             report.getDetail(),
             urls,
-            report.getCreatedAt()
+            report.getCreatedAt(),
+            report.getAdminReply(),
+            report.getProcessedBy(),
+            report.getProcessedAt()
         );
     }
 }

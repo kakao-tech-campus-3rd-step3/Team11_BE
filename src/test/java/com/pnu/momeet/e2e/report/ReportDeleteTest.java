@@ -124,7 +124,7 @@ class ReportDeleteTest extends BaseReportTest {
 
         // DB에 직접 접근하여 상태를 ENDED로 변경
         UserReport report = reportRepository.findById(reportId).orElseThrow();
-        report.close();
+        report.processReport(testAdminProfileId, "삭제 테스트");
         reportRepository.save(report);
 
         RestAssured.given().log().all()

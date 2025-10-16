@@ -14,5 +14,8 @@ public record ReportDetailResponse(
     ReportStatus status,
     String detail,
     List<String> images,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    String adminReply,
+    UUID processedBy,
+    LocalDateTime processedAt
 ) {}

@@ -214,6 +214,9 @@ CREATE TABLE user_report (
     status       VARCHAR(20) NOT NULL DEFAULT 'OPEN',
     detail       TEXT,
     ip_hash      VARCHAR(128),
+    admin_reply  TEXT,
+    processed_by UUID,
+    processed_at TIMESTAMP,
     created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
     CONSTRAINT ck_reporter_ne_target CHECK (reporter_profile_id <> target_profile_id)

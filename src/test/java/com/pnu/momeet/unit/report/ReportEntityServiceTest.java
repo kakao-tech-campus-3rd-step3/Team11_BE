@@ -41,6 +41,22 @@ class ReportEntityServiceTest {
     private ReportEntityService entityService;
 
     @Test
+    @DisplayName("markEnded - 상태 변경 후 저장 호출")
+    void markEnded_save() {
+        UUID adminProfileId = UUID.randomUUID();
+        UserReport report = UserReport.create(java.util.UUID.randomUUID(),
+            java.util.UUID.randomUUID(), ReportCategory.ABUSE, "d", "ip");
+
+        entityService.processReport(report, adminProfileId, "메모");
+
+        assertThat(report.getStatus()).isEqualTo(ReportStatus.ENDED);
+        assertThat(report.getAdminReply()).isEqualTo("메모");
+        assertThat(report.getProcessedBy()).isEqualTo(adminProfileId);
+
+        verify(reportRepository).save(report);
+    }
+
+    @Test
     @DisplayName("getOpenReports - findByStatus(OPEN, pageable) 위임/반환 검증")
     void getOpenReports_delegates_findByStatusOpen() {
         PageRequest page = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "createdAt"));

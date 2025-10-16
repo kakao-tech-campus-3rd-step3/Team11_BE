@@ -22,6 +22,7 @@ import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
 import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
+import com.pnu.momeet.domain.report.dto.request.ReportProcessRequest;
 import com.pnu.momeet.domain.report.dto.response.ReportDetailResponse;
 import com.pnu.momeet.domain.report.dto.response.ReportSummaryResponse;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
@@ -416,6 +417,7 @@ class ReportDomainServiceTest {
         UUID memberId = UUID.randomUUID();
         UUID callerPid = UUID.randomUUID();
         UUID reportId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
 
         Profile caller = mock(Profile.class);
         given(profileService.getByMemberId(memberId)).willReturn(caller);
@@ -424,12 +426,71 @@ class ReportDomainServiceTest {
         UserReport report = UserReport.create(callerPid, UUID.randomUUID(),
             ReportCategory.ETC, "신고", "ip");
         ReflectionTestUtils.setField(report, "id", reportId);
-        report.close();
+        report.processReport(adminId, "삭제 테스트");
         given(entityService.getById(reportId)).willReturn(report);
 
         assertThatThrownBy(() -> reportService.deleteReport(memberId, reportId))
             .isInstanceOf(IllegalStateException.class);
 
         verify(entityService, never()).deleteReport(any(), any());
+    }
+
+    @Test
+    @DisplayName("processReport - OPEN→ENDED 전이 및 상세 매핑")
+    void processReport_success() {
+        UUID adminMemberId = UUID.randomUUID();
+        UUID adminProfileId = UUID.randomUUID();
+        UUID reportId = UUID.randomUUID();
+
+        Profile adminProfile = mock(Profile.class);
+        given(profileService.getByMemberId(adminMemberId)).willReturn(adminProfile);
+        given(adminProfile.getId()).willReturn(adminProfileId);
+
+        // reporter/target은 임의
+        UserReport report = UserReport.create(UUID.randomUUID(), UUID.randomUUID(),
+            ReportCategory.ABUSE, "d", "ip");
+        ReflectionTestUtils.setField(report, "id", reportId);
+        ReflectionTestUtils.setField(report, "createdAt", LocalDateTime.now());
+
+        given(entityService.getById(reportId)).willReturn(report);
+        // 처리 수행 시 엔티티 변경되도록 스텁
+        willAnswer(inv -> {
+            ReflectionTestUtils.setField(report, "status", ReportStatus.ENDED);
+            ReflectionTestUtils.setField(report, "adminReply", "메모");
+            ReflectionTestUtils.setField(report, "processedBy", adminProfileId);
+            ReflectionTestUtils.setField(report, "processedAt", LocalDateTime.now());
+            return null;
+        }).given(entityService).processReport(eq(report), eq(adminProfileId), eq("메모"));
+        given(entityService.getAttachmentUrls(reportId)).willReturn(List.of("https://cdn/x.png"));
+
+        var resp = reportService.processReport(adminMemberId, reportId, new ReportProcessRequest("메모"));
+
+        assertThat(resp.status()).isEqualTo(ReportStatus.ENDED);
+        assertThat(resp.images()).containsExactly("https://cdn/x.png");
+        assertThat(resp.adminReply()).isIn(null, "메모");
+        assertThat(resp.processedAt()).isNotNull();
+
+        verify(entityService).getById(reportId);
+        verify(entityService).processReport(eq(report), eq(adminProfileId), eq("메모"));
+        verify(entityService).getAttachmentUrls(reportId);
+    }
+
+    @Test
+    @DisplayName("processReport - ENDED 상태면 409")
+    void processReport_conflict() {
+        UUID adminMemberId = UUID.randomUUID();
+        UUID adminProfileId = UUID.randomUUID();
+        UUID reportId = UUID.randomUUID();
+
+        UserReport report = UserReport.create(UUID.randomUUID(), UUID.randomUUID(),
+            ReportCategory.SPAM, "d", "ip");
+        report.processReport(adminProfileId, "x");
+
+        given(entityService.getById(reportId)).willReturn(report);
+
+        assertThatThrownBy(() -> reportService.processReport(adminMemberId, reportId, new ReportProcessRequest("x")))
+            .isInstanceOf(IllegalStateException.class);
+
+        verify(entityService, never()).processReport(any(), any(), any());
     }
 }
