@@ -18,7 +18,6 @@ public class VerificationCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Setter
     private UUID code;
 
     @Column(name = "member_id", nullable = false, unique = true)

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class MemberScheduler {
-    MemberEntityService memberService;
+    private final MemberEntityService memberService;
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정마다 실행
     public void deleteUnverifiedMembers() {

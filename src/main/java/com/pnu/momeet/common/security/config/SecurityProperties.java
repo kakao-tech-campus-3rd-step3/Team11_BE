@@ -75,6 +75,6 @@ public class SecurityProperties {
     @Getter
     @Setter
     public static class Verification {
-        private int ExpirationInMinute;
+        private int expirationInMinute;
     }
 }
