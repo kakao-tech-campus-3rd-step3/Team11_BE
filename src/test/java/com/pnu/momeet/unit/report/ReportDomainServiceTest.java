@@ -22,6 +22,7 @@ import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
 import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
+import com.pnu.momeet.domain.report.dto.response.ReportDetailResponse;
 import com.pnu.momeet.domain.report.dto.response.ReportSummaryResponse;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
 import com.pnu.momeet.domain.report.entity.UserReport;
@@ -60,6 +61,37 @@ class ReportDomainServiceTest {
 
     @InjectMocks
     private ReportDomainService reportService;
+
+    @Test
+    @DisplayName("getReportById - 단건/첨부 조회 및 상세 DTO 매핑")
+    void getReportByAdmin_success() {
+        // given
+        UUID reportId = UUID.randomUUID();
+        UUID reporter = UUID.randomUUID();
+        UUID target   = UUID.randomUUID();
+
+        UserReport report = UserReport.create(reporter, target, ReportCategory.SPAM, "detail", "ip");
+        org.springframework.test.util.ReflectionTestUtils.setField(report, "id", reportId);
+        org.springframework.test.util.ReflectionTestUtils.setField(report, "createdAt", LocalDateTime.now());
+
+        given(entityService.getById(reportId)).willReturn(report);
+        given(entityService.getAttachmentUrls(reportId))
+            .willReturn(List.of("https://cdn/r1.png", "https://cdn/r2.png"));
+
+        // when
+        ReportDetailResponse resp = reportService.getReportById(reportId);
+
+        // then
+        assertThat(resp.reportId()).isEqualTo(reportId);
+        assertThat(resp.reporterProfileId()).isEqualTo(reporter);
+        assertThat(resp.targetProfileId()).isEqualTo(target);
+        assertThat(resp.detail()).isEqualTo("detail");
+        assertThat(resp.images()).containsExactly("https://cdn/r1.png", "https://cdn/r2.png");
+        assertThat(resp.createdAt()).isNotNull();
+
+        verify(entityService).getById(reportId);
+        verify(entityService).getAttachmentUrls(reportId);
+    }
 
     @Test
     @DisplayName("getOpenReports - createdAt DESC 정렬 + DTO 매핑")

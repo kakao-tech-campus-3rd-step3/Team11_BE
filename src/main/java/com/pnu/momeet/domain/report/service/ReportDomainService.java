@@ -50,6 +50,14 @@ public class ReportDomainService {
     }
 
     @Transactional(readOnly = true)
+    public ReportDetailResponse getReportById(UUID reportId) {
+        UserReport report = entityService.getById(reportId);
+        List<String> urls = entityService.getAttachmentUrls(reportId);
+        log.debug("신고 조회 성공. reportId={}", reportId);
+        return ReportEntityMapper.toReportDetailResponse(report, urls);
+    }
+
+    @Transactional(readOnly = true)
     public ReportDetailResponse getMyReport(UUID memberId, UUID reportId) {
         Profile me = profileService.getByMemberId(memberId);
         UserReport report = entityService.getById(reportId);
