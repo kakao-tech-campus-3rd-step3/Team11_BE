@@ -21,6 +21,15 @@ spring:
     username: ${BREVO_USERNAME}
     password: ${BREVO_PASSWORD}
     from-domain: ${EMAIL_FROM_DOMAIN}
+    properties:
+        mail:
+            smtp:
+            auth: true
+            starttls:
+                enable: true
+            connectiontimeout: 5000
+            timeout: 5000
+            writetimeout: 5000
 
   datasource:
     url: ${DB_URL}
