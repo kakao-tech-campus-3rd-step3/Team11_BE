@@ -237,7 +237,7 @@ stateDiagram-v2
     IN_PROGRESS --> ENDED: 종료<br/>(POST /me/finish)
     IN_PROGRESS --> CANCELED: 관리자 취소<br/>(POST /{id}/cancel)
 
-    ENDED --> EVALUATION_TIMEOUT: 평가 기한 만료<br/>(스케줄러, 24시간 후)
+    ENDED --> EVALUATION_TIMEOUT: 평가 기한 만료<br/>(스케줄러, 3일 후)
     ENDED --> [*]: 평가 기간 중 유지
 
     EVALUATION_TIMEOUT --> [*]: 완전 종료
@@ -257,7 +257,7 @@ stateDiagram-v2
 
     note right of ENDED
         종료됨
-        평가 기간 (24시간)
+        평가 기간 (3일)
         평가 완료되어도 상태 유지
     end note
 

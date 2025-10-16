@@ -241,7 +241,7 @@ sequenceDiagram
     participant DB as Database
 
     Scheduler->>Scheduler: @Scheduled 실행<br/>(매일 자정)
-    Scheduler->>DB: SELECT Meetup<br/>WHERE status=ENDED<br/>AND endAt < now() - 1일
+    Scheduler->>DB: SELECT Meetup<br/>WHERE status=ENDED<br/>AND endAt < now() - 3일
     DB-->>Scheduler: expiredMeetups
 
     loop 각 만료된 모임
@@ -308,14 +308,14 @@ stateDiagram-v2
     IN_PROGRESS --> ENDED: 종료<br/> MeetupFinishedEvent
     IN_PROGRESS --> CANCELED: 관리자 취소<br/> MeetupCanceledEvent
 
-    ENDED --> EVALUATION_TIMEOUT: 24시간 경과<br/> EvaluationDeadlineEndedEvent
+    ENDED --> EVALUATION_TIMEOUT: 3일 경과<br/> EvaluationDeadlineEndedEvent
     ENDED --> [*]: 평가 기간 중 유지
 
     EVALUATION_TIMEOUT --> [*]
     CANCELED --> [*]
 
     note right of ENDED
-        평가 기간 중 (24시간)
+        평가 기간 중 (3일)
         참가자들이 서로 평가
         각 평가마다 EvaluationSubmittedEvent 발행
         평가 완료되어도 상태는 그대로 유지
