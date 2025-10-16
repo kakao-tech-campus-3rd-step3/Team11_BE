@@ -107,13 +107,16 @@ public class EmailAuthService {
         Member member = memberService.getById(verificationCode.getMemberId());
         if (member.isVerified()) {
             log.debug("이메일 인증 실패: 이미 인증된 이메일 - {}", member.getEmail());
+            verificationCodeRepository.delete(verificationCode);
             throw new IllegalArgumentException("이미 인증된 이메일입니다.");
         }
         if (verificationCode.getExpiresAt().isBefore(LocalDateTime.now())) {
+            verificationCodeRepository.delete(verificationCode);
             log.debug("이메일 인증 실패: 만료된 코드 - {}", code);
             throw new IllegalArgumentException("만료된 인증 코드입니다.");
         }
         memberService.updateMember(member, m -> m.setVerified(true));
         log.info("이메일 인증 성공: {}", member.getEmail());
+        verificationCodeRepository.delete(verificationCode);
     }
 }
