@@ -15,6 +15,12 @@ spring:
         bucket: ${AWS_S3_BUCKET_NAME}
       region:
         static: ap-northeast-2
+  mail:
+    host: ${BREVO_STMP_HOST}
+    port: ${BREVO_STMP_PORT}
+    username: ${BREVO_USERNAME}
+    password: ${BREVO_PASSWORD}
+    from-domain: ${EMAIL_FROM_DOMAIN}
 
   datasource:
     url: ${DB_URL}
@@ -60,6 +66,7 @@ app:
       - /api/auth/login
       - /api/auth/signup
       - /api/auth/refresh
+      - /api/auth/verify
       - /api/auth/kakao
       - /api/auth/kakao/callback
       - /api/auth/kakao/withdraw
@@ -92,3 +99,6 @@ momeet:
   temperature:
     bayesian:
       prior-k: 5.0
+
+frontend:
+  url: https://${FRONTEND_DOMAIN_NAME:localhost:3000}
