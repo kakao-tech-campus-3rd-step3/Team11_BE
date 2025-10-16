@@ -2,6 +2,7 @@ package com.pnu.momeet.domain.report.service;
 
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
 import com.pnu.momeet.domain.report.entity.UserReport;
+import com.pnu.momeet.domain.report.enums.ReportStatus;
 import com.pnu.momeet.domain.report.repository.ReportAttachmentRepository;
 import com.pnu.momeet.domain.report.repository.ReportRepository;
 import java.time.LocalDateTime;
@@ -34,6 +35,14 @@ public class ReportEntityService {
         }
         log.debug("신고 조회 성공. reportId={}", reportId);
         return report.get();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserReport> getOpenReports(PageRequest pageRequest) {
+        log.debug("OPEN 상태의 신고 목록 조회 시도.");
+        Page<UserReport> reports = reportRepository.findByStatus(ReportStatus.OPEN, pageRequest);
+        log.debug("OPEN 상태의 신고 목록 조회 성공.");
+        return reports;
     }
 
     @Transactional(readOnly = true)

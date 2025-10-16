@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
 import com.pnu.momeet.domain.report.entity.UserReport;
 import com.pnu.momeet.domain.report.enums.ReportCategory;
+import com.pnu.momeet.domain.report.enums.ReportStatus;
 import com.pnu.momeet.domain.report.repository.ReportAttachmentRepository;
 import com.pnu.momeet.domain.report.repository.ReportRepository;
 import com.pnu.momeet.domain.report.service.ReportEntityService;
@@ -38,6 +39,19 @@ class ReportEntityServiceTest {
 
     @InjectMocks
     private ReportEntityService entityService;
+
+    @Test
+    @DisplayName("getOpenReports - findByStatus(OPEN, pageable) 위임/반환 검증")
+    void getOpenReports_delegates_findByStatusOpen() {
+        PageRequest page = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "createdAt"));
+        given(reportRepository.findByStatus(ReportStatus.OPEN, page))
+            .willReturn(new PageImpl<>(List.of(), page, 0));
+
+        var result = entityService.getOpenReports(page);
+
+        assertThat(result.getTotalElements()).isZero();
+        verify(reportRepository).findByStatus(ReportStatus.OPEN, page);
+    }
 
     @Test
     @DisplayName("getAttachmentUrls - URL 리스트 매핑/반환")

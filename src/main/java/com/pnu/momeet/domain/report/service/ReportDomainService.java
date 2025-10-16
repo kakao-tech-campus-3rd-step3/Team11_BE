@@ -21,6 +21,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,16 @@ public class ReportDomainService {
     private final ReportEntityService entityService;
     private final ProfileEntityService profileService;
     private final S3StorageService s3StorageService;
+
+    @Transactional(readOnly = true)
+    public Page<ReportSummaryResponse> getOpenReports(PageRequest page) {
+        Page<UserReport> reports = entityService.getOpenReports(page);
+        List<ReportSummaryResponse> content = reports.getContent().stream()
+            .map(ReportEntityMapper::toReportSummaryResponse)
+            .toList();
+        log.debug("신고 목록 조회 성공. count={}", content.size());
+        return new PageImpl<>(content, page, reports.getTotalElements());
+    }
 
     @Transactional(readOnly = true)
     public ReportDetailResponse getMyReport(UUID memberId, UUID reportId) {

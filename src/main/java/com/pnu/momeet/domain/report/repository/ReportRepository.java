@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.report.repository;
 
 import com.pnu.momeet.domain.report.entity.UserReport;
+import com.pnu.momeet.domain.report.enums.ReportStatus;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,4 +25,6 @@ public interface ReportRepository extends JpaRepository<UserReport, UUID> {
     );
 
     Page<UserReport> findByReporterProfileId(UUID id, Pageable pageable);
+
+    Page<UserReport> findByStatus(ReportStatus reportStatus, Pageable pageable);
 }

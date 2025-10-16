@@ -22,6 +22,7 @@ import com.pnu.momeet.domain.profile.enums.Gender;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
 import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
+import com.pnu.momeet.domain.report.dto.response.ReportSummaryResponse;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
 import com.pnu.momeet.domain.report.entity.UserReport;
 import com.pnu.momeet.domain.report.enums.ReportCategory;
@@ -42,6 +43,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -58,6 +60,32 @@ class ReportDomainServiceTest {
 
     @InjectMocks
     private ReportDomainService reportService;
+
+    @Test
+    @DisplayName("getOpenReports - createdAt DESC 정렬 + DTO 매핑")
+    void getOpenReports_success_desc_and_mapping() {
+        // given
+        PageRequest page = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt"));
+        UserReport oldOne = UserReport.create(UUID.randomUUID(), UUID.randomUUID(), ReportCategory.SPAM, "d", "ip");
+        UserReport newOne = UserReport.create(UUID.randomUUID(), UUID.randomUUID(), ReportCategory.ABUSE, "d2", "ip");
+        ReflectionTestUtils.setField(oldOne, "createdAt", LocalDateTime.now().minusSeconds(1));
+        ReflectionTestUtils.setField(newOne, "createdAt", LocalDateTime.now());
+
+        given(entityService.getOpenReports(page))
+            .willReturn(new PageImpl<>(List.of(newOne, oldOne), page, 2));
+
+        // when
+        Page<ReportSummaryResponse> result = reportService.getOpenReports(page);
+
+        // then
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent().get(0).category()).isEqualTo(ReportCategory.ABUSE);
+        assertThat(result.getContent().get(1).category()).isEqualTo(ReportCategory.SPAM);
+        assertThat(result.getSort().getOrderFor("createdAt").getDirection())
+            .isEqualTo(Sort.Direction.DESC);
+
+        verify(entityService).getOpenReports(page);
+    }
 
     @Test
     @DisplayName("getMyReport - 프로필 매핑 후, 엔티티/첨부 조회 및 DTO 매핑")
