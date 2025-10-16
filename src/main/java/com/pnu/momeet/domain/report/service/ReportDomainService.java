@@ -1,15 +1,12 @@
 package com.pnu.momeet.domain.report.service;
 
 import com.pnu.momeet.common.service.S3StorageService;
-import com.pnu.momeet.domain.block.service.mapper.BlockDtoMapper;
-import com.pnu.momeet.domain.member.service.MemberEntityService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
 import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
-import com.pnu.momeet.domain.report.dto.response.MyReportDetailResponse;
-import com.pnu.momeet.domain.report.dto.response.MyReportSummaryResponse;
-import com.pnu.momeet.domain.report.dto.response.ReportResponse;
+import com.pnu.momeet.domain.report.dto.response.ReportDetailResponse;
+import com.pnu.momeet.domain.report.dto.response.ReportSummaryResponse;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
 import com.pnu.momeet.domain.report.entity.UserReport;
 import com.pnu.momeet.domain.report.enums.ReportStatus;
@@ -23,7 +20,6 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -43,7 +39,7 @@ public class ReportDomainService {
     private final S3StorageService s3StorageService;
 
     @Transactional(readOnly = true)
-    public MyReportDetailResponse getMyReport(UUID memberId, UUID reportId) {
+    public ReportDetailResponse getMyReport(UUID memberId, UUID reportId) {
         Profile me = profileService.getByMemberId(memberId);
         UserReport report = entityService.getById(reportId);
         if (!report.getReporterProfileId().equals(me.getId())) {
@@ -51,20 +47,20 @@ public class ReportDomainService {
         }
         List<String> urls = entityService.getAttachmentUrls(reportId);
         log.debug("신고 조회 성공. reporterPid={}, reportId={}", me.getId(), reportId);
-        return ReportDtoMapper.toMyReportDetailResponse(report, urls);
+        return ReportEntityMapper.toReportDetailResponse(report, urls);
     }
 
     @Transactional(readOnly = true)
-    public Page<MyReportSummaryResponse> getMyReports(UUID memberId, ReportPageRequest reportPageRequest) {
+    public Page<ReportSummaryResponse> getMyReports(UUID memberId, ReportPageRequest reportPageRequest) {
         PageRequest pageRequest = ReportDtoMapper.toPageRequest(reportPageRequest);
         Profile reporterProfile = profileService.getByMemberId(memberId);
         Page<UserReport> reports = entityService.getMyReports(reporterProfile.getId(), pageRequest);
         log.debug("신고 목록 조회 성공. reporterPid={}", reporterProfile.getId());
-        return reports.map(ReportDtoMapper::toMyReportSummaryResponse);
+        return reports.map(ReportEntityMapper::toReportSummaryResponse);
     }
 
     @Transactional
-    public ReportResponse createReport(UUID memberId, ReportCreateRequest request, String ipHash) {
+    public ReportDetailResponse createReport(UUID memberId, ReportCreateRequest request, String ipHash) {
         Profile reporterProfile = profileService.getByMemberId(memberId);
         if (!profileService.existsById(request.targetProfileId())) {
             log.info("존재하지 않는 프로필에 대해 신고 생성 시도. memberId={}", memberId);
@@ -120,7 +116,7 @@ public class ReportDomainService {
 
         log.info("신고 생성 성공. reportId={}, reporterProfileId={}, targetProfileId={}",
             report.getId(), reporterProfile.getId(), request.targetProfileId());
-        return ReportEntityMapper.toReportResponse(report, uploadedUrls);
+        return ReportEntityMapper.toReportDetailResponse(report, uploadedUrls);
     }
 
     @Transactional

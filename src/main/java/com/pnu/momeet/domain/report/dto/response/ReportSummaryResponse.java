@@ -5,7 +5,7 @@ import com.pnu.momeet.domain.report.enums.ReportStatus;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record MyReportSummaryResponse(
+public record ReportSummaryResponse(
     UUID reportId,
     UUID targetProfileId,
     ReportCategory category,

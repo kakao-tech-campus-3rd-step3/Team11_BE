@@ -4,17 +4,14 @@ import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.common.util.IpHashUtil;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
 import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
-import com.pnu.momeet.domain.report.dto.response.MyReportDetailResponse;
-import com.pnu.momeet.domain.report.dto.response.MyReportSummaryResponse;
-import com.pnu.momeet.domain.report.dto.response.ReportResponse;
+import com.pnu.momeet.domain.report.dto.response.ReportDetailResponse;
+import com.pnu.momeet.domain.report.dto.response.ReportSummaryResponse;
 import com.pnu.momeet.domain.report.service.ReportDomainService;
-import com.pnu.momeet.domain.report.service.mapper.ReportDtoMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,7 +34,7 @@ public class ReportController {
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/{reportId}")
-    public ResponseEntity<MyReportDetailResponse> getMyReport(
+    public ResponseEntity<ReportDetailResponse> getMyReport(
         @AuthenticationPrincipal CustomUserDetails user,
         @PathVariable UUID reportId
     ) {
@@ -46,11 +43,11 @@ public class ReportController {
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping
-    public ResponseEntity<Page<MyReportSummaryResponse>> getMyReports(
+    public ResponseEntity<Page<ReportSummaryResponse>> getMyReports(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @Valid @ModelAttribute ReportPageRequest reportPageRequest
     ) {
-        Page<MyReportSummaryResponse> result = reportService.getMyReports(
+        Page<ReportSummaryResponse> result = reportService.getMyReports(
             userDetails.getMemberId(), reportPageRequest
         );
         return ResponseEntity.ok(result);
@@ -58,13 +55,13 @@ public class ReportController {
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PostMapping()
-    public ResponseEntity<ReportResponse> createReport(
+    public ResponseEntity<ReportDetailResponse> createReport(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @Valid @ModelAttribute ReportCreateRequest reportCreateRequest,
         HttpServletRequest httpServletRequest
     ) {
         String ipHash = ipHashUtil.fromRequest(httpServletRequest);
-        ReportResponse saved = reportService.createReport(
+        ReportDetailResponse saved = reportService.createReport(
             userDetails.getMemberId(),
             reportCreateRequest,
             ipHash
