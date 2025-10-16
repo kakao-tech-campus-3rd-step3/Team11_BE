@@ -60,6 +60,42 @@ class ReportDomainServiceTest {
     private ReportDomainService reportService;
 
     @Test
+    @DisplayName("getMyReport - 프로필 매핑 후, 엔티티/첨부 조회 및 DTO 매핑")
+    void getMyReport_success() {
+        // given
+        UUID memberId = UUID.randomUUID();
+        UUID reporterPid = UUID.randomUUID();
+        UUID targetPid = UUID.randomUUID();
+        UUID reportId = UUID.randomUUID();
+
+        Profile me = mock(Profile.class);
+        given(profileService.getByMemberId(memberId)).willReturn(me);
+        given(me.getId()).willReturn(reporterPid);
+
+        UserReport report = UserReport.create(reporterPid, targetPid, ReportCategory.SPAM, "detail", "ip");
+        ReflectionTestUtils.setField(report, "id", reportId);
+        ReflectionTestUtils.setField(report, "createdAt", LocalDateTime.now());
+
+        given(entityService.getById(reportId)).willReturn(report);
+        given(entityService.getAttachmentUrls(reportId)).willReturn(List.of("https://cdn/reports/1.png"));
+
+        // when
+        var resp = reportService.getMyReport(memberId, reportId);
+
+        // then
+        assertThat(resp.reportId()).isEqualTo(reportId);
+        assertThat(resp.reporterProfileId()).isEqualTo(reporterPid);
+        assertThat(resp.targetProfileId()).isEqualTo(targetPid);
+        assertThat(resp.detail()).isEqualTo("detail");
+        assertThat(resp.images()).containsExactly("https://cdn/reports/1.png");
+        assertThat(resp.createdAt()).isNotNull();
+
+        verify(profileService).getByMemberId(memberId);
+        verify(entityService).getById(reportId);
+        verify(entityService).getAttachmentUrls(reportId);
+    }
+
+    @Test
     @DisplayName("getMyReports - 멤버→프로필 매핑 후, createdAt DESC 정렬로 조회/매핑")
     void getMyReports_success_createdAtDesc() {
         // given

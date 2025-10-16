@@ -7,6 +7,7 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
 import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
+import com.pnu.momeet.domain.report.dto.response.MyReportDetailResponse;
 import com.pnu.momeet.domain.report.dto.response.MyReportSummaryResponse;
 import com.pnu.momeet.domain.report.dto.response.ReportResponse;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
@@ -40,6 +41,18 @@ public class ReportDomainService {
     private final ReportEntityService entityService;
     private final ProfileEntityService profileService;
     private final S3StorageService s3StorageService;
+
+    @Transactional(readOnly = true)
+    public MyReportDetailResponse getMyReport(UUID memberId, UUID reportId) {
+        Profile me = profileService.getByMemberId(memberId);
+        UserReport report = entityService.getById(reportId);
+        if (!report.getReporterProfileId().equals(me.getId())) {
+            log.info("신고자가 아닌 사용자가 신고 조회 시도. reporterId={}", me.getId());
+        }
+        List<String> urls = entityService.getAttachmentUrls(reportId);
+        log.debug("신고 조회 성공. reporterPid={}, reportId={}", me.getId(), reportId);
+        return ReportDtoMapper.toMyReportDetailResponse(report, urls);
+    }
 
     @Transactional(readOnly = true)
     public Page<MyReportSummaryResponse> getMyReports(UUID memberId, ReportPageRequest reportPageRequest) {

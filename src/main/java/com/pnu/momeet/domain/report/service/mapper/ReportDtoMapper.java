@@ -2,9 +2,11 @@ package com.pnu.momeet.domain.report.service.mapper;
 
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
 import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
+import com.pnu.momeet.domain.report.dto.response.MyReportDetailResponse;
 import com.pnu.momeet.domain.report.dto.response.MyReportSummaryResponse;
 import com.pnu.momeet.domain.report.entity.ReportAttachment;
 import com.pnu.momeet.domain.report.entity.UserReport;
+import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -47,6 +49,19 @@ public class ReportDtoMapper {
             userReport.getCategory(),
             userReport.getStatus(),
             userReport.getCreatedAt()
+        );
+    }
+
+    public static MyReportDetailResponse toMyReportDetailResponse(UserReport report, List<String> urls) {
+        return new MyReportDetailResponse(
+            report.getId(),
+            report.getReporterProfileId(),
+            report.getTargetProfileId(),
+            report.getCategory(),
+            report.getStatus(),
+            report.getDetail(),
+            urls,
+            report.getCreatedAt()
         );
     }
 }

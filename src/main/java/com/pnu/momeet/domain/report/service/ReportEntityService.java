@@ -45,6 +45,15 @@ public class ReportEntityService {
     }
 
     @Transactional(readOnly = true)
+    public List<String> getAttachmentUrls(UUID reportId) {
+        log.debug("신고 첨부파일 URL 조회 시도. reportId={}", reportId);
+        List<String> urls = reportAttachmentRepository.findByReportId(reportId)
+            .stream().map(ReportAttachment::getUrl).toList();
+        log.debug("신고 첨부파일 URL 조회 성공. reportId={}, count={}", reportId, urls.size());
+        return urls;
+    }
+
+    @Transactional(readOnly = true)
     public List<ReportAttachment> getAttachmentsByReportId(UUID reportId) {
         log.debug("신고 첨부파일 조회 시도. reportId={}", reportId);
         List<ReportAttachment> attachments = reportAttachmentRepository.findByReportId(reportId);

@@ -1,8 +1,11 @@
 package com.pnu.momeet.e2e.report;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.notNullValue;
 
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.http.ContentType;
@@ -16,6 +19,59 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 class ReportSelfTest extends BaseReportTest {
+
+    @Test
+    @DisplayName("특정 신고 조회 - 신고자 본인 200")
+    void getReport_success_owner() {
+        // 1) 사전: USER가 신고 1건 생성(이미지 없이)
+        var user = getToken(Role.ROLE_USER);
+        ExtractableResponse<Response> created = given().log().all()
+            .header(AUTH_HEADER, BEAR_PREFIX + user.accessToken())
+            .contentType(ContentType.MULTIPART)
+            .multiPart("targetProfileId", testAdminProfileId.toString())
+            .multiPart("category", "ABUSE")
+            .multiPart("detail", "욕설")
+            .when().post()
+            .then().log().all()
+            .statusCode(HttpStatus.CREATED.value())
+            .extract();
+
+        UUID reportId = UUID.fromString(created.jsonPath().getString("reportId"));
+        reportsToBeDeleted.add(reportId);
+
+        // 2) 본인 토큰으로 단건 조회
+        given().log().all()
+            .header(AUTH_HEADER, BEAR_PREFIX + user.accessToken())
+            .when().get("/{reportId}", reportId)
+            .then().log().all()
+            .statusCode(HttpStatus.OK.value())
+            .body("reportId", equalTo(reportId.toString()))
+            .body("reporterProfileId", equalTo(testUserProfileId.toString()))
+            .body("targetProfileId", equalTo(testAdminProfileId.toString()))
+            .body("category", equalTo("ABUSE"))
+            .body("status", anyOf(equalTo("OPEN"), equalTo("ENDED")))
+            .body("createdAt", notNullValue());
+    }
+
+    @Test
+    @DisplayName("특정 신고 조회 - 토큰 없음 401")
+    void getReport_fail_401() {
+        given().log().all()
+            .contentType(ContentType.URLENC.withCharset(StandardCharsets.UTF_8))
+            .when().get("/{reportId}", UUID.randomUUID())
+            .then().log().all()
+            .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    @DisplayName("특정 신고 조회 - 존재하지 않는 ID 404")
+    void getReport_fail_404() {
+        given().log().all()
+            .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
+            .when().get("/{reportId}", UUID.randomUUID())
+            .then().log().all()
+            .statusCode(HttpStatus.NOT_FOUND.value());
+    }
 
     @Test
     @DisplayName("내 신고 목록 조회 - 최신순(createdAt DESC), 페이지네이션")

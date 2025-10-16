@@ -40,6 +40,21 @@ class ReportEntityServiceTest {
     private ReportEntityService entityService;
 
     @Test
+    @DisplayName("getAttachmentUrls - URL 리스트 매핑/반환")
+    void getAttachmentUrls_success() {
+        UUID reportId = UUID.randomUUID();
+        var a = ReportAttachment.create(reportId, "https://cdn/reports/a.png");
+        var b = ReportAttachment.create(reportId, "https://cdn/reports/b.png");
+
+        given(attachmentRepository.findByReportId(reportId)).willReturn(List.of(a, b));
+
+        List<String> urls = entityService.getAttachmentUrls(reportId);
+
+        assertThat(urls).containsExactlyInAnyOrder("https://cdn/reports/a.png", "https://cdn/reports/b.png");
+        verify(attachmentRepository).findByReportId(reportId);
+    }
+
+    @Test
     @DisplayName("getMyReports - 레포지토리 위임 및 Pageable 전달 검증(createdAt DESC)")
     void getMyReports_delegates_withSortDesc() {
         // given

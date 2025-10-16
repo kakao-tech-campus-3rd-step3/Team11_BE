@@ -4,6 +4,7 @@ import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.common.util.IpHashUtil;
 import com.pnu.momeet.domain.report.dto.request.ReportCreateRequest;
 import com.pnu.momeet.domain.report.dto.request.ReportPageRequest;
+import com.pnu.momeet.domain.report.dto.response.MyReportDetailResponse;
 import com.pnu.momeet.domain.report.dto.response.MyReportSummaryResponse;
 import com.pnu.momeet.domain.report.dto.response.ReportResponse;
 import com.pnu.momeet.domain.report.service.ReportDomainService;
@@ -33,6 +34,15 @@ public class ReportController {
 
     private final ReportDomainService reportService;
     private final IpHashUtil ipHashUtil;
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping("/{reportId}")
+    public ResponseEntity<MyReportDetailResponse> getMyReport(
+        @AuthenticationPrincipal CustomUserDetails user,
+        @PathVariable UUID reportId
+    ) {
+        return ResponseEntity.ok(reportService.getMyReport(user.getMemberId(), reportId));
+    }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping
