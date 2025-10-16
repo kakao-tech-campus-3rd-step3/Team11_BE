@@ -26,7 +26,7 @@ public class VerificationEventListener {
         String email = event.getEmail();
         String code = event.getCode();
         log.info("인증이메일 전송 이벤트 시작 : code = {}", code);
-        String verificationUrl = securityProperties.getHttps().getUrl() + "/auth/verify?code=" + code;
+        String verificationUrl = securityProperties.getHttps().getUrl() + "/api/auth/verify?code=" + code;
         Context context = new Context();
         context.setVariable("title", "MoMeet 회원가입 인증");
         context.setVariable("verificationUrl", verificationUrl);
