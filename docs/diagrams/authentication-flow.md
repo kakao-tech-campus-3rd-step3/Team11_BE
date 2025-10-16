@@ -24,7 +24,11 @@ sequenceDiagram
     DB-->>MES: savedMember
     MES-->>EAS: savedMember
 
-    EAS->>MES: updateMember()<br/>(tokenIssuedAt, enabled=true)
+    EAS->>MES: getById(memberId)
+    MES->>DB: SELECT Member
+    DB-->>MES: member
+    MES-->>EAS: member
+    EAS->>MES: updateMember(member)<br/>(tokenIssuedAt, enabled=true)
     EAS->>JWT: generateAccessToken(memberId)
     JWT-->>EAS: accessToken
     EAS->>JWT: generateRefreshToken(memberId)
@@ -77,7 +81,11 @@ sequenceDiagram
         AC-->>User: 401 Unauthorized
     end
 
-    EAS->>MES: updateMember()<br/>(tokenIssuedAt, enabled=true)
+    EAS->>MES: getById(memberId)
+    MES->>DB: SELECT Member
+    DB-->>MES: member
+    MES-->>EAS: member
+    EAS->>MES: updateMember(member)<br/>(tokenIssuedAt, enabled=true)
     EAS->>JWT: generateAccessToken(memberId)
     JWT-->>EAS: accessToken
     EAS->>JWT: generateRefreshToken(memberId)
@@ -156,7 +164,11 @@ sequenceDiagram
         DB-->>MES: savedMember
     end
 
-    KAS->>MES: updateMember()<br/>(tokenIssuedAt, enabled=true)
+    KAS->>MES: getById(memberId)
+    MES->>DB: SELECT Member
+    DB-->>MES: member
+    MES-->>KAS: member
+    KAS->>MES: updateMember(member)<br/>(tokenIssuedAt, enabled=true)
     KAS->>JWT: generateAccessToken(memberId)
     JWT-->>KAS: accessToken
     KAS->>JWT: generateRefreshToken(memberId)
