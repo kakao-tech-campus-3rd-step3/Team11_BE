@@ -35,11 +35,4 @@ public class VerificationCode {
         this.createdAt = LocalDateTime.now();
         this.expiresAt = this.createdAt.plusMinutes(EXPIRATION_MINUTES);
     }
-
-    public VerificationCode renewCode() {
-        this.code = UUID.randomUUID();
-        this.createdAt = LocalDateTime.now();
-        this.expiresAt = this.createdAt.plusMinutes(EXPIRATION_MINUTES);
-        return this;
-    }
 }

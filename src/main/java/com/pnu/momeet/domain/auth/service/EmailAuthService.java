@@ -63,18 +63,14 @@ public class EmailAuthService {
         Member savedMember = memberService.createMember(
                 new Member(email, password, List.of(Role.ROLE_USER), false)
         );
-
         Optional<VerificationCode> existingCode = verificationCodeRepository.findByMemberId(savedMember.getId());
-
-        VerificationCode verificationCode;
-
-        log.info("새 인증 코드 발급: {}", email);
         if (existingCode.isPresent()) {
-            verificationCode = existingCode.get().renewCode();
-        } else {
-            verificationCode = new VerificationCode(savedMember.getId());
+            verificationCodeRepository.delete(existingCode.get());
+            log.debug("기존 인증 코드 삭제: {}", email);
         }
-
+        log.info("새 인증 코드 발급: {}", email);
+        VerificationCode verificationCode = new VerificationCode(savedMember.getId());
+        
         verificationCodeRepository.save(verificationCode);
         sendVerificationEmail(email, verificationCode.getCode().toString());
         log.info("인증 메일 발송 완료: {}", email);
