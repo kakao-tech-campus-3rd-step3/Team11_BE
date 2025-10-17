@@ -41,4 +41,13 @@ public class ParticipantDslRepository {
             .orderBy(p.id.asc())
             .fetch();
     }
+
+    public long updateIsFinishedByMeetupId(UUID meetupId, boolean isFinished) {
+        QParticipant p = QParticipant.participant;
+
+        return jpaQueryFactory.update(p)
+            .set(p.isFinished, isFinished)
+            .where(p.meetup.id.eq(meetupId))
+            .execute();
+    }
 }

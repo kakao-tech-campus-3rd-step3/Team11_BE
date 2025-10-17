@@ -3,7 +3,6 @@ package com.pnu.momeet.domain.participant.service;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.repository.ParticipantDslRepository;
 import com.pnu.momeet.domain.participant.repository.ParticipantRepository;
-import java.util.Collection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
@@ -122,9 +121,10 @@ public class ParticipantEntityService {
     }
 
     @Transactional
-    public void deleteAllByMeetupId(UUID meetupId) {
-        log.debug("특정 모임 ID의 참가자 전체 삭제 시도. meetupId={}", meetupId);
-        participantRepository.deleteAllByMeetupId(meetupId);
-        log.debug("특정 모임 ID의 참가자 전체 삭제 성공. meetupId={}", meetupId);
+    public long updateIsFinishedByMeetupId(UUID meetupId, boolean isFinished) {
+        log.debug("모임 ID로 참가자 isFinished 상태 일괄 수정 시도. meetupId={}, isFinished={}", meetupId, isFinished);
+        long count  = participantDslRepository.updateIsFinishedByMeetupId(meetupId, isFinished);
+        log.debug("모임 ID로 참가자 isFinished 상태 일괄 수정 성공. meetupId={}, isFinished={}", meetupId, isFinished);
+        return count;
     }
 }
