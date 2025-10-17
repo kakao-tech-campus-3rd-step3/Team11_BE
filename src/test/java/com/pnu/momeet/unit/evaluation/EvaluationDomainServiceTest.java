@@ -27,7 +27,6 @@ import com.pnu.momeet.domain.meetup.dto.response.MeetupSummaryResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
-import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.enums.MeetupRole;
@@ -40,7 +39,6 @@ import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
 import java.lang.reflect.Constructor;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -130,7 +128,6 @@ class EvaluationDomainServiceTest {
             .owner(evaluator)
             .name("종료모임")
             .category(MainCategory.SPORTS)
-            .subCategory(SubCategory.SOCCER)
             .description("desc")
             .capacity(10)
             .scoreLimit(3.0)

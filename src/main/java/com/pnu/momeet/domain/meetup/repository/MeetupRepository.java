@@ -19,4 +19,5 @@ public interface MeetupRepository extends JpaRepository<Meetup, UUID>, JpaSpecif
     @NonNull
     Page<Meetup> findAll(Specification<Meetup> spec,@NonNull Pageable pageable);
     List<Meetup> findAllByStatusAndEndAtBefore(MeetupStatus status, LocalDateTime time);
+    List<Meetup> findAllByStatusAndStartAtBefore(MeetupStatus status, LocalDateTime time);
 }

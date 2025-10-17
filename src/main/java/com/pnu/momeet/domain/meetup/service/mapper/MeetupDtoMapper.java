@@ -8,7 +8,6 @@ import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
-import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import java.time.LocalDateTime;
@@ -24,18 +23,13 @@ public class MeetupDtoMapper {
 
     public static Meetup toEntity(MeetupCreateRequest request, Point locationPoint, Profile profile, Sigungu sigungu) {
         MainCategory category = MainCategory.valueOf(request.category());
-        SubCategory subCategory = null;
-        if (request.subCategory() != null) {
-            subCategory = SubCategory.valueOf(request.subCategory());
-        }
-
-        LocalDateTime endAt = LocalDateTime.now().plusHours(request.durationHours());
+        LocalDateTime startAt = LocalDateTime.parse(request.startAt());
+        LocalDateTime endAt = LocalDateTime.parse(request.endAt());
 
         // hashTags는 서비스 레이어에서 설정
         return Meetup.builder()
                 .name(request.name())
                 .category(category)
-                .subCategory(subCategory)
                 .description(request.description())
                 .capacity(request.capacity())
                 .scoreLimit(request.scoreLimit())
@@ -43,6 +37,7 @@ public class MeetupDtoMapper {
                 .address(request.location().address())
                 .sigungu(sigungu)
                 .owner(profile)
+                .startAt(startAt)
                 .endAt(endAt)
                 .build();
     }
@@ -55,10 +50,6 @@ public class MeetupDtoMapper {
             }
             if (request.category() != null) {
                 meetup.setCategory(MainCategory.valueOf(request.category()));
-                meetup.setSubCategory(null); // 카테고리가 변경되면 서브카테고리 초기화
-            }
-            if (request.subCategory() != null) {
-                meetup.setSubCategory(SubCategory.valueOf(request.subCategory()));
             }
             if (request.description() != null) {
                 meetup.setDescription(request.description());
@@ -105,18 +96,11 @@ public class MeetupDtoMapper {
             spec = spec.and((root, query, cb)
                     -> cb.equal(root.get("category"), category));
         }
-        if (request.getSubCategory() != null) {
-            SubCategory subCategory = SubCategory.valueOf(request.getSubCategory());
-            spec = spec.and((root, query, cb)
-                    -> cb.equal(root.get("subCategory"), subCategory));
-        }
-
         if (request.getStatus() != null) {
             MeetupStatus status = MeetupStatus.valueOf(request.getStatus());
             spec = spec.and((root, query, cb)
                     -> cb.equal(root.get("status"), status));
         }
-
         if (request.getSearch() != null && !request.getSearch().isEmpty()) {
             String pattern = "%" + request.getSearch().toLowerCase() + "%";
             spec = spec.and((root, query, cb)

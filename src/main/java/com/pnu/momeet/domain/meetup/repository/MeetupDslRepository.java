@@ -5,7 +5,6 @@ import com.pnu.momeet.domain.evaluation.entity.QEvaluation;
 import com.pnu.momeet.domain.meetup.entity.QMeetupHashTag;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
-import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.participant.entity.QParticipant;
 import com.pnu.momeet.domain.sigungu.entity.QSigungu;
 import com.querydsl.core.BooleanBuilder;
@@ -48,7 +47,6 @@ public class MeetupDslRepository {
             Point location,
             double radius,
             Optional<MainCategory> category,
-            Optional<SubCategory> subCategory,
             Optional<String> keyword,
             UUID viewerMemberId
     ) {
@@ -62,7 +60,6 @@ public class MeetupDslRepository {
         builder.and(distanceWithin(location, radius));
         builder.and(meetup.status.eq(MeetupStatus.OPEN));
         category.ifPresent(mainCategory -> builder.and(meetup.category.eq(mainCategory)));
-        subCategory.ifPresent(subCat -> builder.and(meetup.subCategory.eq(subCat)));
         keyword.ifPresent(kw -> builder.and(
                 meetup.name.containsIgnoreCase(kw)
                 .or(meetup.description.containsIgnoreCase(kw))
