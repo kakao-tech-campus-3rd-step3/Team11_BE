@@ -11,7 +11,7 @@ public record MeetupCreateRequest(
         @Size(min = 1, max = 60, message = "모임명은 1-60자 사이여야 합니다")
         String name,
 
-        @NotNull(message = "카테고리는 필수입니다")
+        @NotBlank(message = "카테고리는 필수입니다")
         @ValidMainCategory
         String category,
 
@@ -51,7 +51,7 @@ public record MeetupCreateRequest(
                 LocationRequest location
         ) {
                 this.name = name;
-                this.category = category.toUpperCase();
+                this.category = category != null ? category.toUpperCase() : null;
                 this.description = description != null ? description : "";
                 this.hashTags = hashTags != null ? hashTags : List.of();
                 this.capacity = capacity != null ? capacity : 10;

@@ -27,12 +27,12 @@ class MeetupReadTest extends BaseMeetupTest {
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "조회 테스트 모임",
                 "GAME",
-                "BOARD_GAME",
                 "테스트용 보드게임 모임입니다.",
                 List.of("보드게임", "친목"),
                 6,
-                35.,
-                3,
+                35.0,
+                "2025-10-18T15:00",
+                "2025-10-18T18:00",
                 location
         );
 
@@ -61,7 +61,6 @@ class MeetupReadTest extends BaseMeetupTest {
                     "id", equalTo(meetupId.toString()),
                     "name", equalTo("조회 테스트 모임"),
                     "category", equalTo("GAME"),
-                    "subCategory", equalTo("BOARD_GAME"),
                     "description", equalTo("테스트용 보드게임 모임입니다."),
                     "capacity", equalTo(6),
                     "scoreLimit", equalTo(35.0f),

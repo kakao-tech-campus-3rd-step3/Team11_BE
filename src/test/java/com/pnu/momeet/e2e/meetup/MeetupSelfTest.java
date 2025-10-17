@@ -28,12 +28,12 @@ class MeetupSelfTest extends BaseMeetupTest {
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "본인 모임 조회 테스트",
                 "GAME",
-                "BOARD_GAME",
                 "본인 모임 조회 테스트용 모임입니다.",
                 List.of("보드게임"),
                 6,
                 35.0,
-                3,
+                "2025-10-18T15:00",
+                "2025-10-18T18:00",
                 location
         );
 
@@ -63,7 +63,6 @@ class MeetupSelfTest extends BaseMeetupTest {
                     "id", equalTo(meetupId.toString()),
                     "name", equalTo("본인 모임 조회 테스트"),
                     "category", equalTo("GAME"),
-                    "subCategory", equalTo("BOARD_GAME"),
                     "description", equalTo("본인 모임 조회 테스트용 모임입니다."),
                     "capacity", equalTo(6),
                     "scoreLimit", equalTo(35.0f),
@@ -117,12 +116,12 @@ class MeetupSelfTest extends BaseMeetupTest {
         MeetupCreateRequest createRequest = new MeetupCreateRequest(
                 "새로 생성한 모임",
                 "SPORTS",
-                "SOCCER",
                 "새로 생성한 모임입니다.",
                 List.of("축구", "운동"),
                 10,
                 35.0,
-                2,
+                "2025-10-18T15:00",
+                "2025-10-18T17:00",
                 location
         );
 
@@ -146,7 +145,6 @@ class MeetupSelfTest extends BaseMeetupTest {
                     "id", equalTo(createdMeetup.id().toString()),
                     "name", equalTo("새로 생성한 모임"),
                     "category", equalTo("SPORTS"),
-                    "subCategory", equalTo("SOCCER"),
                     "status", equalTo("OPEN")
                 );
     }
@@ -167,12 +165,12 @@ class MeetupSelfTest extends BaseMeetupTest {
         MeetupCreateRequest chrisRequest = new MeetupCreateRequest(
                 "chris의 모임",
                 "SPORTS",
-                "BASKETBALL",
                 "chris가 만든 모임입니다.",
                 List.of("농구"),
                 8,
                 36.0,
-                2,
+                "2025-10-18T15:00",
+                "2025-10-18T17:00",
                 location
         );
 

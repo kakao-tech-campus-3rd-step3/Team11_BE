@@ -295,6 +295,7 @@ class MeetupStateTest extends BaseMeetupTest {
                 .locationPoint(point)
                 .address("부산광역시 금정구 부산대학로 63번길 2")
                 .sigungu(sigungu)
+                .startAt(LocalDateTime.now())
                 .endAt(LocalDateTime.now().plusHours(3))
                 .status(status)
                 .build();
