@@ -42,7 +42,18 @@ public class MeetupStateService {
 
         // 2) 상태 전이: IN_PROGRESS (엔티티 메서드로 캡슐화 권장)
         entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.IN_PROGRESS));
+        coreEventPublisher.publish(MeetupEntityMapper.toMeetupStartEvent(meetup));
         log.info("모임 시작 완료. id={}, ownerId={}", meetup.getId(), ownerProfileId);
+    }
+
+    @Transactional
+    public void startMeetupById(UUID meetupId) {
+        Meetup meetup = entityService.getById(meetupId);
+        if (meetup.getStatus() != MeetupStatus.OPEN) {
+            throw new IllegalStateException("시작할 수 있는 상태가 아닙니다.");
+        }
+        entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.IN_PROGRESS));
+        log.info("모임 시작 완료. id={}", meetupId);
     }
 
     @Transactional
