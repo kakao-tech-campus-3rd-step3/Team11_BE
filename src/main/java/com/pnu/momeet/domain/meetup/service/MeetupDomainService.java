@@ -11,6 +11,7 @@ import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
+import com.pnu.momeet.domain.meetup.repository.spec.MeetupSpecifications;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupDtoMapper;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
 import com.pnu.momeet.domain.profile.entity.Profile;
@@ -76,17 +77,12 @@ public class MeetupDomainService {
         UUID viewerMemberId
     ) {
         PageRequest pageRequest = MeetupDtoMapper.toPageRequest(request);
-        Specification<Meetup> specification = MeetupDtoMapper.toSpecification(request);
+        Specification<Meetup> specification = MeetupDtoMapper.toSpecification(request)
+            .and(MeetupSpecifications.visibleTo(viewerMemberId));
 
-        // 기존 페이지 조회
-        Page<Meetup> raw = entityService.getAllBySpecificationWithPagination(specification, pageRequest);
+        Page<Meetup> page = entityService.getAllBySpecificationWithPagination(specification, pageRequest);
 
-        // 페이지 내에서만 차단 모임 필터 ( Meetup 총 개수는 차단 여부와 상관없이 유지 )
-        List<MeetupResponse> filtered = raw.getContent().stream()
-            .filter(m -> !entityService.isBlockedInMeetup(m.getId(), viewerMemberId))
-            .map(MeetupEntityMapper::toResponse)
-            .toList();
-        return new PageImpl<>(filtered, pageRequest, raw.getTotalElements());
+        return page.map(MeetupEntityMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
