@@ -71,6 +71,16 @@ public class ChatEventService {
     }
 
     @Transactional(readOnly = true)
+    public void startMeetup(UUID meetupId) {
+        participantService.getAllByMeetupId(meetupId).stream()
+                .filter(Participant::getIsActive)
+                .forEach(participant ->
+                    messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.STARTED)
+                );
+        log.info("모임 시작 알림 전송 완료 - meetupId: {}", meetupId);
+    }
+
+    @Transactional(readOnly = true)
     public void cancelMeetup(UUID meetupId) {
         participantService.getAllByMeetupId(meetupId).stream()
                 .filter(Participant::getIsActive)
