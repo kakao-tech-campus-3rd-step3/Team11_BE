@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.chatting.util.ChatMessagingTemplate;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
+import com.pnu.momeet.domain.member.service.MemberEntityService;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.enums.MeetupRole;
@@ -29,6 +30,7 @@ import java.util.UUID;
 public class ParticipantDomainService {
     private final ParticipantEntityService entityService;
     private final MeetupEntityService meetupService;
+    private final MemberEntityService memberService;
     private final ProfileEntityService profileService;
     private final ChatMessagingTemplate chatMessagingTemplate;
 
@@ -42,6 +44,25 @@ public class ParticipantDomainService {
                 .stream()
                 .map(ParticipantEntityMapper::toDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ParticipantResponse> getParticipantsVisibleToViewer(
+        UUID meetupId,
+        UUID viewerMemberId
+    ) {
+        if (!memberService.existsById(viewerMemberId)) {
+            log.info("존재하지 않는 회원 ID로 참가자 조회 시도. memberId={}", viewerMemberId);
+            throw new NoSuchElementException("해당 회원이 존재하지 않습니다.");
+        }
+        if (!meetupService.existsById(meetupId)) {
+            log.info("존재하지 않는 모임 ID로 참가자 조회 시도. meetupId={}", meetupId);
+            throw new NoSuchElementException("해당 모임이 존재하지 않습니다.");
+        }
+        return entityService.findAllVisibleByMeetupId(meetupId, viewerMemberId)
+            .stream()
+            .map(ParticipantEntityMapper::toDto)
+            .toList();
     }
 
     @Transactional

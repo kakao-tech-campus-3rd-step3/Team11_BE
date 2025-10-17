@@ -72,11 +72,12 @@ public class MeetupEntityService {
             Double radius,
             Optional<MainCategory> mainCategory,
             Optional<SubCategory> subCategory,
-            Optional<String> search
+            Optional<String> search,
+            UUID viewerMemberId
     ) {
         log.debug("특정 위치 기반 meetup 목록 조회 시도. location={}, radius={}", location, radius);
         var meetups = meetupDslRepository.findAllByDistanceAndPredicates(
-                location, radius, mainCategory, subCategory, search
+                location, radius, mainCategory, subCategory, search, viewerMemberId
         );
         log.debug("특정 위치 기반 meetup 목록 조회 성공. size={}", meetups.size());
         return meetups;
@@ -174,4 +175,8 @@ public class MeetupEntityService {
         log.debug("특정 id의 meetup 삭제 성공. id={}", meetupId);
     }
 
+    @Transactional(readOnly = true)
+    public boolean isBlockedInMeetup(UUID meetupId, UUID viewerMemberId) {
+        return meetupDslRepository.existsBlockedInMeetup(meetupId, viewerMemberId);
+    }
 }

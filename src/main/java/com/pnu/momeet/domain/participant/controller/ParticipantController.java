@@ -27,6 +27,18 @@ public class ParticipantController {
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/visible")
+    public ResponseEntity<List<ParticipantResponse>> getVisibleParticipants(
+        @PathVariable UUID meetupId,
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        List<ParticipantResponse> participants = participantService.getParticipantsVisibleToViewer(
+            meetupId, userDetails.getMemberId()
+        );
+        return ResponseEntity.ok().body(participants);
+    }
+
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PostMapping
     public ResponseEntity<ParticipantResponse> joinMeetup(
             @PathVariable UUID meetupId,

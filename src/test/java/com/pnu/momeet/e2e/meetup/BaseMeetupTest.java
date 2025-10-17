@@ -2,6 +2,8 @@ package com.pnu.momeet.e2e.meetup;
 
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.block.entity.UserBlock;
+import com.pnu.momeet.domain.block.repository.BlockRepository;
 import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
@@ -59,6 +61,12 @@ public abstract class BaseMeetupTest extends BaseE2ETest {
     private MeetupRepository meetupRepository;
     @Autowired
     private SigunguEntityService sigunguService;
+    @Autowired
+    private BlockRepository blockRepository;
+
+    protected void block(UUID blockerMemberId, UUID blockedMemberId) {
+        blockRepository.save(UserBlock.create(blockerMemberId, blockedMemberId));
+    }
 
     @BeforeEach
     @Override

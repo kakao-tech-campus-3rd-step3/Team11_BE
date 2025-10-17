@@ -17,7 +17,7 @@ import static org.hamcrest.Matchers.*;
 @DisplayName("E2E : Meetup 조회 테스트")
 class MeetupReadTest extends BaseMeetupTest {
 
-    private UUID createTestMeetup() {
+    private UUID createTestMeetupByEmail(String email) {
         LocationRequest location = LocationRequest.of(
                 35.23203443995263,
                 129.08262659183725,
@@ -38,7 +38,7 @@ class MeetupReadTest extends BaseMeetupTest {
 
         var response = meetupService.createMeetup(
                 request,
-                users.get(ALICE_EMAIL).id()
+                users.get(email).id()
         );
         toBeDeleted.add(response.id());
         return response.id();
@@ -47,7 +47,7 @@ class MeetupReadTest extends BaseMeetupTest {
     @Test
     @DisplayName("모임 단건 조회 성공 테스트 - 200 OK")
     void get_meetup_by_id_success() {
-        UUID meetupId = createTestMeetup();
+        UUID meetupId = createTestMeetupByEmail(ALICE_EMAIL);
 
         RestAssured
             .given()
@@ -77,7 +77,7 @@ class MeetupReadTest extends BaseMeetupTest {
     @Test
     @DisplayName("모임 페이지 조회 성공 테스트 - 200 OK")
     void get_meetup_page_success() {
-        createTestMeetup(); // 테스트용 모임 하나 생성
+        createTestMeetupByEmail(ALICE_EMAIL); // 테스트용 모임 하나 생성
 
         RestAssured
             .given()
@@ -103,7 +103,7 @@ class MeetupReadTest extends BaseMeetupTest {
     @Test
     @DisplayName("모임 페이지 조회 성공 테스트 - 카테고리 필터링")
     void get_meetup_page_with_category_filter_success() {
-        createTestMeetup(); // GAME 카테고리 모임 생성
+        createTestMeetupByEmail(ALICE_EMAIL); // GAME 카테고리 모임 생성
 
         RestAssured
             .given()
@@ -127,7 +127,7 @@ class MeetupReadTest extends BaseMeetupTest {
     @Test
     @DisplayName("모임 지역 기반 조회 성공 테스트 - 200 OK")
     void get_meetup_by_geo_success() {
-        createTestMeetup(); // 부산 지역 모임 생성
+        createTestMeetupByEmail(ALICE_EMAIL); // 부산 지역 모임 생성
 
         RestAssured
             .given()
@@ -164,7 +164,7 @@ class MeetupReadTest extends BaseMeetupTest {
     @Test
     @DisplayName("모임 조회 실패 테스트 - 401 Unauthorized - 인증 실패")
     void get_meetup_fail_by_unauthorized() {
-        UUID meetupId = createTestMeetup();
+        UUID meetupId = createTestMeetupByEmail(ALICE_EMAIL);
 
         RestAssured
             .given()
@@ -200,5 +200,114 @@ class MeetupReadTest extends BaseMeetupTest {
                     .log().all()
                     .statusCode(400)
         );
+    }
+
+    @Test
+    @DisplayName("[차단] viewer가 모임 소유자를 차단하면 상세는 404")
+    void get_meetup_by_id_blocked_by_viewer_404() {
+        // given: BOB이 모임을 만들고, ALICE가 BOB을 차단
+        UUID meetupId = createTestMeetupByEmail(BOB_EMAIL);
+        block(users.get(ALICE_EMAIL).id(), users.get(BOB_EMAIL).id()); // ALICE → BOB
+
+        // when & then: ALICE로 상세 조회 시 404
+        RestAssured.given()
+            .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
+            .when()
+            .get("/{meetupId}", meetupId)
+            .then()
+            .log().all()
+            .statusCode(404);
+    }
+
+    @Test
+    @DisplayName("[차단] 모임 소유자가 viewer를 차단해도 상세는 404")
+    void get_meetup_by_id_blocked_by_owner_404() {
+        UUID meetupId = createTestMeetupByEmail(BOB_EMAIL);
+        block(users.get(BOB_EMAIL).id(), users.get(ALICE_EMAIL).id()); // BOB → ALICE
+
+        RestAssured.given()
+            .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
+            .when()
+            .get("/{meetupId}", meetupId)
+            .then()
+            .log().all()
+            .statusCode(404);
+    }
+
+    @Test
+    @DisplayName("[차단] 페이지 조회 시 차단 모임은 목록에서 제외된다")
+    void get_meetup_page_excludes_blocked_meetup() {
+        UUID meetupId = createTestMeetupByEmail(BOB_EMAIL);
+        block(users.get(ALICE_EMAIL).id(), users.get(BOB_EMAIL).id()); // ALICE → BOB
+
+        RestAssured.given()
+            .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
+            .queryParam("page", 0)
+            .queryParam("size", 10)
+            .queryParam("sigunguCode", 26410)
+            .when()
+            .get()
+            .then()
+            .log().all()
+            .statusCode(200)
+            // content에 해당 ID가 없어야 함
+            .body("content.findAll { it.id == '" + meetupId + "' }.size()", equalTo(0));
+    }
+
+    @Test
+    @DisplayName("[차단] 지도 조회: viewer가 모임 소유자와 차단이면 제외된다")
+    void get_meetup_geo_excludes_when_viewer_blocks_owner() {
+        // given: 모임은 BOB이 만듦(= owner=BOB)
+        UUID meetupId = createTestMeetupByEmail(BOB_EMAIL);
+
+        // ALICE -> BOB 차단
+        block(users.get(ALICE_EMAIL).id(), users.get(BOB_EMAIL).id());
+
+        // when & then: ALICE로 조회 시 해당 모임이 결과에 없어야 함
+        RestAssured.given()
+            .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
+            .queryParams(Map.of(
+                "latitude", 35.23203443995263,
+                "longitude", 129.08262659183725,
+                "radius", 10.0
+            ))
+            .when()
+            .get("/geo")
+            .then()
+            .statusCode(200)
+            .body("findAll { it.id == '" + meetupId + "' }.size()", equalTo(0));
+    }
+
+    @Test
+    @DisplayName("[차단] 지도 조회: viewer가 참가자 중 누군가와 차단이면 제외된다")
+    void get_meetup_geo_excludes_when_viewer_blocks_participant() {
+        // given: owner=ALICE
+        UUID meetupId = createTestMeetupByEmail(ALICE_EMAIL);
+
+        // BOB을 참가자로 넣기 (기존 참가자 API 사용)
+        RestAssured.given()
+            .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(BOB_EMAIL).accessToken())
+            .pathParam("meetupId", meetupId)
+            .when()
+            .post("/{meetupId}/participants")
+            .then()
+            .statusCode(200);
+
+        // ALICE -> BOB 차단
+        block(users.get(ALICE_EMAIL).id(), users.get(BOB_EMAIL).id());
+
+        // when & then: ALICE로 조회 시 해당 모임이 결과에 없어야 함
+        RestAssured.given()
+            .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
+            .queryParams(Map.of(
+                "latitude", 35.23203443995263,
+                "longitude", 129.08262659183725,
+                "radius", 10.0
+            ))
+            .when()
+            .get("/geo")
+            .then()
+            .statusCode(200)
+            .body("findAll { it.id == '" + meetupId + "' }.size()", equalTo(0));
     }
 }

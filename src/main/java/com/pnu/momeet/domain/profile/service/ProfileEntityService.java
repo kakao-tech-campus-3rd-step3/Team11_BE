@@ -1,12 +1,16 @@
 package com.pnu.momeet.domain.profile.service;
 
+import com.pnu.momeet.domain.profile.dto.response.BlockedProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
+import com.pnu.momeet.domain.profile.repository.ProfileDslRepository;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfileEntityService {
 
     private final ProfileRepository profileRepository;
+    private final ProfileDslRepository profileDslRepository;
 
     @Transactional(readOnly = true)
     public Profile getByMemberId(UUID memberId) {
@@ -54,6 +59,11 @@ public class ProfileEntityService {
     }
 
     @Transactional(readOnly = true)
+    public Page<BlockedProfileResponse> getBlockedProfiles(UUID blockerId, Pageable pageable) {
+        return profileDslRepository.findBlockedProfiles(blockerId, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public UUID mapToProfileId(UUID memberId) {
         var profileId = profileRepository.findIdByMemberId(memberId);
         if (profileId.isEmpty()) {
@@ -66,6 +76,11 @@ public class ProfileEntityService {
     @Transactional(readOnly = true)
     public boolean existsByMemberId(UUID memberId) {
         return profileRepository.existsByMemberId(memberId);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID profileId) {
+        return profileRepository.existsById(profileId);
     }
 
     @Transactional(readOnly = true)

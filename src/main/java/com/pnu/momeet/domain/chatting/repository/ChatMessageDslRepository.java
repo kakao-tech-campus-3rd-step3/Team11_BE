@@ -1,9 +1,11 @@
 package com.pnu.momeet.domain.chatting.repository;
 
+import com.pnu.momeet.domain.block.entity.QUserBlock;
 import com.pnu.momeet.domain.chatting.entity.ChatMessage;
 import com.pnu.momeet.domain.chatting.entity.QChatMessage;
 import com.pnu.momeet.domain.common.dto.response.CursorInfo;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -18,10 +20,12 @@ public class ChatMessageDslRepository {
 
     public CursorInfo<ChatMessage> findHistoriesByMeetupId(UUID meetupId, int size, Long cursorId) {
         QChatMessage chatMessage = QChatMessage.chatMessage;
+
         BooleanExpression condition = chatMessage.meetup.id.eq(meetupId);
         if (cursorId != null) {
             condition = condition.and(chatMessage.id.lt(cursorId));
         }
+
         List<ChatMessage> content = jpaQueryFactory
                 .selectFrom(chatMessage)
                 .where(condition)
