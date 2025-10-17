@@ -107,24 +107,20 @@ public class ReportEntityService {
 
     @Transactional
     public UserReport save(UserReport userReport) {
-        log.debug("신고 저장 시도. id={}, reporterPid={}, targetPid={}, category={}, status={}, detail={}, ipHashLen={}",
+        log.debug("신고 저장 시도. id={}, reporterPid={}, targetPid={}, category={}, status={}",
             userReport.getId(),
             userReport.getReporterProfileId(),
             userReport.getTargetProfileId(),
             userReport.getCategory(),
-            userReport.getStatus(),
-            userReport.getDetail(),
-            (userReport.getIpHash() == null ? 0 : userReport.getIpHash().length())
+            userReport.getStatus()
         );
         UserReport saved = reportRepository.save(userReport);
-        log.debug("신고 저장 성공. id={}, reporterPid={}, targetPid={}, category={}, status={}, detail={}, ipHashLen={}",
+        log.debug("신고 저장 성공. id={}, reporterPid={}, targetPid={}, category={}, status={}",
             saved.getId(),
             saved.getReporterProfileId(),
             saved.getTargetProfileId(),
             saved.getCategory(),
-            saved.getStatus(),
-            saved.getDetail(),
-            saved.getIpHash()
+            saved.getStatus()
         );
         return saved;
     }
