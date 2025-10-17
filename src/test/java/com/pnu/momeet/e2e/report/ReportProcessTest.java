@@ -45,7 +45,7 @@ public class ReportProcessTest extends BaseAdminReportTest {
             .statusCode(HttpStatus.OK.value())
             .body("reportId", equalTo(reportId.toString()))
             .body("status", equalTo("ENDED"))
-            .body("adminReply", anyOf(nullValue(), equalTo("처리 완료")))
+            .body("adminReply", equalTo("처리 완료"))
             .body("processedBy", notNullValue())
             .body("processedAt", notNullValue());
     }
