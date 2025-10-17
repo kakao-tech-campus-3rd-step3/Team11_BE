@@ -1,7 +1,6 @@
 package com.pnu.momeet.domain.block.entity;
 
 import com.pnu.momeet.domain.common.entity.BaseCreatedEntity;
-import com.pnu.momeet.domain.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
