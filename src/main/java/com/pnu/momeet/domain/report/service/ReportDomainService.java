@@ -64,6 +64,7 @@ public class ReportDomainService {
         UserReport report = entityService.getById(reportId);
         if (!report.getReporterProfileId().equals(me.getId())) {
             log.info("신고자가 아닌 사용자가 신고 조회 시도. reporterId={}", me.getId());
+            throw new IllegalStateException("신고자가 아닌 사용자는 조회할 수 없습니다.");
         }
         List<String> urls = entityService.getAttachmentUrls(reportId);
         log.debug("신고 조회 성공. reporterPid={}, reportId={}", me.getId(), reportId);
