@@ -79,8 +79,8 @@ public class ProfileEntityService {
     }
 
     @Transactional(readOnly = true)
-    public boolean existsById(UUID memberId) {
-        return profileRepository.existsById(memberId);
+    public boolean existsById(UUID profileId) {
+        return profileRepository.existsById(profileId);
     }
 
     @Transactional(readOnly = true)
