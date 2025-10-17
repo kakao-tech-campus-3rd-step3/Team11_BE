@@ -1,7 +1,7 @@
 package com.pnu.momeet.domain.meetup.dto.request;
 
+import com.pnu.momeet.common.validation.annotation.MeetupTimeUnit;
 import com.pnu.momeet.common.validation.annotation.ValidMainCategory;
-import com.pnu.momeet.common.validation.annotation.ValidSubCategory;
 import jakarta.validation.constraints.*;
 
 import java.util.List;
@@ -14,9 +14,6 @@ public record MeetupCreateRequest(
         @NotNull(message = "카테고리는 필수입니다")
         @ValidMainCategory
         String category,
-
-        @ValidSubCategory
-        String subCategory,
 
         String description,
 
@@ -31,10 +28,13 @@ public record MeetupCreateRequest(
         @Max(value = 35 , message = "점수 제한은 35.0 이하이어야 합니다")
         Double scoreLimit,
 
-        @NotNull(message = "마감 시간은 필수입니다")
-        @Min(value = 1, message = "모임 지속 시간은 최소 1시간 이상이어야 합니다")
-        @Max(value = 24, message = "모임 지속 시간은 최대 24시간 이내여야 합니다")
-        Integer durationHours,
+        @NotNull(message = "모임 시작 시간은 필수입니다")
+        @MeetupTimeUnit
+        String startAt,
+
+        @NotNull(message = "모임 지속 시간은 필수입니다")
+        @MeetupTimeUnit
+        String endAt,
 
         @NotNull(message = "위치 정보는 필수입니다")
         LocationRequest location
@@ -42,22 +42,22 @@ public record MeetupCreateRequest(
         public MeetupCreateRequest(
                 String name,
                 String category,
-                String subCategory,
                 String description,
                 List<String> hashTags,
                 Integer capacity,
                 Double scoreLimit,
-                Integer durationHours,
+                String startAt,
+                String endAt,
                 LocationRequest location
         ) {
                 this.name = name;
                 this.category = category.toUpperCase();
-                this.subCategory = subCategory != null ? subCategory.toUpperCase() : null;
                 this.description = description != null ? description : "";
                 this.hashTags = hashTags != null ? hashTags : List.of();
                 this.capacity = capacity != null ? capacity : 10;
                 this.scoreLimit = scoreLimit != null ? scoreLimit : 0.0;
-                this.durationHours = durationHours;
+                this.startAt = startAt;
+                this.endAt = endAt;
                 this.location = location;
         }
 }
