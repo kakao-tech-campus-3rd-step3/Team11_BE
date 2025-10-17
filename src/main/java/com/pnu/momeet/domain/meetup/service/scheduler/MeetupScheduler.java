@@ -20,7 +20,7 @@ public class MeetupScheduler {
     private final MeetupStateService meetupStateService;
     private final MeetupEntityService meetupEntityService;
 
-    @Scheduled(cron = "0 1/30 * * * ?")
+    @Scheduled(cron = "0 0/30 * * * ?")
     public void finishExpiredMeetups() {
         log.debug("종료할 모임 탐색 시작");
         // 30분 + 30초 전, 00분 + 30초 전 사이에 시작/종료되는 모임 처리
