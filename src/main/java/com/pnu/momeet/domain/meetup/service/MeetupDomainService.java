@@ -56,7 +56,7 @@ public class MeetupDomainService {
             }
         } catch (DateTimeParseException e) {
             throw new CustomValidationException(Map.of(
-                "timeUnit", List.of("시간 형식이 올바르지 않습니다. yyyy-MM-DDTHH:MM:SS 형식을 사용해주세요.")
+                "timeUnit", List.of("시간 형식이 올바르지 않습니다. yyyy-MM-ddTHH:mm 형식을 사용해주세요.")
             ));
         }
 
