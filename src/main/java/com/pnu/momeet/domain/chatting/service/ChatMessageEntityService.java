@@ -22,7 +22,9 @@ public class ChatMessageEntityService {
 
     @Transactional
     public CursorInfo<ChatMessage> getHistories(UUID meetupId, int size, Long cursorId) {
-        log.debug("채팅 메시지 히스토리 조회 시도 - meetupId: {}, size: {}, cursorId: {}",meetupId, size, cursorId);
+        log.debug("채팅 메시지 히스토리 조회 시도 - meetupId: {}, size: {}, cursorId: {}",
+            meetupId, size, cursorId
+        );
         var histories = chatMessageDslRepository.findHistoriesByMeetupId(meetupId, size, cursorId);
         log.debug("채팅 메시지 히스토리 조회 완료 - meetupId: {}, size: {}, cursorId: {}, resultSize: {}",
                 meetupId, size, cursorId, histories.getSize());

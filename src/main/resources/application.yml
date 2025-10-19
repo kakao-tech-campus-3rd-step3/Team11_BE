@@ -15,6 +15,21 @@ spring:
         bucket: ${AWS_S3_BUCKET_NAME}
       region:
         static: ap-northeast-2
+  mail:
+    host: ${BREVO_SMTP_HOST}
+    port: ${BREVO_SMTP_PORT}
+    username: ${BREVO_USERNAME}
+    password: ${BREVO_PASSWORD}
+    from-domain: ${EMAIL_FROM_DOMAIN}
+    properties:
+        mail:
+            smtp:
+            auth: true
+            starttls:
+                enable: true
+            connectiontimeout: 5000
+            timeout: 5000
+            writetimeout: 5000
 
   datasource:
     url: ${DB_URL}
@@ -36,32 +51,39 @@ app:
     jwt:
       secret: ${JWT_SECRET}
       access-token:
-        name_in_cookie: access_token
         expiration_in_second: 3600
       refresh-token:
-        name_in_cookie: refresh_token
         expiration_in_second: 604800
+      ws-upgrade-token:
+        expiration_in_second: 30 # 30초
       issuer: momeet
+    verification:
+      expiration_in_minute: 10
 
     https:
        enabled: false
        domain: localhost:8080
-       allow-origins:
-         - http://localhost:*
-         - http://127.0.0.1:*
+
+    websocket:
+      endpoint: /ws/chat
+      handshake-header: token
+
+    cors:
+      allowed-origins:
+        - http://localhost:*
+        - http://127.0.0.1:*
 
     whitelist-urls:
       - /api/auth/login
       - /api/auth/signup
       - /api/auth/refresh
+      - /api/auth/verify
       - /api/auth/kakao
       - /api/auth/kakao/callback
       - /api/auth/kakao/withdraw
       - /error
       - /admin
       - /admin/**
-      - /ws/**
-      - /ws/chat/**
       - /health
 
 logging:
@@ -88,3 +110,6 @@ momeet:
   temperature:
     bayesian:
       prior-k: 5.0
+
+frontend:
+  url: https://${FRONTEND_DOMAIN_NAME:localhost:3000}

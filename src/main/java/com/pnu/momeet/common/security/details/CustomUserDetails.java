@@ -54,6 +54,10 @@ public class CustomUserDetails implements UserDetails, Principal {
         return memberInfo.isAccountNonLocked();
     }
 
+    public boolean isVerified() {
+        return memberInfo.verified();
+    }
+
     public LocalDateTime getTokenIssuedAt() {
         return memberInfo.tokenIssuedAt();
     }

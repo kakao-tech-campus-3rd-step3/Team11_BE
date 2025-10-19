@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS member_role CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
 DROP TABLE IF EXISTS profile CASCADE;
 DROP TABLE IF EXISTS member CASCADE;
+DROP TABLE IF EXISTS member_verification CASCADE;
 DROP TABLE IF EXISTS badge CASCADE;
 DROP TABLE IF EXISTS profile_badge CASCADE;
 DROP TABLE IF EXISTS meetup CASCADE;
@@ -12,6 +13,9 @@ DROP TABLE IF EXISTS meetup_hash_tag CASCADE;
 DROP TABLE IF EXISTS meetup_participant CASCADE;
 DROP TABLE IF EXISTS badge CASCADE;
 DROP TABLE IF EXISTS profile_badge CASCADE;
+DROP TABLE IF EXISTS user_block CASCADE;
+DROP TABLE IF EXISTS user_report CASCADE;
+DROP TABLE IF EXISTS report_attachment CASCADE;
 
 CREATE TABLE member (
     id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -23,9 +27,19 @@ CREATE TABLE member (
     updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
     token_issued_at  TIMESTAMP DEFAULT NULL,
     enabled        BOOLEAN NOT NULL DEFAULT TRUE,
+    verified       BOOLEAN NOT NULL DEFAULT FALSE,
     is_account_non_locked BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE(provider, provider_id)
 );
+
+CREATE TABLE member_verification (
+    code uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    member_id uuid UNIQUE NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMP NOT NULL
+);
+
+create index if not exists idx_verification_expires_at on member_verification(expires_at);
 
 
 CREATE TABLE member_role (
@@ -37,7 +51,7 @@ CREATE TABLE member_role (
 
 CREATE TABLE refresh_token (
     member_id uuid PRIMARY KEY REFERENCES member(id) ON DELETE CASCADE,
-    token_value varchar(255) NOT NULL
+    token_value varchar(500) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS public.sigungu_boundary (
@@ -146,7 +160,7 @@ CREATE TABLE evaluation (
     meetup_id UUID  NOT NULL,
     evaluator_profile_id UUID  NOT NULL,
     target_profile_id UUID  NOT NULL,
-    rating SMALLINT NOT NULL, -- 0=LIKE, 1=DISLIKE
+    rating VARCHAR(10) NOT NULL,
     ip_hash VARCHAR(128) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
@@ -190,3 +204,43 @@ CREATE INDEX IF NOT EXISTS idx_profile_badge_profile ON profile_badge(profile_id
 CREATE INDEX IF NOT EXISTS idx_profile_badge_badge   ON profile_badge(badge_id);
 CREATE INDEX IF NOT EXISTS idx_profile_rep_only
     ON profile_badge(profile_id) WHERE is_representative = TRUE;
+
+CREATE TABLE IF NOT EXISTS user_block (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    blocker_id UUID NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    blocked_id UUID NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_user_block UNIQUE (blocker_id, blocked_id),
+    CONSTRAINT ck_user_block_self CHECK (blocker_id <> blocked_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_block_blocker ON user_block (blocker_id);
+CREATE INDEX IF NOT EXISTS idx_user_block_blocked ON user_block (blocked_id);
+
+CREATE TABLE user_report (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    reporter_profile_id  UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    target_profile_id    UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    category     VARCHAR(30) NOT NULL,
+    status       VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    detail       TEXT,
+    ip_hash      VARCHAR(128),
+    admin_reply  TEXT,
+    processed_by UUID,
+    processed_at TIMESTAMP,
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT ck_reporter_ne_target CHECK (reporter_profile_id <> target_profile_id)
+);
+
+CREATE TABLE report_attachment (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    report_id    UUID NOT NULL REFERENCES user_report(id) ON DELETE CASCADE,
+    url          TEXT NOT NULL,
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_report_reporter_created_at
+    ON user_report (reporter_profile_id, created_at DESC);
+CREATE INDEX idx_report_attachment_report
+    ON report_attachment (report_id);

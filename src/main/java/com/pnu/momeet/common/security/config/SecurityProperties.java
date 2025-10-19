@@ -16,6 +16,9 @@ public class SecurityProperties {
     private List<String> whitelistUrls;
     private Jwt jwt;
     private Https https;
+    private Websocket websocket;
+    private Cors cors;
+    private Verification verification;
 
     @Getter
     @Setter
@@ -23,19 +26,24 @@ public class SecurityProperties {
         private String secret;
         private AccessToken accessToken;
         private RefreshToken refreshToken;
+        private WsUpgradeToken wsUpgradeToken;
         private String issuer;
 
         @Getter
         @Setter
         public static class AccessToken {
-            private String nameInCookie;
             private int expirationInSecond;
         }
 
         @Getter
         @Setter
         public static class RefreshToken {
-            private String nameInCookie;
+            private int expirationInSecond;
+        }
+
+        @Getter
+        @Setter
+        public static class WsUpgradeToken {
             private int expirationInSecond;
         }
     }
@@ -45,7 +53,28 @@ public class SecurityProperties {
     public static class Https {
         private boolean enabled;
         private String domain;
-        private List<String> allowOrigins;
-        private boolean secureCookies = false;
+
+        public String getUrl() {
+            return (enabled ? "https://" : "http://") + domain;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class Websocket {
+        private String endpoint;
+        private String handshakeHeader;
+    }
+
+    @Getter
+    @Setter
+    public static class Cors {
+        private List<String> allowedOrigins;
+    }
+
+    @Getter
+    @Setter
+    public static class Verification {
+        private int expirationInMinute;
     }
 }

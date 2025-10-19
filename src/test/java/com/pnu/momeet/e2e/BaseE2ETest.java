@@ -24,6 +24,9 @@ public abstract class BaseE2ETest {
     public static final String TEST_USER_EMAIL = "user@test.com";
     public static final String TEST_USER_PASSWORD = "testpass1212!";
 
+    public static final String TEST_ALICE_USER_EMAIL = "alice@test.com";
+    public static final String TEST_ALICE_USER_PASSWORD = "testpass1212!";
+
     public static final String AUTH_HEADER = "Authorization";
     public static final String BEAR_PREFIX = "Bearer ";
 

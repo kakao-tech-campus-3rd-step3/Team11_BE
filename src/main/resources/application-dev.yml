@@ -10,8 +10,8 @@ app:
     https:
       enabled: true
       domain: ${DEV_DOMAIN_NAME}
-      secure-cookies: true
-      allow-origins:
+    cors:
+      allowed-origins:
         - http://localhost:*
         - http://127.0.0.1:*
         - http://${DEV_DOMAIN_NAME}

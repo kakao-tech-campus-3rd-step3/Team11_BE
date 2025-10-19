@@ -11,6 +11,7 @@ import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.enums.SubCategory;
+import com.pnu.momeet.domain.meetup.repository.spec.MeetupSpecifications;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupDtoMapper;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
 import com.pnu.momeet.domain.profile.entity.Profile;
@@ -23,6 +24,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -53,7 +55,8 @@ public class MeetupDomainService {
     }
     @Transactional(readOnly = true)
     public List<MeetupResponse> getAllByLocation(
-            MeetupGeoSearchRequest request
+        MeetupGeoSearchRequest request,
+        UUID viewerMemberId
     ) {
         Point locationPoint = geometryFactory.createPoint(new Coordinate(request.longitude(), request.latitude()));
         Optional<MainCategory> mainCategory = Optional.ofNullable(request.category()).map(MainCategory::valueOf);
@@ -61,7 +64,7 @@ public class MeetupDomainService {
         Optional<String> search = Optional.ofNullable(request.search());
 
         return entityService.getAllByLocationAndCondition(
-            locationPoint, request.radius(), mainCategory, subCategory, search
+            locationPoint, request.radius(), mainCategory, subCategory, search, viewerMemberId
         )
             .stream()
             .map(MeetupEntityMapper::toResponse)
@@ -70,13 +73,16 @@ public class MeetupDomainService {
 
     @Transactional(readOnly = true)
     public Page<MeetupResponse> getAllBySpecification(
-            MeetupPageRequest request
+        MeetupPageRequest request,
+        UUID viewerMemberId
     ) {
         PageRequest pageRequest = MeetupDtoMapper.toPageRequest(request);
-        Specification<Meetup> specification = MeetupDtoMapper.toSpecification(request);
+        Specification<Meetup> specification = MeetupDtoMapper.toSpecification(request)
+            .and(MeetupSpecifications.visibleTo(viewerMemberId));
 
-        return entityService.getAllBySpecificationWithPagination(specification, pageRequest)
-                .map(MeetupEntityMapper::toResponse);
+        Page<Meetup> page = entityService.getAllBySpecificationWithPagination(specification, pageRequest);
+
+        return page.map(MeetupEntityMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -86,21 +92,20 @@ public class MeetupDomainService {
     }
 
     @Transactional(readOnly = true)
+    public MeetupDetail getById(UUID meetupId, UUID viewerMemberId) {
+        if (entityService.isBlockedInMeetup(meetupId, viewerMemberId)) {
+            log.info("차단 관계의 사용자가 있는 모임 조회 시도. id={}", meetupId);
+            throw new NoSuchElementException("해당 Id의 모임이 존재하지 않습니다. id=" + meetupId);
+        }
+        var meetup =  entityService.getByIdWithDetails(meetupId);
+        return MeetupEntityMapper.toDetail(meetup);
+    }
+
+    @Transactional(readOnly = true)
     public MeetupDetail getOwnedActiveMeetupByMemberID(UUID memberId) {
         UUID profileId = profileService.mapToProfileId(memberId);
-        List<Meetup> activeMeetups = entityService.getAllByOwnerIdAndStatusIn(
-                profileId, List.of(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS)
-        );
-        if (activeMeetups.isEmpty()) {
-            log.info("진행 중이거나 모집 중인 모임이 없음. memberId={}", memberId);
-            throw new NoSuchElementException("진행 중이거나 모집 중인 모임이 없습니다.");
-        }
-        if (activeMeetups.size() > 1) {
-            // 비정상적인 상황
-            log.warn("진행 중이거나 모집 중인 모임이 2개 이상임. memberId={}, count={}", memberId, activeMeetups.size());
-        }
-
-        return MeetupEntityMapper.toDetail(activeMeetups.getFirst());
+        Meetup activeMeetups = entityService.getParticipatedMeetupByProfileId(profileId);
+        return MeetupEntityMapper.toDetail(activeMeetups);
     }
 
     @Transactional(readOnly = true)
@@ -111,13 +116,11 @@ public class MeetupDomainService {
     @Transactional
     public MeetupDetail createMeetup(MeetupCreateRequest request, UUID memberId) {
         validateCategories(request.category(), request.subCategory());
-        if (entityService.existsByOwnerIdAndStatusIn(
-                profileService.mapToProfileId(memberId),
-                List.of(MeetupStatus.OPEN, MeetupStatus.IN_PROGRESS)
-        )) {
-            log.info("이미 진행 중이거나 모집 중인 모임이 있음. memberId={}", memberId);
+        UUID profileId = profileService.mapToProfileId(memberId);
+        if (entityService.existsParticipatedMeetupByProfileId(profileId)) {
+            log.info("이미 참여중인 모임이 있음. memberId={}", memberId);
             throw new CustomValidationException(Map.of(
-                    "owner", List.of("이미 진행 중이거나 모집 중인 모임이 있습니다. 하나의 모임만 생성할 수 있습니다.")
+                    "owner", List.of("이미 참여중인 모임이 있습니다. 모임이 종료된 후에 새 모임을 생성할 수 있습니다.")
             ));
         }
         Point locationPoint = geometryFactory.createPoint(new Coordinate(

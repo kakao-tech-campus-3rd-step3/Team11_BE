@@ -1,0 +1,69 @@
+package com.pnu.momeet.e2e.block;
+
+import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
+import com.pnu.momeet.domain.auth.service.EmailAuthService;
+import com.pnu.momeet.domain.block.repository.BlockRepository;
+import com.pnu.momeet.domain.member.enums.Role;
+import com.pnu.momeet.domain.member.service.MemberEntityService;
+import com.pnu.momeet.domain.profile.service.ProfileDomainService;
+import com.pnu.momeet.e2e.BaseE2ETest;
+import io.restassured.RestAssured;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
+
+public abstract class BaseBlockTest extends BaseE2ETest {
+
+    protected Map<Role, TokenResponse> testTokens;
+    protected List<UUID> blocksToBeDeleted;
+
+    protected UUID testUserMemberId;
+    protected UUID testAdminMemberId;
+
+    protected UUID testUserProfileId;
+    protected UUID testAdminProfileId;
+
+    @Autowired
+    protected EmailAuthService emailAuthService;
+    @Autowired
+    protected MemberEntityService memberService;
+    @Autowired
+    protected ProfileDomainService profileService;
+    @Autowired
+    protected BlockRepository blockRepository;
+
+    @BeforeEach
+    protected void setup() {
+        super.setup();
+        RestAssured.basePath = "/api/blocks"; // 차단 컨트롤러 베이스 경로
+        testTokens = new HashMap<>();
+        blocksToBeDeleted = new ArrayList<>();
+        testTokens.put(Role.ROLE_ADMIN, emailAuthService.login(TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD));
+        testTokens.put(Role.ROLE_USER,  emailAuthService.login(TEST_USER_EMAIL,  TEST_USER_PASSWORD));
+
+        // 테스트 계정(Admin, User)들의 memberId / profileId 확보
+        var testAdminMember = memberService.getByEmail(TEST_ADMIN_EMAIL);
+        testAdminMemberId = testAdminMember.getId();
+        testAdminProfileId = profileService.getMyProfile(testAdminMemberId).id();
+        var testUserMember = memberService.getByEmail(TEST_USER_EMAIL);
+        testUserMemberId = testUserMember.getId();
+        testUserProfileId = profileService.getMyProfile(testUserMemberId).id();
+    }
+
+    @AfterEach
+    protected void tearDown() {
+        if (blocksToBeDeleted != null && !blocksToBeDeleted.isEmpty()) {
+            blocksToBeDeleted.forEach(badgeId -> blockRepository.deleteById(badgeId));
+            blocksToBeDeleted.clear();
+        }
+    }
+
+    protected TokenResponse getToken(Role role) {
+        return testTokens.get(role);
+    }
+}

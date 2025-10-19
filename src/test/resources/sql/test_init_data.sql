@@ -50,6 +50,33 @@ INSERT INTO public_test.profile (
     26410
 );
 
+-- 테스트 유저 Alice 추가
+-- password: testpass1212!
+INSERT INTO public_test.member (email, password)
+VALUES (
+           'alice@test.com',
+           '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G'
+       );
+
+INSERT INTO public_test.member_role (member_id, name)
+VALUES (
+           (SELECT id FROM public_test.member WHERE email = 'alice@test.com'),
+           'ROLE_USER'
+       );
+
+-- Alice User용 프로필 생성
+INSERT INTO public_test.profile (
+    member_id, nickname, age, gender, image_url, description, base_location_id
+) VALUES (
+    (SELECT id FROM public_test.member WHERE email = 'alice@test.com'),
+    '앨리스',
+    25,
+    'FEMALE',
+    'https://cdn.example.com/profiles/alice.png',
+    '테스트 환경용 기본 프로필',
+    26410
+);
+
 -- 종료된 모임 추가 (관리자가 owner)
 INSERT INTO public_test.meetup (
     id, owner_id, name, category, sub_category, description,

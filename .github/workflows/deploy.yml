@@ -89,6 +89,12 @@ jobs:
             export KAKAO_ADMIN_KEY='${{ secrets.KAKAO_ADMIN_KEY }}'
             export PROD_DOMAIN_NAME='${{ secrets.PROD_DOMAIN_NAME }}'
             export FRONTEND_DOMAIN_NAME='${{ secrets.FRONTEND_DOMAIN_NAME }}'
+            
+            export BREVO_SMTP_HOST='${{ secrets.BREVO_SMTP_HOST }}'
+            export BREVO_SMTP_PORT='${{ secrets.BREVO_SMTP_PORT }}'
+            export BREVO_USERNAME='${{ secrets.BREVO_USERNAME }}'
+            export BREVO_PASSWORD='${{ secrets.BREVO_PASSWORD }}'
+            export EMAIL_FROM_DOMAIN='${{ secrets.EMAIL_FROM_DOMAIN }}'
           
             echo "Starting deployment script..."
             # 스크립트를 실행합니다. 스크립트 내부에서 백그라운드 실행 및 로그 기록을 처리합니다.
