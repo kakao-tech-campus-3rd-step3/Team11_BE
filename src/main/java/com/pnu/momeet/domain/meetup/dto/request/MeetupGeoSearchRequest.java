@@ -1,7 +1,6 @@
 package com.pnu.momeet.domain.meetup.dto.request;
 
 import com.pnu.momeet.common.validation.annotation.ValidMainCategory;
-import com.pnu.momeet.common.validation.annotation.ValidSubCategory;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
@@ -20,9 +19,6 @@ public record MeetupGeoSearchRequest(
         @ValidMainCategory
         String category,
 
-        @ValidSubCategory
-        String subCategory,
-
         String search
 ) {
         public MeetupGeoSearchRequest(
@@ -30,14 +26,12 @@ public record MeetupGeoSearchRequest(
                 Double longitude,
                 Double radius,
                 String category,
-                String subCategory,
                 String search
         ) {
                 this.latitude = latitude;
                 this.longitude = longitude;
                 this.radius = radius != null ? radius : 5.0; // 기본 반경 5km
                 this.category = category;
-                this.subCategory = subCategory;
                 this.search = search;
         }
 }

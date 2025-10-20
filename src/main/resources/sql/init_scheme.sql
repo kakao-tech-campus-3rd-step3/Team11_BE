@@ -99,7 +99,6 @@ CREATE TABLE meetup (
     owner_id        UUID        NOT NULL REFERENCES profile(id),
     name            VARCHAR(60) NOT NULL,
     category        VARCHAR(30) NOT NULL,
-    sub_category    VARCHAR(30) NOT NULL,
     description     TEXT        NOT NULL,
     participant_count INTEGER     NOT NULL DEFAULT 1,
     capacity        INTEGER     NOT NULL DEFAULT 10,
@@ -108,6 +107,7 @@ CREATE TABLE meetup (
     address         TEXT        NOT NULL,
     sgg_code        BIGINT      NOT NULL REFERENCES sigungu_boundary(sgg_code),
     status          VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    start_at        TIMESTAMP   NOT NULL,
     end_at          TIMESTAMP,
     created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMP   NOT NULL DEFAULT NOW()
@@ -117,7 +117,7 @@ CREATE INDEX IF NOT EXISTS idx_meetup_location_point ON meetup USING GIST (locat
 CREATE INDEX IF NOT EXISTS idx_meetup_status ON meetup (status);
 CREATE INDEX IF NOT EXISTS idx_meetup_owner ON meetup (owner_id);
 CREATE INDEX IF NOT EXISTS idx_category ON meetup (category);
-CREATE INDEX IF NOT EXISTS idx_sub_category ON meetup (sub_category);
+CREATE INDEX IF NOT EXISTS idx_meetup_state_start_time ON meetup (status, start_at);
 CREATE INDEX IF NOT EXISTS idx_meetup_state_end_time ON meetup (status, end_at);
 
 CREATE TABLE meetup_hash_tag (

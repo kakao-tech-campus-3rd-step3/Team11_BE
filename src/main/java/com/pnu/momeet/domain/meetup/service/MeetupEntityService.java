@@ -3,7 +3,6 @@ package com.pnu.momeet.domain.meetup.service;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
-import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.meetup.repository.MeetupDslRepository;
 import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import lombok.RequiredArgsConstructor;
@@ -71,13 +70,12 @@ public class MeetupEntityService {
             Point location,
             Double radius,
             Optional<MainCategory> mainCategory,
-            Optional<SubCategory> subCategory,
             Optional<String> search,
             UUID viewerMemberId
     ) {
         log.debug("특정 위치 기반 meetup 목록 조회 시도. location={}, radius={}", location, radius);
         var meetups = meetupDslRepository.findAllByDistanceAndPredicates(
-                location, radius, mainCategory, subCategory, search, viewerMemberId
+                location, radius, mainCategory, search, viewerMemberId
         );
         log.debug("특정 위치 기반 meetup 목록 조회 성공. size={}", meetups.size());
         return meetups;
@@ -109,6 +107,14 @@ public class MeetupEntityService {
         log.debug("특정 상태이면서 특정 시간 이전에 종료된 meetup 목록 조회 시도. status={}, before={}", status, before);
         var meetups = meetupRepository.findAllByStatusAndEndAtBefore(status, before);
         log.debug("특정 상태이면서 특정 시간 이전에 종료된 meetup 목록 조회 성공. status={}, size={}", status, meetups.size());
+        return meetups;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Meetup> getAllByStatusAndStartAtBefore(MeetupStatus status, LocalDateTime before) {
+        log.debug("특정 상태이면서 특정 시간 이전에 시작된 meetup 목록 조회 시도. status={}, before={}", status, before);
+        var meetups = meetupRepository.findAllByStatusAndStartAtBefore(status, before);
+        log.debug("특정 상태이면서 특정 시간 이전에 시작된 meetup 목록 조회 성공. status={}, size={}", status, meetups.size());
         return meetups;
     }
 

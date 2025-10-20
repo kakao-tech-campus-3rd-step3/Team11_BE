@@ -4,7 +4,6 @@ package com.pnu.momeet.domain.meetup.entity;
 import com.pnu.momeet.domain.common.entity.BaseEntity;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
-import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
@@ -34,10 +33,6 @@ public class Meetup extends BaseEntity {
     @Column(nullable = false, length = 30)
     @Enumerated(EnumType.STRING)
     private MainCategory category;
-
-    @Column(nullable = false, length = 30)
-    @Enumerated(EnumType.STRING)
-    private SubCategory subCategory;
 
     @OneToMany(mappedBy = "meetup", fetch = FetchType.LAZY,
             cascade = CascadeType.ALL, orphanRemoval = true)
@@ -69,7 +64,10 @@ public class Meetup extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private MeetupStatus status = MeetupStatus.OPEN;
 
-    @Column(name = "end_at")
+    @Column(name = "start_at", nullable = false)
+    private LocalDateTime startAt;
+
+    @Column(name = "end_at", nullable = false)
     private LocalDateTime endAt;
 
     @OneToMany(mappedBy = "meetup", fetch = FetchType.LAZY,
@@ -82,26 +80,26 @@ public class Meetup extends BaseEntity {
             Profile owner,
             String name,
             MainCategory category,
-            SubCategory subCategory,
             String description,
             Integer capacity,
             Double scoreLimit,
             Point locationPoint,
             String address,
             Sigungu sigungu,
+            LocalDateTime startAt,
             LocalDateTime endAt,
             MeetupStatus status
     ) {
         this.owner = owner;
         this.name = name;
         this.category = category;
-        this.subCategory = subCategory;
         this.description = description;
         this.capacity = capacity;
         this.scoreLimit = scoreLimit;
         this.locationPoint = locationPoint;
         this.address = address;
         this.sigungu = sigungu;
+        this.startAt = startAt;
         this.endAt = endAt;
         this.status = Objects.requireNonNullElse(status, MeetupStatus.OPEN);
         this.participantCount = 0;

@@ -132,12 +132,12 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "테스트 밋업 " + index,
                 "STUDY",
-                "CERTIFICATE",
                 "테스트 밋업 설명",
                 List.of("테스트", "밋업", "해시태그" + index),
                 10,
                 10.0,
-                10,
+                "2025-10-18T15:00",
+                "2025-10-19T01:00",
                 new LocationRequest(35.243322, 129.088287, "부산시 금정구")
         );
 

@@ -23,7 +23,9 @@ public class AuthSignupTest extends BaseAuthTest {
     @DisplayName("회원가입 성공 테스트")
     public void signup_success() {
         SignupRequest request = new SignupRequest("testSignup@test.com", "testSignup123@", "testSignup123@");
-        TokenResponse response = RestAssured
+        
+        // 이메일 인증 방식으로 변경되어 204 No Content 반환
+        RestAssured
             .given()
                 .contentType(ContentType.JSON)
                 .body(request)
@@ -31,23 +33,17 @@ public class AuthSignupTest extends BaseAuthTest {
                 .post("/signup")
             .then()
                 .log().all()
-                .statusCode(200)
-                .body(
-                        "accessToken", notNullValue(),
-                        "refreshToken", notNullValue()
-                )
-                .extract()
-                .as(TokenResponse.class);
+                .statusCode(204);
 
+        // 회원 생성 확인 (아직 verified=false 상태)
         MemberResponse signedUpMember = memberService.getMemberByEmail(request.email());
         toBeDeleted.add(signedUpMember); // 회원가입한 계정 삭제를 위해 리스트에 추가
         MemberInfo memberInfo = memberService.getMemberInfoById(signedUpMember.id());
 
-        testTokenPair(response, signedUpMember);
         assertThat(signedUpMember).isNotNull();
         assertThat(memberInfo.provider()).isEqualTo(Provider.EMAIL);
         assertThat(memberInfo.enabled()).isTrue(); // 계정 활성화 여부
-        assertThat(memberInfo.tokenIssuedAt()).isNotNull(); // 토큰 발급 시점
+        assertThat(memberInfo.verified()).isFalse(); // 아직 이메일 인증 안됨
         assertThat(memberInfo.roles().size()).isEqualTo(1);
         assertThat(memberInfo.roles().getFirst()).isEqualTo("ROLE_USER");
     }

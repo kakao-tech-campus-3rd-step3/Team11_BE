@@ -29,6 +29,4 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
     Optional<Participant> findByIdAndMeetupId(Long id, UUID meetupId);
 
     boolean existsByProfileIdAndMeetupId(UUID profileId, UUID meetupId);
-
-    void deleteAllByMeetupId(UUID meetupId);
 }
