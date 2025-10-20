@@ -183,10 +183,4 @@ public class ParticipantDomainService {
         log.info("호스트 권한 양도 성공. fromId={}, toId={}", requester.getId(), targetParticipant.getId());
         return ParticipantEntityMapper.toDto(targetParticipant);
     }
-
-    @Transactional
-    public void finalizeAllParticipantsByMeetupId(UUID meetupId) {
-        long finishCount = entityService.updateIsFinishedByMeetupId(meetupId, true);
-        log.info("참여자의 모임 종료 처리 완료. meetupId={}, finalizedCount={}", meetupId, finishCount);
-    }
 }

@@ -134,7 +134,6 @@ CREATE TABLE meetup_participant (
     role            VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
     is_active       BOOLEAN NOT NULL DEFAULT FALSE,
     is_rated        BOOLEAN NOT NULL DEFAULT FALSE,
-    is_finished     BOOLEAN NOT NULL DEFAULT FALSE,
     last_active_at  TIMESTAMP,
     created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
     UNIQUE(meetup_id, profile_id)

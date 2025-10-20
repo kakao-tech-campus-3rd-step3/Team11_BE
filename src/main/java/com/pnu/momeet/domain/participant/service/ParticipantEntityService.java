@@ -119,12 +119,4 @@ public class ParticipantEntityService {
         participantRepository.deleteById(id);
         log.debug("특정 id의 참가자 삭제 성공. id={}", id);
     }
-
-    @Transactional
-    public long updateIsFinishedByMeetupId(UUID meetupId, boolean isFinished) {
-        log.debug("모임 ID로 참가자 isFinished 상태 일괄 수정 시도. meetupId={}, isFinished={}", meetupId, isFinished);
-        long count  = participantDslRepository.updateIsFinishedByMeetupId(meetupId, isFinished);
-        log.debug("모임 ID로 참가자 isFinished 상태 일괄 수정 성공. meetupId={}, isFinished={}", meetupId, isFinished);
-        return count;
-    }
 }

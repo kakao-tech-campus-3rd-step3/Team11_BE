@@ -54,10 +54,6 @@ public class Participant extends SimpleCreationEntity {
     @Column(name = "is_rated", nullable = false)
     private Boolean isRated = false;
 
-    @NotNull
-    @ColumnDefault("false")
-    private Boolean isFinished = false;
-
     @Column(name = "last_active_at")
     private LocalDateTime lastActiveAt;
 
