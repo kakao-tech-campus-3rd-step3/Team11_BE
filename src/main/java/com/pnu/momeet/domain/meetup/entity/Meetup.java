@@ -64,10 +64,10 @@ public class Meetup extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private MeetupStatus status = MeetupStatus.OPEN;
 
-    @Column
+    @Column(name = "start_at", nullable = false)
     private LocalDateTime startAt;
 
-    @Column(name = "end_at")
+    @Column(name = "end_at", nullable = false)
     private LocalDateTime endAt;
 
     @OneToMany(mappedBy = "meetup", fetch = FetchType.LAZY,

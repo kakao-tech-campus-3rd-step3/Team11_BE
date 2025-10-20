@@ -54,6 +54,8 @@ public class MeetupStateService {
         }
         entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.IN_PROGRESS));
         log.info("모임 시작 완료. id={}", meetupId);
+        coreEventPublisher.publish(MeetupEntityMapper.toMeetupStartEvent(meetup));
+        log.info("모임 시작 완료. id={}", meetupId);
     }
 
     @Transactional

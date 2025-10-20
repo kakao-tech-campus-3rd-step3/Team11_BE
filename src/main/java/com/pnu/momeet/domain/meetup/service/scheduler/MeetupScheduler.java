@@ -27,6 +27,7 @@ public class MeetupScheduler {
         LocalDateTime limit = LocalDateTime.now().plusSeconds(IDLE_TIMEOUT_SEC);
         startOpenMeetup(limit);
         finishProgressingMeetup(limit);
+        cancelIdleMeetup(limit);
     }
 
     private void startOpenMeetup(LocalDateTime limit) {
@@ -67,6 +68,26 @@ public class MeetupScheduler {
         }
         log.info("모임 종료 처리 완료. 대상 모임 : {}, 성공: {}, 실패: {}", meetupsToFinish.size(), successCount, failureCount);
     }
+
+    private void cancelIdleMeetup(LocalDateTime limit) {
+        var meetupsToCancel = meetupEntityService.getAllByStatusAndEndAtBefore(
+                MeetupStatus.OPEN, limit
+        );
+        log.debug("취소할 모임 탐색 완료. 취소할 모임 개수: {}", meetupsToCancel.size());
+        int successCount = 0, failureCount = 0;
+
+        for (var meetup : meetupsToCancel) {
+            try {
+                meetupStateService.cancelMeetupAdmin(meetup.getId());
+                successCount++;
+            } catch (Exception e) {
+                log.error("모임 취소 처리 중 오류 발생. meetupId={}", meetup.getId(), e);
+                failureCount++;
+            }
+        }
+        log.info("모임 취소 처리 완료. 대상 모임 : {}, 성공: {}, 실패: {}", meetupsToCancel.size(), successCount, failureCount);
+    }
+
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정마다 실행
     public void closeEvaluationPeriod() {
