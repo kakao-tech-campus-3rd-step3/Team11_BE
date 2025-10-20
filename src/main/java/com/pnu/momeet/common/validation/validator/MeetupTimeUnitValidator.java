@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public class MeetupTimeUnitValidator implements ConstraintValidator<MeetupTimeUnit, String> {
     // yyyy-MM-ddTHH:mm 30분 단위 검사 정규식
     private static final Pattern MEETUP_TIME_UNIT_PATTERN =
-            Pattern.compile("^\\d{4}-\\d{2}-\\d{2}T(([01]\\d|2[0-3]):(00|30)$");
+            Pattern.compile("^\\d{4}-\\d{2}-\\d{2}T(([01]\\d|2[0-3]):(00|30))$");
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
