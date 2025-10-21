@@ -11,8 +11,7 @@ import java.time.format.ResolverStyle;
 
 public class MeetupTimeUnitValidator implements ConstraintValidator<MeetupTimeUnit, String> {
     // yyyy-MM-ddTHH:mm 30분 단위 검사 정규식
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
-            .withResolverStyle(ResolverStyle.STRICT);
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {

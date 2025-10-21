@@ -17,6 +17,7 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
@@ -38,6 +39,8 @@ import java.util.*;
 @RequiredArgsConstructor
 public class MeetupDomainService {
 
+    private static final long MIN_LEAD_MINUTES = 30; // 시작 최소 리드타임(분)
+
     private final GeometryFactory geometryFactory;
     private final MeetupEntityService entityService;
     private final ProfileEntityService profileService;
@@ -52,6 +55,21 @@ public class MeetupDomainService {
             if (endTime.isBefore(startTime) || endTime.isEqual(startTime)) {
                 throw new CustomValidationException(Map.of(
                     "timeUnit", List.of("종료 시간은 시작 시간 이후여야 합니다.")
+                ));
+            }
+
+            long durationMin = Duration.between(startTime, endTime).toMinutes();
+            if (durationMin % 30 != 0) {
+                throw new CustomValidationException(Map.of(
+                    "timeUnit", List.of("모임 지속 시간은 30분 단위여야 합니다.")
+                ));
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime minStart = now.plusMinutes(MIN_LEAD_MINUTES);
+            if (startTime.isBefore(minStart)) {
+                throw new CustomValidationException(Map.of(
+                    "timeUnit", List.of("시작 시간은 현재로부터 최소 " + MIN_LEAD_MINUTES + "분 이후여야 합니다.")
                 ));
             }
         } catch (DateTimeParseException e) {
