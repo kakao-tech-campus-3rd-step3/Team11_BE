@@ -27,7 +27,6 @@ class MeetupSelfTest extends BaseMeetupTest {
             "부산광역시 금정구 부산대학로 63번길 2"
         );
 
-        // ✅ LocalDateTime 기준 미래 시간
         LocalDateTime base = baseSlot();
         String startAt = slot(base, 2); // +1h
         String endAt   = slot(base, 5); // +2.5h
