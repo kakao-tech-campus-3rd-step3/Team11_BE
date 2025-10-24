@@ -5,6 +5,8 @@ import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,10 @@ class MeetupCreateTest extends BaseMeetupTest {
                 "부산광역시 금정구 부산대학로 63번길 2"
         );
 
+        LocalDateTime base = baseSlot();
+        String startAt = slot(base, 2); // +1h
+        String endAt   = slot(base, 5); // +2.5h
+
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "테스트 모임",
                 "GAME",
@@ -34,8 +40,8 @@ class MeetupCreateTest extends BaseMeetupTest {
                 List.of("보드게임", "친목"),
                 6,
                 35.0,
-                "2025-10-18T15:00",
-                "2025-10-18T18:00",
+                startAt,
+                endAt,
                 location
         );
 
@@ -43,6 +49,7 @@ class MeetupCreateTest extends BaseMeetupTest {
             .given()
                 .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
                 .contentType(ContentType.JSON)
+                .log().body()
                 .body(request)
             .when()
                 .post()
@@ -80,6 +87,10 @@ class MeetupCreateTest extends BaseMeetupTest {
                 "부산광역시 금정구 부산대학로 63번길 2"
         );
 
+        LocalDateTime base = baseSlot();
+        String startAt = slot(base, 2); // +1h
+        String endAt   = slot(base, 5); // +2.5h
+
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "기본값 테스트 모임",
                 "SPORTS",
@@ -87,8 +98,8 @@ class MeetupCreateTest extends BaseMeetupTest {
                 null, // hashTags default to empty list
                 null, // capacity default to 10
                 null, // scoreLimit default to 0.0
-                "2025-10-18T15:00",
-                "2025-10-18T17:00",
+                startAt,
+                endAt,
                 location
         );
 

@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupUpdateRequest;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,10 @@ class MeetupUpdateTest extends BaseMeetupTest {
                 "부산광역시 금정구 부산대학로 63번길 2"
         );
 
+        LocalDateTime base = baseSlot();
+        String startAt = slot(base, 2); // +1h
+        String endAt   = slot(base, 5); // +2.5h
+
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "수정 테스트 모임",
                 "GAME",
@@ -33,8 +38,8 @@ class MeetupUpdateTest extends BaseMeetupTest {
                 List.of("보드게임"),
                 6,
                 35.0,
-                "2025-10-18T15:00",
-                "2025-10-18T18:00",
+                startAt,
+                endAt,
                 location
         );
 
@@ -247,7 +252,7 @@ class MeetupUpdateTest extends BaseMeetupTest {
         // chris@test.com 사용자로 alice의 모임 수정 시도
         RestAssured
             .given()
-                .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(BOB_EMAIL).accessToken())
+                .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(CHRIS_EMAIL).accessToken())
                 .contentType(ContentType.JSON)
                 .body(request)
             .when()

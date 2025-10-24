@@ -3,6 +3,7 @@ package com.pnu.momeet.e2e.meetup;
 import com.pnu.momeet.domain.meetup.dto.request.LocationRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import io.restassured.RestAssured;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,10 @@ class MeetupReadTest extends BaseMeetupTest {
                 "부산광역시 금정구 부산대학로 63번길 2"
         );
 
+        LocalDateTime base = baseSlot();
+        String startAt = slot(base, 2); // +1h
+        String endAt   = slot(base, 5); // +2.5h
+
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "조회 테스트 모임",
                 "GAME",
@@ -31,8 +36,8 @@ class MeetupReadTest extends BaseMeetupTest {
                 List.of("보드게임", "친목"),
                 6,
                 35.0,
-                "2025-10-18T15:00",
-                "2025-10-18T18:00",
+                startAt,
+                endAt,
                 location
         );
 
@@ -205,8 +210,8 @@ class MeetupReadTest extends BaseMeetupTest {
     @DisplayName("[차단] viewer가 모임 소유자를 차단하면 상세는 404")
     void get_meetup_by_id_blocked_by_viewer_404() {
         // given: BOB이 모임을 만들고, ALICE가 BOB을 차단
-        UUID meetupId = createTestMeetupByEmail(BOB_EMAIL);
-        block(users.get(ALICE_EMAIL).id(), users.get(BOB_EMAIL).id()); // ALICE → BOB
+        UUID meetupId = createTestMeetupByEmail(CHRIS_EMAIL);
+        blockIfNeeded(users.get(ALICE_EMAIL).id(), users.get(CHRIS_EMAIL).id()); // ALICE → BOB
 
         // when & then: ALICE로 상세 조회 시 404
         RestAssured.given()
@@ -221,8 +226,8 @@ class MeetupReadTest extends BaseMeetupTest {
     @Test
     @DisplayName("[차단] 모임 소유자가 viewer를 차단해도 상세는 404")
     void get_meetup_by_id_blocked_by_owner_404() {
-        UUID meetupId = createTestMeetupByEmail(BOB_EMAIL);
-        block(users.get(BOB_EMAIL).id(), users.get(ALICE_EMAIL).id()); // BOB → ALICE
+        UUID meetupId = createTestMeetupByEmail(CHRIS_EMAIL);
+        blockIfNeeded(users.get(CHRIS_EMAIL).id(), users.get(ALICE_EMAIL).id()); // BOB → ALICE
 
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
@@ -236,8 +241,8 @@ class MeetupReadTest extends BaseMeetupTest {
     @Test
     @DisplayName("[차단] 페이지 조회 시 차단 모임은 목록에서 제외된다")
     void get_meetup_page_excludes_blocked_meetup() {
-        UUID meetupId = createTestMeetupByEmail(BOB_EMAIL);
-        block(users.get(ALICE_EMAIL).id(), users.get(BOB_EMAIL).id()); // ALICE → BOB
+        UUID meetupId = createTestMeetupByEmail(CHRIS_EMAIL);
+        blockIfNeeded(users.get(ALICE_EMAIL).id(), users.get(CHRIS_EMAIL).id()); // ALICE → BOB
 
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
@@ -257,10 +262,10 @@ class MeetupReadTest extends BaseMeetupTest {
     @DisplayName("[차단] 지도 조회: viewer가 모임 소유자와 차단이면 제외된다")
     void get_meetup_geo_excludes_when_viewer_blocks_owner() {
         // given: 모임은 BOB이 만듦(= owner=BOB)
-        UUID meetupId = createTestMeetupByEmail(BOB_EMAIL);
+        UUID meetupId = createTestMeetupByEmail(CHRIS_EMAIL);
 
         // ALICE -> BOB 차단
-        block(users.get(ALICE_EMAIL).id(), users.get(BOB_EMAIL).id());
+        blockIfNeeded(users.get(ALICE_EMAIL).id(), users.get(CHRIS_EMAIL).id());
 
         // when & then: ALICE로 조회 시 해당 모임이 결과에 없어야 함
         RestAssured.given()
@@ -285,7 +290,7 @@ class MeetupReadTest extends BaseMeetupTest {
 
         // BOB을 참가자로 넣기 (기존 참가자 API 사용)
         RestAssured.given()
-            .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(BOB_EMAIL).accessToken())
+            .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(CHRIS_EMAIL).accessToken())
             .pathParam("meetupId", meetupId)
             .when()
             .post("/{meetupId}/participants")
@@ -293,7 +298,7 @@ class MeetupReadTest extends BaseMeetupTest {
             .statusCode(200);
 
         // ALICE -> BOB 차단
-        block(users.get(ALICE_EMAIL).id(), users.get(BOB_EMAIL).id());
+        blockIfNeeded(users.get(ALICE_EMAIL).id(), users.get(CHRIS_EMAIL).id());
 
         // when & then: ALICE로 조회 시 해당 모임이 결과에 없어야 함
         RestAssured.given()

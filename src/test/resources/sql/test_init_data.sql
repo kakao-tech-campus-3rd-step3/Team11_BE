@@ -80,6 +80,33 @@ INSERT INTO public_test.profile (
     26410
 );
 
+-- 테스트 유저 Chris 추가
+-- password: testpass1212!
+INSERT INTO public_test.member (email, password, verified)
+VALUES (
+           'chris@test.com',
+           '$2a$10$c.KAjYSgNz6KLUtG7Qw0B.i/vviGv/FgKvMH7orJFvx8Oh0.wmJ5G',
+           TRUE
+       );
+
+INSERT INTO public_test.member_role (member_id, name)
+VALUES (
+           (SELECT id FROM public_test.member WHERE email = 'chris@test.com'),
+           'ROLE_USER'
+       );
+
+-- Chris User용 프로필 생성
+INSERT INTO public_test.profile (member_id, nickname, age, gender, image_url, description, base_location_id)
+VALUES (
+           (SELECT id FROM public_test.member WHERE email = 'chris@test.com'),
+           '크리스',
+           27,
+           'MALE',
+           'https://cdn.example.com/profiles/bob.png',
+           '풋살·등산 러버 🏔️',
+           26260
+       );
+
 -- 종료된 모임 추가 (관리자가 owner)
 INSERT INTO public_test.meetup (
     id, owner_id, name, category, description,
