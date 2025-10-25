@@ -1,7 +1,6 @@
 package com.pnu.momeet.domain.participant.service;
 
 import com.pnu.momeet.domain.participant.entity.Participant;
-import com.pnu.momeet.domain.participant.repository.ParticipantDslRepositoryImpl;
 import com.pnu.momeet.domain.participant.repository.ParticipantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
