@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import com.pnu.momeet.common.model.enums.TokenType;
+import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -76,6 +77,17 @@ public class JwtAuthenticateHelper {
         // WebSocket 연결 요청인 경우 쿼리 파라미터에서 토큰 추출
         if (request.getRequestURI().startsWith(webSocketEndpoint)) {
             String token = request.getParameter(tokenQueryParameter);
+            if (token != null && !token.isEmpty()) {
+                return token;
+            }
+        }
+        return null;
+    }
+
+    public String resolveTokenFromQueryParam(ServerHttpRequest request) {
+        if (request.getURI().getPath().startsWith(webSocketEndpoint)) {
+            // WebSocket 연결 요청인 경우 쿼리 파라미터에서 토큰 추출
+            String token = request.getHeaders().getFirst(tokenQueryParameter);
             if (token != null && !token.isEmpty()) {
                 return token;
             }
