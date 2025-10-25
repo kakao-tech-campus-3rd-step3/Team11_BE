@@ -78,7 +78,7 @@ public class MeetupScheduler {
 
         for (var meetup : meetupsToCancel) {
             try {
-                meetupStateService.cancelMeetupAdmin(meetup.getId());
+                meetupStateService.cancelMeetupById(meetup.getId());
                 successCount++;
             } catch (Exception e) {
                 log.error("모임 취소 처리 중 오류 발생. meetupId={}", meetup.getId(), e);

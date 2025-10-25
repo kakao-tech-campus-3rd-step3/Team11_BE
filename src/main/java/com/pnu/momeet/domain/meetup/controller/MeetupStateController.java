@@ -31,7 +31,7 @@ public class MeetupStateController {
     public void meetupCancel(
         @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        meetupStateService.cancelMeetup(userDetails.getMemberId());
+        meetupStateService.cancelMeetupMemberId(userDetails.getMemberId());
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -40,7 +40,7 @@ public class MeetupStateController {
     public void meetupCancelAdmin(
         @PathVariable UUID meetupId
     ) {
-        meetupStateService.cancelMeetupAdmin(meetupId);
+        meetupStateService.cancelMeetupById(meetupId);
     }
 
     @PostMapping("/me/finish")
