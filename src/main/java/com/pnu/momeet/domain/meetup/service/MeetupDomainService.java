@@ -86,8 +86,8 @@ public class MeetupDomainService {
         UUID viewerMemberId
     ) {
         Point locationPoint = geometryFactory.createPoint(new Coordinate(request.longitude(), request.latitude()));
-        Optional<MainCategory> mainCategory = Optional.ofNullable(request.category()).map(MainCategory::valueOf);
-        Optional<String> search = Optional.ofNullable(request.search());
+        MainCategory mainCategory = (request.category() != null) ? MainCategory.valueOf(request.category()) : null;
+        String search = request.search();
 
         return entityService.getAllByLocationAndCondition(
             locationPoint, request.radius(), mainCategory, search, viewerMemberId

@@ -6,7 +6,6 @@ import com.pnu.momeet.domain.meetup.dto.request.MeetupPageRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
-import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
@@ -20,10 +19,8 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
-import org.springframework.data.jpa.domain.Specification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

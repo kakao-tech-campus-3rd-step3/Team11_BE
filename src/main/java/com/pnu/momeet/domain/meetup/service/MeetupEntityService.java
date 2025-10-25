@@ -3,7 +3,6 @@ package com.pnu.momeet.domain.meetup.service;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
-import com.pnu.momeet.domain.meetup.repository.MeetupDslRepository;
 import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +22,6 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class MeetupEntityService {
     private final MeetupRepository meetupRepository;
-    private final MeetupDslRepository meetupDslRepository;
 
     @Transactional(readOnly = true)
     public Meetup getById(UUID meetupId) {
@@ -40,7 +38,7 @@ public class MeetupEntityService {
     @Transactional(readOnly = true)
     public Meetup getByIdWithDetails(UUID meetupId) {
         log.debug("특정 id의 meetup 상세 조회 시도. id={}", meetupId);
-        var meetup = meetupDslRepository.findByIdWithDetails(meetupId);
+        var meetup = meetupRepository.findByIdWithDetails(meetupId);
         if (meetup.isEmpty()) {
             log.info("존재하지 않는 id의 meetup 상세 조회 시도. id={}", meetupId);
             throw new NoSuchElementException("해당 Id의 모임이 존재하지 않습니다. id=" + meetupId);
@@ -69,12 +67,12 @@ public class MeetupEntityService {
     public List<Meetup> getAllByLocationAndCondition(
             Point location,
             Double radius,
-            Optional<MainCategory> mainCategory,
-            Optional<String> search,
+            MainCategory mainCategory,
+            String search,
             UUID viewerMemberId
     ) {
         log.debug("특정 위치 기반 meetup 목록 조회 시도. location={}, radius={}", location, radius);
-        var meetups = meetupDslRepository.findAllByDistanceAndPredicates(
+        var meetups = meetupRepository.findAllByDistanceAndPredicates(
                 location, radius, mainCategory, search, viewerMemberId
         );
         log.debug("특정 위치 기반 meetup 목록 조회 성공. size={}", meetups.size());
@@ -84,7 +82,7 @@ public class MeetupEntityService {
     @Transactional(readOnly = true)
     public List<Meetup> getAllByOwnerIdAndStatusIn(UUID ownerId, List<MeetupStatus> statuses) {
         log.debug("특정 회원이 소유한 특정 상태의 meetup 목록 조회 시도. ownerId={}, statuses={}", ownerId, statuses);
-        var meetups = meetupDslRepository.findAllByOwnerIdAndStatusIn(ownerId, statuses);
+        var meetups = meetupRepository.findAllByOwnerIdAndStatusIn(ownerId, statuses);
         log.debug("특정 회원이 소유한 특정 상태의 meetup 목록 조회 성공. ownerId={}, size={}", ownerId, meetups.size());
         return meetups;
     }
@@ -93,7 +91,7 @@ public class MeetupEntityService {
     @Transactional(readOnly = true)
     public Meetup getParticipatedMeetupByProfileId(UUID profileId) {
         log.debug("특정 프로필 ID가 참여한 meetup 조회 시도. profileId={}", profileId);
-        var meetup = meetupDslRepository.findParticipatedMeetupsByProfileId(profileId);
+        var meetup = meetupRepository.findParticipatedMeetupsByProfileId(profileId);
         if (meetup.isEmpty()) {
             log.info("특정 프로필 ID가 참여한 meetup이 없음. profileId={}", profileId);
             throw new NoSuchElementException("참여한 모임이 없습니다.");
@@ -120,13 +118,13 @@ public class MeetupEntityService {
 
     @Transactional(readOnly = true)
     public boolean existsParticipatedMeetupByProfileId(UUID profileId) {
-        return meetupDslRepository.existsParticipatedMeetupByProfileId(profileId);
+        return meetupRepository.existsParticipatedMeetupByProfileId(profileId);
     }
 
     @Transactional(readOnly = true)
     public Page<Meetup> getEndedMeetupsByProfileId(UUID profileId, Pageable pageable) {
         log.debug("특정 회원이 소유한 종료된 meetup 목록 조회 시도. ownerId={}", profileId);
-        var pageResult = meetupDslRepository.findEndedMeetupsByProfileId(profileId, pageable);
+        var pageResult = meetupRepository.findEndedMeetupsByProfileId(profileId, pageable);
         log.debug("특정 회원이 소유한 종료된 meetup 목록 조회 성공. ownerId={}, size={}", profileId, pageResult.getNumberOfElements());
         return pageResult;
     }
@@ -136,7 +134,7 @@ public class MeetupEntityService {
         UUID profileId, Boolean evaluated, Pageable pageable
     ) {
         log.debug("특정 회원이 소유한 종료된 meetup 목록 조회 시도. ownerId={}", profileId);
-        var pageResult = meetupDslRepository.findEndedMeetupsByProfileIdAndEvaluated(profileId, evaluated, pageable);
+        var pageResult = meetupRepository.findEndedMeetupsByProfileIdAndEvaluated(profileId, evaluated, pageable);
         log.debug("특정 회원이 소유한 종료된 meetup 목록 조회 성공. ownerId={}, size={}", profileId, pageResult.getNumberOfElements());
         return pageResult;
     }
@@ -183,6 +181,6 @@ public class MeetupEntityService {
 
     @Transactional(readOnly = true)
     public boolean isBlockedInMeetup(UUID meetupId, UUID viewerMemberId) {
-        return meetupDslRepository.existsBlockedInMeetup(meetupId, viewerMemberId);
+        return meetupRepository.existsBlockedInMeetup(meetupId, viewerMemberId);
     }
 }
