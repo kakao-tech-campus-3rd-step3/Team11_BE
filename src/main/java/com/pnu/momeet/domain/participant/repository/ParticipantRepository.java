@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ParticipantRepository extends JpaRepository<Participant, Long> {
+public interface ParticipantRepository extends JpaRepository<Participant, Long>, ParticipantDslRepository {
 
     @EntityGraph("Participant.withProfile")
     List<Participant> findAllByMeetupId(UUID meetupId);
