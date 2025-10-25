@@ -44,7 +44,7 @@ class MeetupDomainServiceTest {
         MeetupPageRequest req = new MeetupPageRequest();
 
         Page<Meetup> repoPage =
-            new PageImpl<Meetup>(java.util.Collections.emptyList(),
+            new PageImpl<>(java.util.Collections.emptyList(),
                 PageRequest.of(0, 10), 0);
 
         when(meetupEntityService.getAllBySpecificationWithPagination(
