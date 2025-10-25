@@ -2,7 +2,6 @@ package com.pnu.momeet.domain.chatting.service;
 
 import com.pnu.momeet.domain.chatting.entity.ChatMessage;
 import com.pnu.momeet.domain.chatting.enums.ChatMessageType;
-import com.pnu.momeet.domain.chatting.repository.ChatMessageDslRepositoryImpl;
 import com.pnu.momeet.domain.chatting.repository.ChatMessageRepository;
 import com.pnu.momeet.domain.common.dto.response.CursorInfo;
 import com.pnu.momeet.domain.participant.entity.Participant;
