@@ -64,6 +64,13 @@ public class ParticipantDomainService {
             .toList();
     }
 
+    @Transactional(readOnly = true)
+    public ParticipantResponse getMyParticipantInfo(UUID meetupId, UUID memberId) {
+        Profile profile = profileService.getByMemberId(memberId);
+        Participant participant = entityService.getByProfileIDAndMeetupID(profile.getId(), meetupId);
+        return ParticipantEntityMapper.toDto(participant);
+    }
+
     @Transactional
     public ParticipantResponse joinMeetup(UUID meetupId, UUID memberId) {
         return joinMeetup(meetupId, memberId, MeetupRole.MEMBER);

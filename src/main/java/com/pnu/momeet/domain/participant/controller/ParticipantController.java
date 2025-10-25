@@ -39,6 +39,16 @@ public class ParticipantController {
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/me")
+    public ResponseEntity<ParticipantResponse> getMyParticipantInfo(
+            @PathVariable UUID meetupId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        ParticipantResponse response = participantService.getMyParticipantInfo(meetupId, userDetails.getMemberId());
+        return ResponseEntity.ok().body(response);
+    }
+
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PostMapping
     public ResponseEntity<ParticipantResponse> joinMeetup(
             @PathVariable UUID meetupId,
