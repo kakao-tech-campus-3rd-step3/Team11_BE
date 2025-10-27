@@ -112,16 +112,17 @@ public class ReportDomainService {
         entityService.save(report);
 
         List<String> uploadedUrls = new ArrayList<>();
+        List<ReportAttachment> attachments = new ArrayList<>();
         try {
             List<MultipartFile> images = request.images();
             if (images != null && !images.isEmpty()) {
                 for (MultipartFile image : images) {
                     String prefix = REPORT_IMAGE_PREFIX + "/" + report.getId();
                     String url = s3StorageService.uploadImage(image, prefix);
-                    ReportAttachment attachment = ReportDtoMapper.toAttachment(report.getId(), url);
-                    entityService.save(attachment);
                     uploadedUrls.add(url);
+                    attachments.add(ReportDtoMapper.toAttachment(report.getId(), url));
                 }
+                entityService.saveAll(attachments);
             }
         } catch (Exception e) {     // S3 업로드 실패 시 지금까지 업로드 된 이미지 제거
             for (int i = uploadedUrls.size() - 1; i >= 0; i--) {

@@ -125,20 +125,15 @@ public class ReportEntityService {
         return saved;
     }
 
-    @Transactional
-    public ReportAttachment save(ReportAttachment attachment) {
-        log.debug("신고 첨부파일 저장 시도. id={}, reportId={}, url={}",
-            attachment.getId(),
-            attachment.getReportId(),
-            attachment.getUrl()
-        );
-        ReportAttachment saved = reportAttachmentRepository.save(attachment);
-        log.debug("신고 첨부파일 저장 성공. id={}, reportId={}, url={}",
-            attachment.getId(),
-            attachment.getReportId(),
-            attachment.getUrl()
-        );
-        return saved;
+    public void saveAll(List<ReportAttachment> attachments) {
+        List<ReportAttachment> saved = reportAttachmentRepository.saveAll(attachments);
+        if (log.isDebugEnabled()) {
+            saved.forEach(a ->
+                log.debug("신고 첨부파일 저장 성공. id={}, reportId={}, url={}",
+                    a.getId(), a.getReportId(), a.getUrl()
+                )
+            );
+        }
     }
 
     @Transactional
