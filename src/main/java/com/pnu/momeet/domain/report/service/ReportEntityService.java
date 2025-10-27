@@ -144,10 +144,10 @@ public class ReportEntityService {
     }
 
     @Transactional
-    public void processReport(UserReport report, UUID adminProifleId, String reply) {
-        log.debug("신고 처리 시도. reportId={}, adminProfileId={}", report.getId(), adminProifleId);
-        report.processReport(adminProifleId, reply);
+    public void processReport(UserReport report, UUID adminMemberId, String reply) {
+        log.debug("신고 처리 시도. reportId={}, adminMemberId={}", report.getId(), adminMemberId);
+        report.processReport(adminMemberId, reply);
         reportRepository.save(report);
-        log.debug("신고 처리 성공. reportId={}, adminProfileId={}", report.getId(), adminProifleId);
+        log.debug("신고 처리 성공. reportId={}, adminMemberId={}", report.getId(), adminMemberId);
     }
 }

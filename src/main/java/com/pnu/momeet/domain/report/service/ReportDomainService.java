@@ -172,16 +172,15 @@ public class ReportDomainService {
 
     @Transactional
     public ReportDetailResponse processReport(UUID memberId, UUID reportId, ReportProcessRequest request) {
-        Profile adminProfile = profileService.getByMemberId(memberId);
         UserReport report = entityService.getById(reportId);
         if (report.getStatus() != ReportStatus.OPEN) {
             log.info("OPEN 상태가 아닌 신고 처리 시도. reportId={}", reportId);
             throw new IllegalStateException("OPEN 상태의 신고가 아닙니다.");
         }
         String reply = (request == null) ? null : request.reply();
-        entityService.processReport(report, adminProfile.getId(), reply);
+        entityService.processReport(report, memberId, reply);
         List<String> urls = entityService.getAttachmentUrls(reportId);
-        log.info("신고 처리 성공. reportId={}, adminProfileId={}", reportId, adminProfile.getId());
+        log.info("신고 처리 성공. reportId={}, adminMemberId={}", reportId, memberId);
         return ReportEntityMapper.toReportDetailResponse(report, urls);
     }
 }
