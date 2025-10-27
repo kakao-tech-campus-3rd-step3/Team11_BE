@@ -14,6 +14,7 @@ import com.pnu.momeet.domain.report.repository.ReportAttachmentRepository;
 import com.pnu.momeet.domain.report.repository.ReportRepository;
 import com.pnu.momeet.domain.report.service.ReportEntityService;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -159,13 +160,14 @@ class ReportEntityServiceTest {
     @Test
     @DisplayName("save(ReportAttachment) - 레포 위임")
     void save_attachment() {
+        List<ReportAttachment> atts = new ArrayList<>();
         ReportAttachment att = ReportAttachment.create(UUID.randomUUID(), "https://cdn/reports/x.png");
-        given(attachmentRepository.save(att)).willReturn(att);
+        atts.add(att);
+        given(attachmentRepository.saveAll(atts)).willReturn(atts);
 
-        ReportAttachment saved = entityService.save(att);
+        entityService.saveAll(atts);
 
-        assertThat(saved).isSameAs(att);
-        verify(attachmentRepository).save(att);
+        verify(attachmentRepository).saveAll(atts);
     }
 
     @Test
