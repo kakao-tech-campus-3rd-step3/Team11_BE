@@ -214,9 +214,6 @@ CREATE TABLE IF NOT EXISTS user_block (
     CONSTRAINT ck_user_block_self CHECK (blocker_id <> blocked_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_user_block_blocker ON user_block (blocker_id);
-CREATE INDEX IF NOT EXISTS idx_user_block_blocked ON user_block (blocked_id);
-
 CREATE TABLE user_report (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reporter_profile_id  UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
