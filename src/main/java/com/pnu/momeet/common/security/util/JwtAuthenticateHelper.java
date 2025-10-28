@@ -86,10 +86,14 @@ public class JwtAuthenticateHelper {
 
     public String resolveTokenFromQueryParam(ServerHttpRequest request) {
         if (request.getURI().getPath().startsWith(webSocketEndpoint)) {
-            // WebSocket 연결 요청인 경우 쿼리 파라미터에서 토큰 추출
-            String token = request.getHeaders().getFirst(tokenQueryParameter);
-            if (token != null && !token.isEmpty()) {
-                return token;
+            String token = request.getURI().getQuery();
+            if (token != null) {
+                for (String param : token.split("&")) {
+                    String[] keyValue = param.split("=");
+                    if (keyValue.length == 2 && keyValue[0].equals(tokenQueryParameter)) {
+                        return keyValue[1];
+                    }
+                }
             }
         }
         return null;
