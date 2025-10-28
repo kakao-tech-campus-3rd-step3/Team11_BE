@@ -8,7 +8,8 @@ public enum ChatActionType {
     KICKED,     // 모임 강퇴
     EXIT,       // 모임 나가기
     STARTED,      // 모임 시작(OPEN -> IN_PROGRESS)
-    FINISH,     // 모임 종료
+    NEAR_END,   // 모임 종료 임박 알림
+    END,     // 모임 종료
     CANCELED,     // 모임 취소
     CANCELED_BY_ADMIN // 모임 관리자에 의한 모임 취소
 }

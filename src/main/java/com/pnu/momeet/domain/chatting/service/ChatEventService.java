@@ -61,11 +61,21 @@ public class ChatEventService {
     }
 
     @Transactional(readOnly = true)
+    public void notifyNearEndMeetup(UUID meetupId) {
+        participantService.getAllByMeetupId(meetupId).stream()
+                .filter(Participant::getIsActive)
+                .forEach(participant ->
+                    messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.NEAR_END)
+                );
+        log.info("모임 종료 임박 알림 전송 완료 - meetupId: {}", meetupId);
+    }
+
+    @Transactional(readOnly = true)
     public void finishMeetup(UUID meetupId) {
         participantService.getAllByMeetupId(meetupId).stream()
                 .filter(Participant::getIsActive)
                 .forEach(participant ->
-                    messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.FINISH)
+                    messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.END)
                 );
         log.info("모임 종료 알림 전송 완료 - meetupId: {}", meetupId);
     }

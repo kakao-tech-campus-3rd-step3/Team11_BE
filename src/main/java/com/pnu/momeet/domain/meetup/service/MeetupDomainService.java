@@ -64,7 +64,6 @@ public class MeetupDomainService {
                     "timeUnit", List.of("모임 지속 시간은 10분 단위여야 합니다.")
                 ));
             }
-
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime minStart = now.plusMinutes(MIN_LEAD_MINUTES);
             if (startTime.isBefore(minStart)) {

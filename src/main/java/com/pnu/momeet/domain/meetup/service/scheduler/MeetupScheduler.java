@@ -1,8 +1,10 @@
 package com.pnu.momeet.domain.meetup.service.scheduler;
 
+import com.pnu.momeet.common.event.CoreEventPublisher;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.meetup.service.MeetupStateService;
+import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,9 +18,11 @@ import java.time.LocalDateTime;
 public class MeetupScheduler {
     private static final int IDLE_TIMEOUT_SEC = 30; // 30 초
     private static final int EVALUATION_TIMEOUT_DAY = 3; // 3 일
+    private static final int MEETUP_INTERVAL_MIN = 10; // 10 분
 
     private final MeetupStateService meetupStateService;
     private final MeetupEntityService meetupEntityService;
+    private final CoreEventPublisher coreEventPublisher;
 
     @Scheduled(cron = "30 0/10 * * * ?")
     public void transmitMeetupState() {
@@ -26,6 +30,7 @@ public class MeetupScheduler {
         // 30분 + 30초 전, 00분 + 30초 전 사이에 시작/종료되는 모임 처리
         LocalDateTime limit = LocalDateTime.now().plusSeconds(IDLE_TIMEOUT_SEC);
         startOpenMeetup(limit);
+        alertNearlyFinishMeetup(limit);
         finishProgressingMeetup(limit);
         cancelIdleMeetup(limit);
     }
@@ -49,6 +54,24 @@ public class MeetupScheduler {
         log.info("모임 시작 처리 완료. 대상 모임 : {}, 성공: {}, 실패: {}", meetupsToStart.size(), successCount, failureCount);
     }
 
+    private void alertNearlyFinishMeetup(LocalDateTime limit) {
+        LocalDateTime alertLimit = limit.plusMinutes(MEETUP_INTERVAL_MIN);
+        var meetupsToAlert = meetupEntityService.getAllByStatusAndEndAtBefore(MeetupStatus.IN_PROGRESS, alertLimit);
+        log.debug("종료 임박 모임 탐색 완료. 종료 임박 모임 개수: {}", meetupsToAlert.size());
+        int successCount = 0, failureCount = 0;
+
+        for (var meetup : meetupsToAlert) {
+            try {
+                coreEventPublisher.publish(MeetupEntityMapper.toMeetupNearEndEvent(meetup));
+                successCount++;
+            } catch (Exception e) {
+                log.error("종료 임박 알림 처리 중 오류 발생. meetupId={}", meetup.getId(), e);
+                failureCount++;
+            }
+        }
+        log.info("종료 임박 알림 처리 완료. 대상 모임 : {}, 성공: {}, 실패: {}", meetupsToAlert.size(), successCount, failureCount);
+    }
+
     private void finishProgressingMeetup(LocalDateTime limit) {
         // 1분 ~ 1분 30초 전 사이에 종료되는 모임 조회
         var meetupsToFinish = meetupEntityService.getAllByStatusAndEndAtBefore(
@@ -68,8 +91,6 @@ public class MeetupScheduler {
         }
         log.info("모임 종료 처리 완료. 대상 모임 : {}, 성공: {}, 실패: {}", meetupsToFinish.size(), successCount, failureCount);
     }
-
-
 
     private void cancelIdleMeetup(LocalDateTime limit) {
         var meetupsToCancel = meetupEntityService.getAllByStatusAndEndAtBefore(

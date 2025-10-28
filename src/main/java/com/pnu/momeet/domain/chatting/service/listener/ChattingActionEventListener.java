@@ -6,6 +6,7 @@ import com.pnu.momeet.domain.chatting.service.ChatMessageEntityService;
 import com.pnu.momeet.domain.evaluation.event.EvaluationDeadlineEndedEvent;
 import com.pnu.momeet.domain.meetup.event.MeetupCanceledEvent;
 import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
+import com.pnu.momeet.domain.meetup.event.MeetupNearEndEvent;
 import com.pnu.momeet.domain.meetup.event.MeetupStartEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,12 @@ public class ChattingActionEventListener {
             case ROLE_USER -> chatEventService.cancelMeetup(event.getMeetupId());
             case ROLE_ADMIN -> chatEventService.cancelByAdminMeetup(event.getMeetupId());
         }
+    }
+
+    @Async
+    @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
+    public void handleOnMeetupNearlyEnded(MeetupNearEndEvent event) {
+        chatEventService.notifyNearEndMeetup(event.getMeetupId());
     }
 
     @Async
