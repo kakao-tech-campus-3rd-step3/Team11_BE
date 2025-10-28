@@ -1,6 +1,9 @@
 package com.pnu.momeet.common.advice;
 
 import com.pnu.momeet.common.exception.*;
+import jakarta.servlet.http.HttpServletRequest;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -16,6 +19,8 @@ import java.util.*;
 
 @RestControllerAdvice
 public class GlobalRestExceptionHandler {
+
+    private static final String UNIQUE_BLOCK = "uq_user_block";
 
     private Map<String, List<String>> extractValidationErrors(MethodArgumentNotValidException e) {
         // 필드 에러 처리
@@ -161,4 +166,17 @@ public class GlobalRestExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ProblemDetail> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        String constraint = (e.getCause() instanceof ConstraintViolationException cve)
+            ? cve.getConstraintName() : null;
+        if (constraint != null && constraint.equalsIgnoreCase(UNIQUE_BLOCK)) {
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "이미 차단한 사용자입니다.");
+            problemDetail.setTitle("데이터 무결성 오류");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
+        }
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "데이터 무결성 제약을 위반했습니다.");
+        problemDetail.setTitle("데이터 무결성 오류");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+    }
 }

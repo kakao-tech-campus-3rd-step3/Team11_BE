@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +77,11 @@ public class BaseReportTest extends BaseE2ETest {
             attachmentToBeDeleted.forEach(badgeId -> attachmentRepository.deleteById(badgeId));
             attachmentToBeDeleted.clear();
         }
+    }
+
+    @AfterAll
+    static void tearDownReport() {
+        RestAssured.reset();
     }
 
     protected TokenResponse getToken(Role role) {
