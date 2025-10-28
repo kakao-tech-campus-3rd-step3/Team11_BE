@@ -20,8 +20,8 @@ public class MeetupScheduler {
     private final MeetupStateService meetupStateService;
     private final MeetupEntityService meetupEntityService;
 
-    @Scheduled(cron = "0 0/30 * * * ?")
-    public void finishExpiredMeetups() {
+    @Scheduled(cron = "30 0/10 * * * ?")
+    public void transmitMeetupState() {
         log.debug("종료할 모임 탐색 시작");
         // 30분 + 30초 전, 00분 + 30초 전 사이에 시작/종료되는 모임 처리
         LocalDateTime limit = LocalDateTime.now().plusSeconds(IDLE_TIMEOUT_SEC);
@@ -69,6 +69,8 @@ public class MeetupScheduler {
         log.info("모임 종료 처리 완료. 대상 모임 : {}, 성공: {}, 실패: {}", meetupsToFinish.size(), successCount, failureCount);
     }
 
+
+
     private void cancelIdleMeetup(LocalDateTime limit) {
         var meetupsToCancel = meetupEntityService.getAllByStatusAndEndAtBefore(
                 MeetupStatus.OPEN, limit
@@ -88,9 +90,8 @@ public class MeetupScheduler {
         log.info("모임 취소 처리 완료. 대상 모임 : {}, 성공: {}, 실패: {}", meetupsToCancel.size(), successCount, failureCount);
     }
 
-
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정마다 실행
-    public void closeEvaluationPeriod() {
+    public void cleanUpMeetups() {
         log.debug("평가 기간 종료할 모임 탐색 시작");
         LocalDateTime limit = LocalDateTime.now().minusDays(EVALUATION_TIMEOUT_DAY);
         var meetupsToClose = meetupEntityService.getAllByStatusAndEndAtBefore(

@@ -59,9 +59,9 @@ public class MeetupDomainService {
             }
 
             long durationMin = Duration.between(startTime, endTime).toMinutes();
-            if (durationMin % 30 != 0) {
+            if (durationMin % 10 != 0) {
                 throw new CustomValidationException(Map.of(
-                    "timeUnit", List.of("모임 지속 시간은 30분 단위여야 합니다.")
+                    "timeUnit", List.of("모임 지속 시간은 10분 단위여야 합니다.")
                 ));
             }
 
