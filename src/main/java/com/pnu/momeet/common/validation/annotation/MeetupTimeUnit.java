@@ -11,7 +11,7 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MeetupTimeUnit {
-    String message() default "'yyyy-MM-ddTHH:mm' 형식의 30분 단위 시간만 허용됩니다.";
+    String message() default "'yyyy-MM-ddTHH:mm' 형식의 10분 단위 시간만 허용됩니다.";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

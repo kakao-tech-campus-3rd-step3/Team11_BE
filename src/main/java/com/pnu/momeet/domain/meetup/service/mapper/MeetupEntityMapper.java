@@ -8,6 +8,7 @@ import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.entity.MeetupHashTag;
 import com.pnu.momeet.domain.meetup.event.MeetupCanceledEvent;
 import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
+import com.pnu.momeet.domain.meetup.event.MeetupNearEndEvent;
 import com.pnu.momeet.domain.meetup.event.MeetupStartEvent;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.participant.entity.Participant;
@@ -112,13 +113,18 @@ MeetupEntityMapper {
         );
     }
 
-    public static MeetupFinishedEvent toMeetupFinishedEvent(Meetup meetup, List<Participant> participants) {
+    public static MeetupFinishedEvent toMeetupFinishedEvent(Meetup meetup, List<Participant> participants, Role finishedBy) {
         return new MeetupFinishedEvent(
                 meetup.getId(),
                 participants.stream()
                         .map(p -> p.getProfile().getId())
-                        .toList()
+                        .toList(),
+                finishedBy
         );
+    }
+
+    public static MeetupNearEndEvent toMeetupNearEndEvent(Meetup meetup) {
+        return new MeetupNearEndEvent(meetup.getId());
     }
 
     public static MeetupCanceledEvent toMeetupCanceledEvent(Meetup meetup, Role requestedBy) {
