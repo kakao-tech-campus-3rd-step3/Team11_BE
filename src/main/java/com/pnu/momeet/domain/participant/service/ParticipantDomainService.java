@@ -1,13 +1,15 @@
 package com.pnu.momeet.domain.participant.service;
 
-import com.pnu.momeet.domain.chatting.enums.ChatActionType;
-import com.pnu.momeet.domain.chatting.util.ChatMessagingTemplate;
+import com.pnu.momeet.common.event.CoreEventPublisher;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.participant.dto.response.ParticipantResponse;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.enums.MeetupRole;
+import com.pnu.momeet.domain.participant.event.ParticipantExitEvent;
+import com.pnu.momeet.domain.participant.event.ParticipantJoinEvent;
+import com.pnu.momeet.domain.participant.event.ParticipantKickEvent;
 import com.pnu.momeet.domain.participant.service.mapper.ParticipantDtoMapper;
 import com.pnu.momeet.domain.participant.service.mapper.ParticipantEntityMapper;
 import com.pnu.momeet.domain.profile.entity.Profile;
@@ -30,7 +32,7 @@ public class ParticipantDomainService {
     private final ParticipantEntityService entityService;
     private final MeetupEntityService meetupService;
     private final ProfileEntityService profileService;
-    private final ChatMessagingTemplate chatMessagingTemplate;
+    private final CoreEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<ParticipantResponse> getParticipantsByMeetupId(UUID meetupId) {
@@ -101,9 +103,8 @@ public class ParticipantDomainService {
         // 참가자 추가 및 참가자 수 증가
         meetupService.updateMeetup(meetup, m -> m.addParticipant(createdParticipant));
         log.info("모임 참가 성공. meetupId={}, profileId={}", meetupId, profile.getId());
-        // 채팅방 입장 알림
-        chatMessagingTemplate.sendAction(meetupId, createdParticipant, ChatActionType.JOIN);
 
+        eventPublisher.publish(new ParticipantJoinEvent(meetupId, createdParticipant.getId()));
         return ParticipantEntityMapper.toDto(createdParticipant);
     }
 
@@ -135,7 +136,7 @@ public class ParticipantDomainService {
             meetupService.updateMeetup(meetup, m -> m.setOwner(replacementHost.getProfile()));
         }
         // 채팅방 퇴장 알림
-        chatMessagingTemplate.sendAction(meetupId, participant, ChatActionType.EXIT);
+        eventPublisher.publish(new ParticipantExitEvent(meetupId, participant.getId()));
         // 참가자 제거 및 참가자 수 감소
         meetupService.updateMeetup(meetup, m -> m.removeParticipant(participant));
 
@@ -159,7 +160,7 @@ public class ParticipantDomainService {
 
         entityService.updateParticipant(requester, p -> p.setLastActiveAt(LocalDateTime.now()));
         // 채팅방 강퇴 알림
-        chatMessagingTemplate.sendAction(meetupId, targetParticipant, ChatActionType.KICKED);
+        eventPublisher.publish(new ParticipantKickEvent(meetupId, targetParticipant.getId()));
         // 참가자 제거 및 참가자 수 감소
         meetupService.updateMeetup(meetupService.getById(meetupId), m -> m.removeParticipant(targetParticipant));
 
