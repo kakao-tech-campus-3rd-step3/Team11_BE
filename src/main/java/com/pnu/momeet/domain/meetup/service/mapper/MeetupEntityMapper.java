@@ -113,12 +113,13 @@ MeetupEntityMapper {
         );
     }
 
-    public static MeetupFinishedEvent toMeetupFinishedEvent(Meetup meetup, List<Participant> participants) {
+    public static MeetupFinishedEvent toMeetupFinishedEvent(Meetup meetup, List<Participant> participants, Role finishedBy) {
         return new MeetupFinishedEvent(
                 meetup.getId(),
                 participants.stream()
                         .map(p -> p.getProfile().getId())
-                        .toList()
+                        .toList(),
+                finishedBy
         );
     }
 

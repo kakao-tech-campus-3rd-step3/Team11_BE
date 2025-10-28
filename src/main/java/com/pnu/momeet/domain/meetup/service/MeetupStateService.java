@@ -81,12 +81,17 @@ public class MeetupStateService {
     }
 
     @Transactional
-    public void finishMeetupById(UUID meetupId) {
+    public void finishMeetupById(UUID meetupId, Role finishedBy) {
         Meetup meetup = entityService.getById(meetupId);
         if (meetup.getStatus() != MeetupStatus.IN_PROGRESS) {
             throw new IllegalStateException("종료할 수 있는 상태가 아닙니다.");
         }
-        finishMeetupInternal(meetup);
+        if (finishedBy != Role.ROLE_SYSTEM && finishedBy != Role.ROLE_ADMIN) {
+            // 이 메서드가 다른 역할로 호출되는 것은 비정상적 상황임
+            log.warn("비시스템/비관리자에 의한 모임 종료 시도 감지. meetupId={}, finishedBy={}", meetupId, finishedBy);
+            throw new IllegalArgumentException("시스템 또는 관리자에 의해서만 모임을 종료할 수 있습니다.");
+        }
+        finishMeetupInternal(meetup, finishedBy);
     }
 
     @Transactional
@@ -99,10 +104,10 @@ public class MeetupStateService {
         if (availableMeetups.isEmpty()) {
             throw new IllegalStateException("종료할 수 있는 모임이 없습니다.");
         }
-        finishMeetupInternal(availableMeetups.getFirst());
+        finishMeetupInternal(availableMeetups.getFirst(), Role.ROLE_USER);
     }
 
-    private void finishMeetupInternal(Meetup meetup) {
+    private void finishMeetupInternal(Meetup meetup, Role finishedBy) {
         // 2) 상태 전이: ENDED (엔티티 메서드로 캡슐화 권장)
         entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.ENDED));
 
@@ -113,7 +118,7 @@ public class MeetupStateService {
                 .forEach(Profile::increaseCompletedJoinMeetups);
 
         // 4) 종료 이벤트 발행 (커밋 후 배지 부여)
-        coreEventPublisher.publish(MeetupEntityMapper.toMeetupFinishedEvent(meetup, participants));
+        coreEventPublisher.publish(MeetupEntityMapper.toMeetupFinishedEvent(meetup, participants, finishedBy));
 
         log.info("모임 종료 완료. meetupId={}, ownerProfileId={}, finisherCount={}",
                 meetup.getId(), meetup.getOwner().getId(), participants.size());

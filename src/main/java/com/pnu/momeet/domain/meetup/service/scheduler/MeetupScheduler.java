@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.meetup.service.MeetupStateService;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
+import com.pnu.momeet.domain.member.enums.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -82,7 +83,7 @@ public class MeetupScheduler {
 
         for (var meetup : meetupsToFinish) {
             try {
-                meetupStateService.finishMeetupById(meetup.getId());
+                meetupStateService.finishMeetupById(meetup.getId(), Role.ROLE_SYSTEM);
                 successCount++;
             } catch (Exception e) {
                 log.error("모임 종료 처리 중 오류 발생. meetupId={}", meetup.getId(), e);

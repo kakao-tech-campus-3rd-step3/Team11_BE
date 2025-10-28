@@ -2,6 +2,7 @@ package com.pnu.momeet.domain.meetup.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
 import com.pnu.momeet.domain.meetup.service.MeetupStateService;
+import com.pnu.momeet.domain.member.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -50,5 +51,14 @@ public class MeetupStateController {
         @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         meetupStateService.finishMeetupByMemberId(userDetails.getMemberId());
+    }
+
+    @PostMapping("{meetupId}/finish")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void meetupFinishAdmin(
+        @PathVariable UUID meetupId
+    ) {
+        meetupStateService.finishMeetupById(meetupId, Role.ROLE_ADMIN);
     }
 }
