@@ -173,7 +173,7 @@ public class GlobalRestExceptionHandler {
         if (constraint != null && constraint.equalsIgnoreCase(UNIQUE_BLOCK)) {
             ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "이미 차단한 사용자입니다.");
             problemDetail.setTitle("데이터 무결성 오류");
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
         }
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "데이터 무결성 제약을 위반했습니다.");
         problemDetail.setTitle("데이터 무결성 오류");
