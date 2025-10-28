@@ -77,6 +77,7 @@ public class ParticipantDomainService {
     public ParticipantResponse joinMeetup(UUID meetupId, UUID memberId) {
         return joinMeetup(meetupId, memberId, MeetupRole.MEMBER);
     }
+
     @Transactional
     public ParticipantResponse joinMeetup(UUID meetupId, UUID memberId, MeetupRole role) {
         Profile profile = profileService.getByMemberId(memberId);

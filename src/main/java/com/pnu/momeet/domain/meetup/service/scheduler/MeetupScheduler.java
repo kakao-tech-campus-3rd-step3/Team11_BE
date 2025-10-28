@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.meetup.service.scheduler;
 
 import com.pnu.momeet.common.event.CoreEventPublisher;
+import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.meetup.service.MeetupStateService;
@@ -12,12 +13,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class MeetupScheduler {
-    private static final int IDLE_TIMEOUT_SEC = 30; // 30 초
+    private static final int IDLE_TIMEOUT_SEC = 10; // 10 초
     private static final int EVALUATION_TIMEOUT_DAY = 3; // 3 일
     private static final int MEETUP_INTERVAL_MIN = 10; // 10 분
 
@@ -28,15 +30,14 @@ public class MeetupScheduler {
     @Scheduled(cron = "30 0/10 * * * ?")
     public void transmitMeetupState() {
         log.debug("종료할 모임 탐색 시작");
-        // 30분 + 30초 전, 00분 + 30초 전 사이에 시작/종료되는 모임 처리
-        LocalDateTime limit = LocalDateTime.now().plusSeconds(IDLE_TIMEOUT_SEC);
-        startOpenMeetup(limit);
-        alertNearlyFinishMeetup(limit);
-        finishProgressingMeetup(limit);
-        cancelIdleMeetup(limit);
+        startOpenMeetup();
+        alertNearlyFinishMeetup();
+        finishProgressingMeetup();
+        cancelIdleMeetup();
     }
 
-    private void startOpenMeetup(LocalDateTime limit) {
+    private void startOpenMeetup() {
+        LocalDateTime limit = LocalDateTime.now().plusSeconds(IDLE_TIMEOUT_SEC);
         var meetupsToStart = meetupEntityService.getAllByStatusAndStartAtBefore(
                 MeetupStatus.OPEN, limit
         );
@@ -55,8 +56,8 @@ public class MeetupScheduler {
         log.info("모임 시작 처리 완료. 대상 모임 : {}, 성공: {}, 실패: {}", meetupsToStart.size(), successCount, failureCount);
     }
 
-    private void alertNearlyFinishMeetup(LocalDateTime limit) {
-        LocalDateTime alertLimit = limit.plusMinutes(MEETUP_INTERVAL_MIN);
+    private void alertNearlyFinishMeetup() {
+        LocalDateTime alertLimit = LocalDateTime.now().plusMinutes(MEETUP_INTERVAL_MIN).plusSeconds(IDLE_TIMEOUT_SEC);
         var meetupsToAlert = meetupEntityService.getAllByStatusAndEndAtBefore(MeetupStatus.IN_PROGRESS, alertLimit);
         log.debug("종료 임박 모임 탐색 완료. 종료 임박 모임 개수: {}", meetupsToAlert.size());
         int successCount = 0, failureCount = 0;
@@ -73,8 +74,9 @@ public class MeetupScheduler {
         log.info("종료 임박 알림 처리 완료. 대상 모임 : {}, 성공: {}, 실패: {}", meetupsToAlert.size(), successCount, failureCount);
     }
 
-    private void finishProgressingMeetup(LocalDateTime limit) {
+    private void finishProgressingMeetup() {
         // 1분 ~ 1분 30초 전 사이에 종료되는 모임 조회
+        LocalDateTime limit = LocalDateTime.now().plusSeconds(IDLE_TIMEOUT_SEC);
         var meetupsToFinish = meetupEntityService.getAllByStatusAndEndAtBefore(
                 MeetupStatus.IN_PROGRESS, limit
         );
@@ -93,7 +95,8 @@ public class MeetupScheduler {
         log.info("모임 종료 처리 완료. 대상 모임 : {}, 성공: {}, 실패: {}", meetupsToFinish.size(), successCount, failureCount);
     }
 
-    private void cancelIdleMeetup(LocalDateTime limit) {
+    private void cancelIdleMeetup() {
+        LocalDateTime limit = LocalDateTime.now().minusSeconds(IDLE_TIMEOUT_SEC);
         var meetupsToCancel = meetupEntityService.getAllByStatusAndEndAtBefore(
                 MeetupStatus.OPEN, limit
         );
@@ -116,10 +119,9 @@ public class MeetupScheduler {
     public void cleanUpMeetups() {
         log.debug("평가 기간 종료할 모임 탐색 시작");
         LocalDateTime limit = LocalDateTime.now().minusDays(EVALUATION_TIMEOUT_DAY);
-        var meetupsToClose = meetupEntityService.getAllByStatusAndEndAtBefore(
-                MeetupStatus.ENDED, limit
-        );
+        List<Meetup> meetupsToClose = meetupEntityService.getAllByStatusAndEndAtBefore(MeetupStatus.ENDED, limit);
         int successCount = 0, failureCount = 0;
+
         for (var meetup : meetupsToClose) {
             try {
                 meetupStateService.evaluationPeriodEnded(meetup);
