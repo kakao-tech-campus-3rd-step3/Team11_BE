@@ -46,7 +46,7 @@ VALUES (
         '앨리스',
         24,
         'FEMALE',
-        'https://cdn.example.com/profiles/alice.png',
+        'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/profiles/alice.png',
         '보드게임/카페 모임 좋아해요 ☕',
         26410
        );
@@ -71,7 +71,7 @@ VALUES (
         '크리스',
         27,
         'MALE',
-        'https://cdn.example.com/profiles/bob.png',
+        'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/profiles/chris.png',
         '풋살·등산 러버 🏔️',
         26260
        );
