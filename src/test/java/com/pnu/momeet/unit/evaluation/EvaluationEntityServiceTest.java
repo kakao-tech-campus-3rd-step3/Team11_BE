@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
 import com.pnu.momeet.domain.evaluation.enums.Rating;
-import com.pnu.momeet.domain.evaluation.repository.EvaluationDslRepository;
+import com.pnu.momeet.domain.evaluation.repository.EvaluationDslRepositoryImpl;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 import com.pnu.momeet.domain.evaluation.service.EvaluationEntityService;
 import java.time.LocalDateTime;
@@ -31,7 +31,7 @@ class EvaluationEntityServiceTest {
 
     @Mock
     private EvaluationRepository evaluationRepository;
-    @Mock private EvaluationDslRepository evaluationDslRepository;
+    @Mock private EvaluationDslRepositoryImpl evaluationDslRepositoryImpl;
 
     @InjectMocks
     private EvaluationEntityService service;
@@ -148,12 +148,12 @@ class EvaluationEntityServiceTest {
     void getMeetupIdsEvaluatedBy() {
         UUID evaluatorId = UUID.randomUUID();
         List<UUID> ids = List.of(UUID.randomUUID(), UUID.randomUUID());
-        given(evaluationDslRepository.findEvaluatedMeetupIds(evaluatorId, ids))
+        given(evaluationDslRepositoryImpl.findEvaluatedMeetupIds(evaluatorId, ids))
             .willReturn(Set.copyOf(ids));
 
         Set<UUID> result = service.getMeetupIdsEvaluatedBy(evaluatorId, ids);
 
         assertThat(result).containsExactlyInAnyOrderElementsOf(ids);
-        verify(evaluationDslRepository).findEvaluatedMeetupIds(evaluatorId, ids);
+        verify(evaluationDslRepositoryImpl).findEvaluatedMeetupIds(evaluatorId, ids);
     }
 }

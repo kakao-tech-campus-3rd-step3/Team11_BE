@@ -7,9 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.UUID;
 
-public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
+public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long>, ChatMessageDslRepository {
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("DELETE FROM ChatMessage cm WHERE cm.meetup.id = :meetupId")
     void deleteAllByMeetupId(UUID meetupId);
 }

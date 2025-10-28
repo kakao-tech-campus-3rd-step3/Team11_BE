@@ -1,9 +1,8 @@
 package com.pnu.momeet.domain.evaluation.service;
 
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
-import com.pnu.momeet.domain.evaluation.repository.EvaluationDslRepository;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
-import com.pnu.momeet.domain.profile.entity.Profile;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class EvaluationEntityService {
 
     private final EvaluationRepository evaluationRepository;
-    private final EvaluationDslRepository evaluationDslRepository;
 
     @Transactional(readOnly = true)
     public boolean existsByMeetupAndPair(UUID meetupId, UUID evaluatorPid, UUID targetPid) {
@@ -82,6 +80,6 @@ public class EvaluationEntityService {
     }
 
     public Set<UUID> getMeetupIdsEvaluatedBy(UUID evaluatorId, List<UUID> meetupIds) {
-        return evaluationDslRepository.findEvaluatedMeetupIds(evaluatorId, meetupIds);
+        return evaluationRepository.findEvaluatedMeetupIds(evaluatorId, meetupIds);
     }
 }
