@@ -40,6 +40,7 @@ ext {
     JTS_VERSION = '1.20.0'
     HIBERNATE_SPATIAL_VERSION = '7.1.0.Final'
     QUERY_DSL_VERSION = '5.1.0'
+    LETTUCE_VERSION = '7.0.0.RELEASE'
 }
 
 dependencies {
@@ -69,6 +70,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation "com.querydsl:querydsl-jpa:${QUERY_DSL_VERSION}:jakarta"
     annotationProcessor "com.querydsl:querydsl-apt:${QUERY_DSL_VERSION}:jakarta"
+
+    // Cache 지원
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation "io.lettuce:lettuce-core:${LETTUCE_VERSION}"
 
     // spatial 지원
     implementation "org.locationtech.jts:jts-core:${JTS_VERSION}"

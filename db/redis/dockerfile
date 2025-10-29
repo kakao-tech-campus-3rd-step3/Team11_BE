@@ -1,0 +1,19 @@
+FROM redis:7-alpine
+
+# REDIS_USER와 REDIS_PASSWORD는 컨테이너 실행 시 반드시 환경변수로 주어져야 합니다.
+ENV REDIS_USER=test-user
+ENV REDIS_PASSWORD=testpass1212
+
+EXPOSE 6379
+
+# /data 디렉토리 보장
+RUN mkdir -p /data
+
+# 시작 스크립트:
+# - REDIS_USER 또는 REDIS_PASSWORD가 비어있으면 에러로 종료(필수화)
+# - ACL 파일을 /data/users.acl에 생성
+# - redis-server를 aclfile 옵션으로 실행
+CMD ["/bin/sh","-lc","if [ -z \"$REDIS_USER\" ] || [ -z \"$REDIS_PASSWORD\" ]; then echo \"ERROR: Both REDIS_USER and REDIS_PASSWORD must be set as environment variables\" >&2; exit 1; fi; printf \"user %s on >%s ~* +@all\n\" \"$REDIS_USER\" \"$REDIS_PASSWORD\" > /data/users.acl; exec redis-server --bind 0.0.0.0 --aclfile /data/users.acl"]
+
+# 헬스체크: 사용자/비밀번호로 인증한 후 PING 검사
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 CMD ["/bin/sh","-c","redis-cli -u \"redis://$REDIS_USER:$REDIS_PASSWORD@127.0.0.1:6379\" ping || exit 1"]

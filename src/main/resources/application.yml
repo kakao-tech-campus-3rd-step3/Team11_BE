@@ -46,6 +46,12 @@ spring:
       mode: always
       data-locations: classpath:sql/init_scheme.sql, classpath:sql/init_data.sql
 
+  # redis는 cache 로만 사용
+  data:
+    redis:
+      repositories:
+        enabled: false
+
 app:
   security:
     jwt:
@@ -85,7 +91,11 @@ app:
       - /admin
       - /admin/**
       - /health
-
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    username: ${REDIS_USERNAME:test-user}
+    password: ${REDIS_PASSWORD:testpass1212}
 logging:
   level:
     root: INFO
@@ -113,3 +123,4 @@ momeet:
 
 frontend:
   url: https://${FRONTEND_DOMAIN_NAME:localhost:3000}
+
