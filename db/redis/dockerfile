@@ -1,0 +1,11 @@
+FROM redis:7-alpine
+
+EXPOSE 6379
+
+# /data 디렉토리 보장
+RUN mkdir -p /data
+
+CMD ["redis-server", "--bind", "0.0.0.0", "--protected-mode", "no", "--dir", "/data"]
+
+# 헬스체크: 인증 없이 PING 검사
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 CMD ["sh","-c","redis-cli -h 127.0.0.1 ping || exit 1"]

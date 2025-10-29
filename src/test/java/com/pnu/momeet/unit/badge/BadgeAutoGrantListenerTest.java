@@ -17,6 +17,8 @@ import com.pnu.momeet.domain.member.enums.Role;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+
+import com.pnu.momeet.domain.member.enums.Role;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
