@@ -8,6 +8,8 @@ import com.pnu.momeet.common.event.DomainEvent;
 import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.event.EvaluationSubmittedEvent;
 import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
+import com.pnu.momeet.domain.member.enums.Role;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,7 +54,7 @@ class CoreEventPublisherTest {
     void publish_meetupFinished_delegatesWithSameEvent() {
         // given
         UUID meetupId = UUID.randomUUID();
-        MeetupFinishedEvent event = new MeetupFinishedEvent(meetupId, List.of(), Role.ROLE_SYSTEM);
+        MeetupFinishedEvent event = new MeetupFinishedEvent(meetupId, List.of(), Role.ROLE_USER);
 
         ArgumentCaptor<Object> cap = ArgumentCaptor.forClass(Object.class);
 
