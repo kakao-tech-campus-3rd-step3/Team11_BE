@@ -5,10 +5,12 @@ import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,6 +40,13 @@ public class EvaluationEntityService {
         log.debug("최근 evaluator→target 평가 조회. evaluatorPid={}, targetPid={}, exists={}",
             evaluatorPid, targetPid, found.isPresent());
         return found;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, LocalDateTime> getLastCreatedAtByTargets(UUID evaluatorPid, Set<UUID> targetPids) {
+        log.debug("모임 참가자들에 대해 최근 생성한 평가 시각 조회. evaluatorPid={}, targetPids={}", evaluatorPid, targetPids);
+        if (targetPids == null || targetPids.isEmpty()) return Map.of();
+        return evaluationRepository.findLastCreatedAtByTargets(evaluatorPid, targetPids);
     }
 
     @Transactional(readOnly = true)
