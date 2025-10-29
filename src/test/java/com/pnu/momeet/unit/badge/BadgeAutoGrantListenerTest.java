@@ -13,6 +13,7 @@ import com.pnu.momeet.domain.badge.service.BadgeRuleService;
 import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.evaluation.event.EvaluationSubmittedEvent;
 import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
+import com.pnu.momeet.domain.member.enums.Role;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -46,7 +47,8 @@ class BadgeAutoGrantListenerTest {
 
         MeetupFinishedEvent e = new MeetupFinishedEvent(
             meetupId,
-            List.of(p1, p2)
+            List.of(p1, p2),
+            Role.ROLE_USER
         );
 
         // 문자열 리터럴 대신 BadgeRule enum의 code() 사용
