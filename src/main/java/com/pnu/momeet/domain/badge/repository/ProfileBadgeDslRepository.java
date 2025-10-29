@@ -7,8 +7,10 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,7 +21,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class BadgeDslRepository {
+public class ProfileBadgeDslRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
 
@@ -36,6 +38,7 @@ public class BadgeDslRepository {
                 b.iconUrl,
                 b.code,
                 pb.createdAt,
+                pb.updatedAt,
                 pb.representative
             ))
             .from(pb)
@@ -81,5 +84,40 @@ public class BadgeDslRepository {
             }
         }
         return orders.toArray(OrderSpecifier[]::new);
+    }
+
+    public boolean isRepresentative(UUID profileId, UUID badgeId) {
+        QProfileBadge pb = QProfileBadge.profileBadge;
+
+        Integer one = jpaQueryFactory
+            .selectOne()
+            .from(pb)
+            .where(pb.profileId.eq(profileId)
+                .and(pb.badgeId.eq(badgeId))
+                .and(pb.representative.isTrue()))
+            .fetchFirst();
+        return one != null;
+    }
+
+    public long resetRepresentative(UUID profileId) {
+        QProfileBadge pb = QProfileBadge.profileBadge;
+
+        return jpaQueryFactory
+            .update(pb)
+            .set(pb.representative, false)
+            .set(pb.updatedAt, LocalDateTime.now())
+            .where(pb.profileId.eq(profileId).and(pb.representative.eq(true)))
+            .execute();
+    }
+
+    public long setRepresentative(UUID profileId, UUID badgeId) {
+        QProfileBadge pb = QProfileBadge.profileBadge;
+
+        return jpaQueryFactory
+            .update(pb)
+            .set(pb.representative, true)
+            .set(pb.updatedAt, LocalDateTime.now())
+            .where(pb.profileId.eq(profileId).and(pb.badgeId.eq(badgeId)))
+            .execute();
     }
 }

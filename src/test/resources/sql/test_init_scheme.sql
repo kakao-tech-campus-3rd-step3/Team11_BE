@@ -181,6 +181,7 @@ CREATE TABLE public_test.profile_badge (
     profile_id        UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
     badge_id          UUID NOT NULL REFERENCES public_test.badge(id)   ON DELETE CASCADE,
     created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMP NOT NULL DEFAULT NOW(),
     is_representative BOOLEAN   NOT NULL DEFAULT FALSE,
     CONSTRAINT uq_profile_badge UNIQUE(profile_id, badge_id)
 );
