@@ -102,25 +102,25 @@ VALUES (
     26260
 );
 
--- 테스트 모임 1: 광안 농구 모임
+-- 테스트 모임 1: 금정 농구 모임 (장전동, PNU 근처)
 INSERT INTO meetup (
     owner_id, name, category, description, participant_count, capacity, score_limit, location_point,
     address, sgg_code, status, start_at, end_at
 )
 VALUES (
            (SELECT id FROM profile WHERE nickname = '방장1'),
-           '광안 농구 모임',
+           '금정 농구 모임',
            'SPORTS',
-           '광안리 근처 농구장 같이 뛰실 분 구합니다! 🏀',
+           '장전동 체육공원 근처 농구 한 판! 🏀',
            1,
            10,
            36.0,
-           ST_GeomFromText('POINT(129.08225 35.23103)', 4326),
-           '부산광역시 수영구 광안동 농구장',
+           ST_GeomFromText('POINT(129.0890 35.2350)', 4326),
+           '부산광역시 금정구 장전동',
            26410,
            'OPEN',
-           date_trunc('hour', now()) + interval '1 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end),
-           date_trunc('hour', now()) + interval '4 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end)
+           '2025-11-05 19:30:00',
+           '2025-11-05 22:30:00'
        );
 
 -- 테스트 모임 생성용 계정 2
@@ -149,25 +149,25 @@ VALUES (
     26260
 );
 
--- ⚽ 테스트 모임 2: 광안 풋살 번개
+-- 테스트 모임 2: 금정 풋살 번개 (구서동)
 INSERT INTO meetup (
     owner_id, name, category, description, participant_count, capacity, score_limit,
     location_point, address, sgg_code, status, start_at, end_at
 )
 VALUES (
            (SELECT id FROM profile WHERE nickname = '방장2'),
-           '광안 풋살 번개',
+           '금정 풋살 번개',
            'SPORTS',
-           '초보 환영 ⚽ 광안리 풋살장 5대5 경기 예정입니다!',
+           '구서동 풋살장 5대5 번개 ⚽ 초보 환영!',
            1,
            12,
            35.0,
-           ST_GeomFromText('POINT(129.0785 35.2287)', 4326),
-           '부산광역시 수영구 민락동 풋살장',
+           ST_GeomFromText('POINT(129.0920 35.2460)', 4326),
+           '부산광역시 금정구 구서동',
            26410,
            'OPEN',
-           date_trunc('hour', now()) + interval '1 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end),
-           date_trunc('hour', now()) + interval '4 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end)
+           '2025-11-06 19:30:00',
+           '2025-11-06 22:30:00'
        );
 
 -- 테스트 모임 생성용 계정 3
@@ -196,52 +196,50 @@ VALUES (
            26260
        );
 
--- 🏐 테스트 모임 3: 광안 해변 배구 모임
+-- 테스트 모임 3: 금정 배구 모임 (남산동)
 INSERT INTO meetup (
     owner_id, name, category, description, participant_count, capacity, score_limit,
     location_point, address, sgg_code, status, start_at, end_at
 )
 VALUES (
            (SELECT id FROM profile WHERE nickname = '방장3'),
-           '광안 해변 배구 모임',
+           '금정 배구 모임',
            'SPORTS',
-           '광안리 해변에서 즐기는 배구 모임! ☀️',
+           '남산동 실내 체육관에서 배구 같이 해요! 🏐',
            1,
            8,
            36.5,
-           ST_GeomFromText('POINT(129.1173 35.1534)', 4326),
-           '부산광역시 수영구 광안해변로',
+           ST_GeomFromText('POINT(129.0860 35.2590)', 4326),
+           '부산광역시 금정구 남산동',
            26410,
            'OPEN',
-           date_trunc('hour', now()) + interval '1 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end),
-           date_trunc('hour', now()) + interval '4 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end)
+           '2025-11-07 19:30:00',
+           '2025-11-07 22:30:00'
        );
 
--- 🏷 해시태그 추가
-INSERT INTO meetup_hash_tag (meetup_id, name, created_at)
-SELECT m.id, t.tag, now()
-FROM (
-         VALUES
-             ('광안 농구 모임','방장1','#농구'),
-             ('광안 농구 모임','방장1','#운동'),
-             ('광안 풋살 번개','방장2','#풋살'),
-             ('광안 풋살 번개','방장2','#축구'),
-             ('광안 해변 배구 모임','방장3','#배구'),
-             ('광안 해변 배구 모임','방장3','#바다')
-     ) AS t(meetup_name, owner_nickname, tag)
-         JOIN meetup  m ON m.name = t.meetup_name
-         JOIN profile p ON p.id = m.owner_id AND p.nickname = t.owner_nickname
-;
-
--- 방장 참가자 추가
+-- 방장 HOST 참가자 추가
 INSERT INTO meetup_participant (meetup_id, profile_id, role, is_active)
 SELECT m.id, p.id, 'HOST', TRUE
 FROM (
          VALUES
-             ('광안 농구 모임','방장1'),
-             ('광안 풋살 번개','방장2'),
-             ('광안 해변 배구 모임','방장3')
-     ) AS t(meetup_name, owner_nickname)
+             ('금정 농구 모임','방장1'),
+             ('금정 풋살 번개','방장2'),
+             ('금정 배구 모임','방장3')
+     ) t(meetup_name, owner_nickname)
          JOIN meetup  m ON m.name = t.meetup_name
-         JOIN profile p ON p.nickname = t.owner_nickname AND p.id = m.owner_id
-;
+         JOIN profile p ON p.id = m.owner_id AND p.nickname = t.owner_nickname;
+
+-- 해시태그 추가
+INSERT INTO meetup_hash_tag (meetup_id, name, created_at)
+SELECT m.id, tag, now()
+FROM (
+         VALUES
+             ('금정 농구 모임','방장1','농구'),
+             ('금정 농구 모임','방장1','운동'),
+             ('금정 풋살 번개','방장2','풋살'),
+             ('금정 풋살 번개','방장2','축구'),
+             ('금정 배구 모임','방장3','배구'),
+             ('금정 배구 모임','방장3','실내')
+     ) t(mname, nick, tag)
+         JOIN meetup  m ON m.name = t.mname
+         JOIN profile p ON p.id = m.owner_id AND p.nickname = t.nick;
