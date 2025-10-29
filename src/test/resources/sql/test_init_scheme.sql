@@ -32,15 +32,6 @@ CREATE TABLE public_test.member (
     UNIQUE(provider, provider_id)
 );
 
-CREATE TABLE public_test.member_verification (
-    code uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    member_id uuid UNIQUE NOT NULL REFERENCES public_test.member(id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMP NOT NULL
-);
-
-create index if not exists idx_verification_expires_at on public_test.member_verification(expires_at);
-
 CREATE TABLE public_test.member_role (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     member_id uuid NOT NULL REFERENCES public_test.member(id) ON DELETE CASCADE,
