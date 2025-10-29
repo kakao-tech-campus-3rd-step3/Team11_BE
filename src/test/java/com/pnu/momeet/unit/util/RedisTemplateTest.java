@@ -21,7 +21,7 @@ public class RedisTemplateTest {
     private VerificationCodeRepository verificationCodeRepository;
 
     @Test
-    public void testVerificationCodeRedisTemplate() throws NullPointerException{
+    public void testVerificationCodeRedisTemplate() {
         UUID memberId = UUID.randomUUID();
         VerificationCode code = VerificationCode.generate(memberId);
         System.out.println("Generated Code: " + code);

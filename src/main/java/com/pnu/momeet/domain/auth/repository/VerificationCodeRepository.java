@@ -28,8 +28,7 @@ public class VerificationCodeRepository {
 
     public void save(VerificationCode code) {
         String key = getKey(code.body());
-        redisTemplate.opsForValue().set(key, code);
-        redisTemplate.expire(key, ttl, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(key, code, ttl, TimeUnit.SECONDS);
     }
 
     public Optional<VerificationCode> findByBody(String body) {
