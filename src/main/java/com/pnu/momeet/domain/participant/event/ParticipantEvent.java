@@ -1,7 +1,6 @@
 package com.pnu.momeet.domain.participant.event;
 
 import com.pnu.momeet.common.event.DomainEvent;
-import com.pnu.momeet.domain.participant.entity.Participant;
 import lombok.Getter;
 
 import java.util.LinkedHashMap;
@@ -11,22 +10,22 @@ import java.util.UUID;
 @Getter
 public abstract class ParticipantEvent extends DomainEvent {
     UUID meetupId;
-    Participant participant;
+    Long participantId;
 
     public ParticipantEvent(
         UUID meetupId,
-        Participant participant
+        Long participantId
     ) {
         super();
         this.meetupId = meetupId;
-        this.participant = participant;
+        this.participantId = participantId;
     }
 
     @Override
     public Map<String, Object> logInfo() {
         LinkedHashMap<String, Object> m = new LinkedHashMap<>(super.logInfo());
         m.put("meetupId", meetupId);
-        m.put("participantId", participant.getId());
+        m.put("participantId", participantId);
         return m;
     }
 

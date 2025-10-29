@@ -23,12 +23,12 @@ public class ParticipantActionHandlingListener {
     public void handleParticipantJoinEvent(ParticipantJoinEvent event) {
         messagingTemplate.sendAction(
                 event.getMeetupId(),
-                event.getParticipant(),
+                event.getParticipantId(),
                 ChatActionType.JOIN
         );
         log.debug("참여자 참가 알림 전송 완료 - meetupId: {}, participantId: {}",
                 event.getMeetupId(),
-                event.getParticipant().getId()
+                event.getParticipantId()
         );
     }
 
@@ -37,13 +37,13 @@ public class ParticipantActionHandlingListener {
     public void handleParticipantKickEvent(ParticipantKickEvent event) {
         messagingTemplate.sendAction(
                 event.getMeetupId(),
-                event.getParticipant(),
+                event.getParticipantId(),
                 ChatActionType.KICKED
         );
 
         log.debug("참여자 강제 퇴장 알림 전송 완료 - meetupId: {}, participantId: {}",
                 event.getMeetupId(),
-                event.getParticipant().getId()
+                event.getParticipantId()
         );
     }
 
@@ -52,12 +52,12 @@ public class ParticipantActionHandlingListener {
     public void handleParticipantLeaveEvent(ParticipantExitEvent event) {
         messagingTemplate.sendAction(
                 event.getMeetupId(),
-                event.getParticipant(),
+                event.getParticipantId(),
                 ChatActionType.EXIT
         );
         log.debug("참여자 퇴장 알림 전송 완료 - meetupId: {}, participantId: {}",
                 event.getMeetupId(),
-                event.getParticipant().getId()
+                event.getParticipantId()
         );
     }
 }
