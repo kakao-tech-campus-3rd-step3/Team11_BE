@@ -10,6 +10,8 @@ import static software.amazon.awssdk.http.HttpStatusCode.NOT_FOUND;
 import static software.amazon.awssdk.http.HttpStatusCode.OK;
 import static software.amazon.awssdk.http.HttpStatusCode.UNAUTHORIZED;
 
+import com.pnu.momeet.domain.evaluation.entity.Evaluation;
+import com.pnu.momeet.domain.evaluation.enums.Rating;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.RestAssured;
 import java.util.UUID;
@@ -81,5 +83,34 @@ public class MeetupEvaluationGetTest extends BaseMeetupEvaluationTest {
             .get("/{meetupId}/evaluations/candidates", UUID.randomUUID())
             .then().log().all()
             .statusCode(404);
+    }
+
+    @Test
+    @DisplayName("평가 후보 조회 - evaluator→target 24h 쿨타임 위반이면 후보에 나타나지 않는다")
+    void getCandidates_excludesTargetWithin24hCooldown() {
+        // given - 종료된 테스트 모임, 토큰 준비
+        UUID meetupId = findTestMeetupId();
+        var accessToken = getToken(Role.ROLE_USER).accessToken();
+
+        // 선행 평가(지금 시각) 저장 -> 24h 쿨타임 위반
+        Evaluation recent = Evaluation.create(
+            meetupId,
+            evaluator_profile_uuid,       // evaluator = user@test.com
+            target_admin_profile_uuid,    // target = admin@test.com
+            Rating.LIKE,
+            "ip#cooldown"
+        );
+        evaluationRepository.save(recent);
+
+        // when & then - 후보 호출 시 타겟이 목록에 없어야 함
+        RestAssured
+            .given().log().all()
+            .header(AUTH_HEADER, BEAR_PREFIX + accessToken)
+            .when()
+            .get("/{meetupId}/evaluations/candidates", meetupId)
+            .then().log().all()
+            .statusCode(200)
+            .body("$", not(hasItem(target_admin_profile_uuid.toString())))
+            .body("profileId", not(hasItem(target_admin_profile_uuid.toString())));
     }
 }
