@@ -48,7 +48,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class EvaluationDomainService {
 
     private static final Duration EVALUATION_COOLTIME = Duration.ofHours(24);
-    private static final Duration EVALUATION_VALIDITY = Duration.ofDays(3);
 
     private final EvaluationEntityService entityService;
     private final ProfileEntityService profileService;
@@ -286,8 +285,15 @@ public class EvaluationDomainService {
         // 모임 존재 확인
         Meetup meetup = meetupService.getById(meetupId);
         LocalDateTime now = LocalDateTime.now();
-        if (!meetup.getStatus().equals(MeetupStatus.ENDED)) {
-            // 모임이 종료 상태가 아닐 경우 평가 불가
+
+        // 평가자는 해당 모임의 참가자여야 함
+        if (!participantService.existsByProfileIdAndMeetupId(evaluator.getId(), meetupId)) {
+            log.debug("해당 모임에 참여하지 않은 사용자. meetupId={}, evaluatorPid={}, now={}", meetupId, evaluator.getId(), now);
+            throw new IllegalArgumentException("모임에 참여하지 않은 사용자입니다.");
+        }
+
+        // 모임이 종료 상태가 아닐 경우 평가 불가
+        if (meetup.getStatus() != MeetupStatus.ENDED) {
             log.debug("평가 가능 상태가 아님. meetupId={}, endAt={}, now={}", meetupId, meetup.getEndAt(), now);
             return List.of();
         }
@@ -298,14 +304,23 @@ public class EvaluationDomainService {
             .filter(p -> !p.getProfile().getId().equals(evaluator.getId()))
             .toList();
 
+        // 평가 대상 ID 집합
+        Set<UUID> targetIds = targets.stream()
+            .map(p -> p.getProfile().getId())
+            .collect(Collectors.toSet());
+
+        // 평가 대상에 대한 최근 평가의 createdAt을 한 번에 조회
+        Map<UUID, LocalDateTime> lastMap =
+            entityService.getLastCreatedAtByTargets(evaluator.getId(), targetIds);
+
+        final LocalDateTime cutoff = now.minus(EVALUATION_COOLTIME);
         List<EvaluatableProfileResponse> result = new ArrayList<>();
         for (Participant p : targets) {
             UUID targetPid = p.getProfile().getId();
+            LocalDateTime last = lastMap.get(targetPid);
 
             // 동일 대상에 대한 평가 쿨타임 검증
-            boolean violateDaily = entityService.getLastByPair(evaluator.getId(), targetPid)
-                .map(last -> last.getCreatedAt().isAfter(now.minus(EVALUATION_COOLTIME)))
-                .orElse(false);
+            boolean violateDaily = (last != null) && !last.isBefore(cutoff);
             if (violateDaily) continue;
 
             result.add(EvaluatableProfileMapper.toEvaluatableProfileResponse(p, null));
