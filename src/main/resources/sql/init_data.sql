@@ -119,8 +119,8 @@ VALUES (
            '부산광역시 수영구 광안동 농구장',
            26410,
            'OPEN',
-           date_trunc('hour', now()) + interval '1 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end),
-           date_trunc('hour', now()) + interval '4 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end)
+           '2025-11-05 19:30:00',
+           '2025-11-05 22:30:00'
        );
 
 -- 테스트 모임 생성용 계정 2
@@ -166,8 +166,8 @@ VALUES (
            '부산광역시 수영구 민락동 풋살장',
            26410,
            'OPEN',
-           date_trunc('hour', now()) + interval '1 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end),
-           date_trunc('hour', now()) + interval '4 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end)
+           '2025-11-05 19:30:00',
+           '2025-11-05 22:30:00'
        );
 
 -- 테스트 모임 생성용 계정 3
@@ -213,8 +213,8 @@ VALUES (
            '부산광역시 수영구 광안해변로',
            26410,
            'OPEN',
-           date_trunc('hour', now()) + interval '1 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end),
-           date_trunc('hour', now()) + interval '4 hour' + make_interval(mins => case when extract(minute from now()) >= 30 then 30 else 0 end)
+           '2025-11-05 19:30:00',
+           '2025-11-05 22:30:00'
        );
 
 -- 🏷 해시태그 추가
