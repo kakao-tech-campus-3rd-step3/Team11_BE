@@ -1,13 +1,15 @@
 package com.pnu.momeet.domain.participant.event;
 
+import com.pnu.momeet.domain.participant.entity.Participant;
+
 import java.util.UUID;
 
 public class ParticipantKickEvent extends ParticipantEvent {
 
     public ParticipantKickEvent(
         UUID meetupId,
-        Long participantId
+        Participant participant
     ) {
-        super(meetupId, participantId);
+        super(meetupId, participant);
     }
 }

@@ -105,7 +105,7 @@ public class ParticipantDomainService {
         meetupService.updateMeetup(meetup, m -> m.addParticipant(createdParticipant));
         log.info("모임 참가 성공. meetupId={}, profileId={}", meetupId, profile.getId());
 
-        eventPublisher.publish(new ParticipantJoinEvent(meetupId, createdParticipant.getId()));
+        eventPublisher.publish(new ParticipantJoinEvent(meetupId, createdParticipant));
         return ParticipantEntityMapper.toDto(createdParticipant);
     }
 
@@ -137,7 +137,7 @@ public class ParticipantDomainService {
             meetupService.updateMeetup(meetup, m -> m.setOwner(replacementHost.getProfile()));
         }
         // 채팅방 퇴장 알림
-        eventPublisher.publish(new ParticipantExitEvent(meetupId, participant.getId()));
+        eventPublisher.publish(new ParticipantExitEvent(meetupId, participant));
         // 참가자 제거 및 참가자 수 감소
         meetupService.updateMeetup(meetup, m -> m.removeParticipant(participant));
 
@@ -161,7 +161,7 @@ public class ParticipantDomainService {
 
         entityService.updateParticipant(requester, p -> p.setLastActiveAt(LocalDateTime.now()));
         // 채팅방 강퇴 알림
-        eventPublisher.publish(new ParticipantKickEvent(meetupId, targetParticipant.getId()));
+        eventPublisher.publish(new ParticipantKickEvent(meetupId, targetParticipant));
         // 참가자 제거 및 참가자 수 감소
         meetupService.updateMeetup(meetupService.getById(meetupId), m -> m.removeParticipant(targetParticipant));
 

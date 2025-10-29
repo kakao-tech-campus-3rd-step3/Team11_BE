@@ -2,10 +2,7 @@ package com.pnu.momeet.domain.meetup.service.listener;
 
 import com.pnu.momeet.domain.chatting.enums.ChatActionType;
 import com.pnu.momeet.domain.chatting.util.ChatMessagingTemplate;
-import com.pnu.momeet.domain.meetup.event.MeetupCanceledEvent;
-import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
-import com.pnu.momeet.domain.meetup.event.MeetupNearEndEvent;
-import com.pnu.momeet.domain.meetup.event.MeetupStartEvent;
+import com.pnu.momeet.domain.meetup.event.*;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.service.ParticipantEntityService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +20,18 @@ import java.util.UUID;
 public class MeetupActionHandlingListener {
     private final ParticipantEntityService participantService;
     private final ChatMessagingTemplate messagingTemplate;
+
+    @Async
+    @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
+    public void handleMeetupModified(MeetupModifiedEvent event) {
+        UUID meetupId = event.getMeetupId();
+        participantService.getAllByMeetupId(meetupId).stream()
+                .filter(Participant::getIsActive)
+                .forEach(participant ->
+                        messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.MODIFIED)
+                );
+        log.info("모임 수정 알림 전송 완료 - meetupId: {}", meetupId);
+    }
 
     @Async
     @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
