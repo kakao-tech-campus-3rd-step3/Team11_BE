@@ -219,10 +219,29 @@ VALUES (
 
 -- 🏷 해시태그 추가
 INSERT INTO meetup_hash_tag (meetup_id, name, created_at)
-VALUES
-    ((SELECT id FROM meetup WHERE name = '광안 농구 모임'), '#농구', NOW()),
-    ((SELECT id FROM meetup WHERE name = '광안 농구 모임'), '#운동', NOW()),
-    ((SELECT id FROM meetup WHERE name = '광안 풋살 번개'), '#풋살', NOW()),
-    ((SELECT id FROM meetup WHERE name = '광안 풋살 번개'), '#축구', NOW()),
-    ((SELECT id FROM meetup WHERE name = '광안 해변 배구 모임'), '#배구', NOW()),
-    ((SELECT id FROM meetup WHERE name = '광안 해변 배구 모임'), '#바다', NOW());
+SELECT m.id, t.tag, now()
+FROM (
+         VALUES
+             ('광안 농구 모임','방장1','#농구'),
+             ('광안 농구 모임','방장1','#운동'),
+             ('광안 풋살 번개','방장2','#풋살'),
+             ('광안 풋살 번개','방장2','#축구'),
+             ('광안 해변 배구 모임','방장3','#배구'),
+             ('광안 해변 배구 모임','방장3','#바다')
+     ) AS t(meetup_name, owner_nickname, tag)
+         JOIN meetup  m ON m.name = t.meetup_name
+         JOIN profile p ON p.id = m.owner_id AND p.nickname = t.owner_nickname
+;
+
+-- 방장 참가자 추가
+INSERT INTO meetup_participant (meetup_id, profile_id, role, is_active)
+SELECT m.id, p.id, 'HOST', TRUE
+FROM (
+         VALUES
+             ('광안 농구 모임','방장1'),
+             ('광안 풋살 번개','방장2'),
+             ('광안 해변 배구 모임','방장3')
+     ) AS t(meetup_name, owner_nickname)
+         JOIN meetup  m ON m.name = t.meetup_name
+         JOIN profile p ON p.nickname = t.owner_nickname AND p.id = m.owner_id
+;
