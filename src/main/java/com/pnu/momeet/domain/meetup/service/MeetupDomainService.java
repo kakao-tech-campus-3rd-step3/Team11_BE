@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.meetup.service;
 
+import com.pnu.momeet.common.event.CoreEventPublisher;
 import com.pnu.momeet.common.exception.CustomValidationException;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupGeoSearchRequest;
@@ -10,6 +11,7 @@ import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
+import com.pnu.momeet.domain.meetup.event.MeetupModifiedEvent;
 import com.pnu.momeet.domain.meetup.repository.spec.MeetupSpecifications;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupDtoMapper;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
@@ -45,6 +47,7 @@ public class MeetupDomainService {
     private final MeetupEntityService entityService;
     private final ProfileEntityService profileService;
     private final SigunguEntityService sigunguService;
+    private final CoreEventPublisher eventPublisher;
 
     private void validateTimeUnits(String startAt, String endAt) {
 
@@ -197,6 +200,7 @@ public class MeetupDomainService {
         }
         // fetch join을 사용하기 위해 다시 조회
         log.info("모임 수정 성공. id={}, ownerId={}", updatedMeetup.getId(), profileId);
+        eventPublisher.publish(new MeetupModifiedEvent(updatedMeetup.getId()));
         return getById(updatedMeetup.getId());
     }
 }
