@@ -25,7 +25,6 @@ public class ChatEventService {
     public void connectToMeetup(UUID meetupId, UUID memberId) {
         UUID profileId = profileService.mapToProfileId(memberId);
         Participant participant = participantService.getByProfileIDAndMeetupID(profileId, meetupId);
-
         if (!participant.getIsActive()) {
             participantService.updateParticipant(participant, p -> {
                 p.setLastActiveAt(LocalDateTime.now());
@@ -40,7 +39,6 @@ public class ChatEventService {
     public void disconnectFromMeetup(UUID meetupId, UUID memberId) {
         UUID profileId = profileService.mapToProfileId(memberId);
         Participant participant = participantService.getByProfileIDAndMeetupID(profileId, meetupId);
-
         if (participant.getIsActive()) {
             participantService.updateParticipant(participant, p -> p.setIsActive(false));
             messagingTemplate.sendAction(meetupId, participant, ChatActionType.LEAVE);

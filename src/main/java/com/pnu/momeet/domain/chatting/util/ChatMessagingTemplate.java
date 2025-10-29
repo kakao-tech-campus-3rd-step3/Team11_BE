@@ -55,4 +55,17 @@ public class ChatMessagingTemplate {
             throw new MessageSendFailureException(e.getMessage());
         }
     }
+
+    @Transactional
+    public void sendAction(UUID meetupId, ChatActionType action) {
+        ActionResponse actionResponse = ChatEntityMapper.toAction(action);
+        try {
+            messagingTemplate.convertAndSend(
+                    TOPIC_PREFIX + meetupId + "/actions",
+                    actionResponse
+            );
+        } catch (Exception e) {
+            throw new MessageSendFailureException(e.getMessage());
+        }
+    }
 }
