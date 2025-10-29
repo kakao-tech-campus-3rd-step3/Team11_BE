@@ -7,10 +7,8 @@ import jakarta.validation.ConstraintValidatorContext;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.format.ResolverStyle;
 
 public class MeetupTimeUnitValidator implements ConstraintValidator<MeetupTimeUnit, String> {
-    // yyyy-MM-ddTHH:mm 30분 단위 검사 정규식
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
     @Override
@@ -21,7 +19,7 @@ public class MeetupTimeUnitValidator implements ConstraintValidator<MeetupTimeUn
         try {
             LocalDateTime dt = LocalDateTime.parse(value, FORMATTER);
             int minute = dt.getMinute();
-            return minute == 0 || minute == 30;
+            return minute % 10 == 0; // 10분 단위가 아니면 false 반환
         } catch (DateTimeParseException e) {
             return false;
         }

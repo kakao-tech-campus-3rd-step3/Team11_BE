@@ -2,7 +2,6 @@ package com.pnu.momeet.e2e.meetup;
 
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.service.EmailAuthService;
-import com.pnu.momeet.domain.block.entity.UserBlock;
 import com.pnu.momeet.domain.block.repository.BlockRepository;
 import com.pnu.momeet.domain.block.service.BlockDomainService;
 import com.pnu.momeet.domain.meetup.repository.MeetupRepository;

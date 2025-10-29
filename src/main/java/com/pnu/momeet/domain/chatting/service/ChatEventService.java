@@ -25,7 +25,6 @@ public class ChatEventService {
     public void connectToMeetup(UUID meetupId, UUID memberId) {
         UUID profileId = profileService.mapToProfileId(memberId);
         Participant participant = participantService.getByProfileIDAndMeetupID(profileId, meetupId);
-
         if (!participant.getIsActive()) {
             participantService.updateParticipant(participant, p -> {
                 p.setLastActiveAt(LocalDateTime.now());
@@ -40,7 +39,6 @@ public class ChatEventService {
     public void disconnectFromMeetup(UUID meetupId, UUID memberId) {
         UUID profileId = profileService.mapToProfileId(memberId);
         Participant participant = participantService.getByProfileIDAndMeetupID(profileId, meetupId);
-
         if (participant.getIsActive()) {
             participantService.updateParticipant(participant, p -> p.setIsActive(false));
             messagingTemplate.sendAction(meetupId, participant, ChatActionType.LEAVE);
@@ -58,45 +56,5 @@ public class ChatEventService {
                     messagingTemplate.sendAction(participant.getMeetup().getId(), participant.getId(), ChatActionType.LEAVE);
                     log.info("사용자 다건 채팅방 연결 종료 - meetupId: {}, memberId: {}", participant.getMeetup().getId(), memberId);
                 });
-    }
-
-    @Transactional(readOnly = true)
-    public void finishMeetup(UUID meetupId) {
-        participantService.getAllByMeetupId(meetupId).stream()
-                .filter(Participant::getIsActive)
-                .forEach(participant ->
-                    messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.FINISH)
-                );
-        log.info("모임 종료 알림 전송 완료 - meetupId: {}", meetupId);
-    }
-
-    @Transactional(readOnly = true)
-    public void startMeetup(UUID meetupId) {
-        participantService.getAllByMeetupId(meetupId).stream()
-                .filter(Participant::getIsActive)
-                .forEach(participant ->
-                    messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.STARTED)
-                );
-        log.info("모임 시작 알림 전송 완료 - meetupId: {}", meetupId);
-    }
-
-    @Transactional(readOnly = true)
-    public void cancelMeetup(UUID meetupId) {
-        participantService.getAllByMeetupId(meetupId).stream()
-                .filter(Participant::getIsActive)
-                .forEach(participant ->
-                    messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.CANCELED)
-                );
-        log.info("모임 취소 알림 전송 완료 - meetupId: {}", meetupId);
-    }
-
-    @Transactional
-    public void cancelByAdminMeetup(UUID meetupId) {
-        participantService.getAllByMeetupId(meetupId).stream()
-                .filter(Participant::getIsActive)
-                .forEach(participant ->
-                    messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.CANCELED_BY_ADMIN)
-                );
-        log.info("모임 관리자에 의한 모임 취소 알림 전송 완료 - meetupId: {}", meetupId);
     }
 }

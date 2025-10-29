@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -38,12 +37,7 @@ public class MeetupStateService {
         if (meetups.isEmpty()) {
             throw new NoSuchElementException("시작 가능한 모임이 없습니다.");
         }
-        Meetup meetup = meetups.getFirst();
-
-        // 2) 상태 전이: IN_PROGRESS (엔티티 메서드로 캡슐화 권장)
-        entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.IN_PROGRESS));
-        coreEventPublisher.publish(MeetupEntityMapper.toMeetupStartEvent(meetup));
-        log.info("모임 시작 완료. id={}, ownerId={}", meetup.getId(), ownerProfileId);
+        startMeetupInternal(meetups.getFirst());
     }
 
     @Transactional
@@ -52,42 +46,52 @@ public class MeetupStateService {
         if (meetup.getStatus() != MeetupStatus.OPEN) {
             throw new IllegalStateException("시작할 수 있는 상태가 아닙니다.");
         }
+        startMeetupInternal(meetup);
+    }
+
+    private void startMeetupInternal(Meetup meetup) {
         entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.IN_PROGRESS));
-        log.info("모임 시작 완료. id={}", meetupId);
         coreEventPublisher.publish(MeetupEntityMapper.toMeetupStartEvent(meetup));
-        log.info("모임 시작 완료. id={}", meetupId);
+        log.info("모임 시작 완료. id={}, ownerId={}", meetup.getId(), meetup.getOwner().getId());
     }
 
     @Transactional
-    public void cancelMeetupAdmin(UUID meetupId) {
+    public void cancelMeetupById(UUID meetupId) {
         Meetup meetup = entityService.getById(meetupId);
         if (meetup.getStatus() != MeetupStatus.OPEN && meetup.getStatus() != MeetupStatus.IN_PROGRESS) {
             throw new IllegalStateException("모임을 취소할 수 있는 상태가 아닙니다.");
         }
-        entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.CANCELED));
-        coreEventPublisher.publish(MeetupEntityMapper.toMeetupCanceledEvent(meetup, Role.ROLE_ADMIN));
-        log.info("관리자에 의해 모임 취소 성공. id={}", meetupId);
+        cancelMeetupInternal(meetup, Role.ROLE_ADMIN);
     }
 
     @Transactional
-    public void cancelMeetup(UUID memberId) {
+    public void cancelMeetupMemberId(UUID memberId) {
         UUID profileId = profileService.mapToProfileId(memberId);
         var meetups = entityService.getAllByOwnerIdAndStatusIn(profileId, List.of(MeetupStatus.OPEN));
         if (meetups.isEmpty()) {
             throw new NoSuchElementException("취소 가능한 모임이 없습니다.");
         }
-        Meetup meetup = meetups.getFirst();
+        cancelMeetupInternal(meetups.getFirst(), Role.ROLE_USER);
+    }
+
+    private void cancelMeetupInternal(Meetup meetup, Role canceledBy) {
         entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.CANCELED));
-        log.info("모임 취소 성공. id={}, ownerId={}", meetup.getId(), profileId);
+        coreEventPublisher.publish(MeetupEntityMapper.toMeetupCanceledEvent(meetup, canceledBy));
+        log.info("모임 취소 성공. id={}, canceledBy={}", meetup.getId(), canceledBy);
     }
 
     @Transactional
-    public void finishMeetupById(UUID meetupId) {
+    public void finishMeetupById(UUID meetupId, Role finishedBy) {
         Meetup meetup = entityService.getById(meetupId);
         if (meetup.getStatus() != MeetupStatus.IN_PROGRESS) {
             throw new IllegalStateException("종료할 수 있는 상태가 아닙니다.");
         }
-        finishMeetupInternal(meetup);
+        if (finishedBy != Role.ROLE_SYSTEM && finishedBy != Role.ROLE_ADMIN) {
+            // 이 메서드가 다른 역할로 호출되는 것은 비정상적 상황임
+            log.warn("비시스템/비관리자에 의한 모임 종료 시도 감지. meetupId={}, finishedBy={}", meetupId, finishedBy);
+            throw new IllegalArgumentException("시스템 또는 관리자에 의해서만 모임을 종료할 수 있습니다.");
+        }
+        finishMeetupInternal(meetup, finishedBy);
     }
 
     @Transactional
@@ -100,7 +104,24 @@ public class MeetupStateService {
         if (availableMeetups.isEmpty()) {
             throw new IllegalStateException("종료할 수 있는 모임이 없습니다.");
         }
-        finishMeetupInternal(availableMeetups.getFirst());
+        finishMeetupInternal(availableMeetups.getFirst(), Role.ROLE_USER);
+    }
+
+    private void finishMeetupInternal(Meetup meetup, Role finishedBy) {
+        // 2) 상태 전이: ENDED (엔티티 메서드로 캡슐화 권장)
+        entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.ENDED));
+
+        // 3) 완주자 조회 -> 프로필 집계 필드 증가
+        var participants = participantService.getAllByMeetupId(meetup.getId());
+        participants.stream()
+                .map(Participant::getProfile)
+                .forEach(Profile::increaseCompletedJoinMeetups);
+
+        // 4) 종료 이벤트 발행 (커밋 후 배지 부여)
+        coreEventPublisher.publish(MeetupEntityMapper.toMeetupFinishedEvent(meetup, participants, finishedBy));
+
+        log.info("모임 종료 완료. meetupId={}, ownerProfileId={}, finisherCount={}",
+                meetup.getId(), meetup.getOwner().getId(), participants.size());
     }
 
     @Transactional
@@ -113,25 +134,5 @@ public class MeetupStateService {
         meetupEntityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.EVALUATION_TIMEOUT));
         coreEventPublisher.publish(new EvaluationDeadlineEndedEvent(meetup.getId()));
         log.info("평가 기간 종료에 따른 모임 상태 변경 완료. id={}, status={}", meetup.getId(), meetup.getStatus());
-    }
-
-    private void finishMeetupInternal(Meetup meetup) {
-        // 2) 상태 전이: ENDED (엔티티 메서드로 캡슐화 권장)
-        entityService.updateMeetup(meetup, m -> {
-            m.setStatus(MeetupStatus.ENDED);
-            m.setEndAt(LocalDateTime.now());
-        });
-
-        // 3) 완주자 조회 -> 프로필 집계 필드 증가
-        var participants = participantService.getAllByMeetupId(meetup.getId());
-        participants.stream()
-                .map(Participant::getProfile)
-                .forEach(Profile::increaseCompletedJoinMeetups);
-
-        // 4) 종료 이벤트 발행 (커밋 후 배지 부여)
-        coreEventPublisher.publish(MeetupEntityMapper.toMeetupFinishedEvent(meetup, participants));
-
-        log.info("모임 종료 완료. meetupId={}, ownerProfileId={}, finisherCount={}",
-                meetup.getId(), meetup.getOwner().getId(), participants.size());
     }
 }

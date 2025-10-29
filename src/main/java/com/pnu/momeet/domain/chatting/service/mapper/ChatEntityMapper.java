@@ -39,4 +39,14 @@ public class ChatEntityMapper {
                 actionType
         );
     }
+
+    public static ActionResponse toAction(ChatActionType actionType) {
+        return new ActionResponse(
+                null,
+                null,
+                null,
+                null,
+                actionType
+        );
+    }
 }

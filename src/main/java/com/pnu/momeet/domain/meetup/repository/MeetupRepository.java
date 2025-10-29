@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-public interface MeetupRepository extends JpaRepository<Meetup, UUID>, JpaSpecificationExecutor<Meetup> {
+public interface MeetupRepository extends JpaRepository<Meetup, UUID>, JpaSpecificationExecutor<Meetup>, MeetupDslRepository {
     @EntityGraph(attributePaths = {"hashTags"})
     @NonNull
     Page<Meetup> findAll(Specification<Meetup> spec,@NonNull Pageable pageable);
