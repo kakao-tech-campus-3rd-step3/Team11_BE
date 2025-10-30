@@ -5,13 +5,24 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.pnu.momeet.domain.badge.service.ProfileBadgeEntityService;
 import com.pnu.momeet.domain.member.enums.Role;
 import io.restassured.http.ContentType;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ProfileBadgeRepresentativeSetTest extends BaseProfileBadgeTest {
+
+    @Autowired
+    private ProfileBadgeEntityService entityService;
+
+    @AfterEach
+    void cleanup() {
+        entityService.resetRepresentative(testUserProfileId);
+    }
 
     @Test
     @DisplayName("내 대표 배지 설정 - 성공 (멱등 포함)")

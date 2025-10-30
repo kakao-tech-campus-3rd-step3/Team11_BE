@@ -79,7 +79,7 @@ public class ProfileBadgeAwardTest extends BaseProfileBadgeTest {
             .post("/{profileId}/badges/award", testUserProfileId)
             .then()
             .statusCode(409)
-            .body("detail", equalTo("이미 배지 부여된 프로필입니다."));
+            .body("detail", equalTo("이미 보유한 배지입니다."));
     }
 
     @Test

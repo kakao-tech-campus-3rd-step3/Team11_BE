@@ -6,6 +6,7 @@ import com.pnu.momeet.domain.badge.entity.QProfileBadge;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -123,7 +124,7 @@ public class ProfileBadgeDslRepository {
         return jpaQueryFactory
             .update(pb)
             .set(pb.representative, false)
-            .set(pb.updatedAt, LocalDateTime.now())
+            .set(pb.updatedAt, Expressions.dateTimeTemplate(LocalDateTime.class, "CURRENT_TIMESTAMP"))
             .where(pb.profileId.eq(profileId).and(pb.representative.eq(true)))
             .execute();
     }
@@ -134,7 +135,7 @@ public class ProfileBadgeDslRepository {
         return jpaQueryFactory
             .update(pb)
             .set(pb.representative, true)
-            .set(pb.updatedAt, LocalDateTime.now())
+            .set(pb.updatedAt, Expressions.dateTimeTemplate(LocalDateTime.class, "CURRENT_TIMESTAMP"))
             .where(pb.profileId.eq(profileId).and(pb.badgeId.eq(badgeId)))
             .execute();
     }
