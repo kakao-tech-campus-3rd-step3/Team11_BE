@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -270,6 +271,77 @@ class ProfileBadgeDomainServiceTest {
 
         assertThat(res).isEmpty();
         verify(profileService).getProfileByMemberId(memberId);
+        verify(entityService).getRepresentativeByProfileId(eq(profileId));
+    }
+
+    @Test
+    @DisplayName("특정 프로필 대표 배지 조회 - 프로필 존재 검증 후 EntityService로 위임 (있음)")
+    void getUserRepresentative_present() {
+        UUID memberId = UUID.randomUUID();
+        UUID profileId = UUID.randomUUID();
+
+        var stubProfile = new ProfileResponse(
+            profileId,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            0,
+            0,
+            null,
+            null
+        );
+        when(profileService.getProfileById(profileId)).thenReturn(stubProfile);
+
+        var dto = new ProfileBadgeResponse(
+            UUID.randomUUID(), "REP", "대표", "https://rep", "REP_CODE",
+            LocalDateTime.now(), LocalDateTime.now(), true
+        );
+        when(entityService.getRepresentativeByProfileId(profileId))
+            .thenReturn(Optional.of(dto));
+
+        var res = profileBadgeService.getUserRepresentativeBadge(profileId);
+
+        assertThat(res).isPresent();
+        assertThat(res.get().representative()).isTrue();
+        verify(profileService).getProfileById(profileId);
+        verify(entityService).getRepresentativeByProfileId(eq(profileId));
+    }
+
+    @Test
+    @DisplayName("특정 프로필 대표 배지 조회 - 프로필 존재 검증 후 EntityService로 위임 (없음)")
+    void getUserRepresentative_absent() {
+        UUID memberId = UUID.randomUUID();
+        UUID profileId = UUID.randomUUID();
+
+        var stubProfile = new ProfileResponse(
+            profileId,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            0,
+            0,
+            null,
+            null
+        );
+        when(profileService.getProfileById(profileId)).thenReturn(stubProfile);
+
+        when(entityService.getRepresentativeByProfileId(profileId))
+            .thenReturn(Optional.empty());
+
+        var res = profileBadgeService.getUserRepresentativeBadge(profileId);
+
+        assertThat(res).isEmpty();
+        verify(profileService).getProfileById(profileId);
         verify(entityService).getRepresentativeByProfileId(eq(profileId));
     }
 

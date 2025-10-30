@@ -54,6 +54,16 @@ public class ProfileBadgeDomainService {
         return representative;
     }
 
+    @Transactional(readOnly = true)
+    public Optional<ProfileBadgeResponse> getUserRepresentativeBadge(UUID profileId) {
+        log.debug("특정 사용자 대표 배지 조회 시도. profileId={}", profileId);
+        profileService.getProfileById(profileId); // 존재 검증
+        Optional<ProfileBadgeResponse> representative = entityService
+            .getRepresentativeByProfileId(profileId);
+        log.debug("특정 사용자 대표 배지 조회 완료. profileId={}, representative={}", profileId, representative);
+        return representative;
+    }
+
     @Transactional
     public ProfileBadgeResponse setRepresentativeBadge(
         UUID memberId,

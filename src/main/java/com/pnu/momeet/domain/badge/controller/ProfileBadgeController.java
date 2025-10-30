@@ -57,6 +57,16 @@ public class ProfileBadgeController {
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping("/{profileId}/badges/representative")
+    public ResponseEntity<ProfileBadgeResponse> getUserRepresentativeBadge(
+        @PathVariable UUID profileId
+    ) {
+        return profileBadgeService.getUserRepresentativeBadge(profileId)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @PutMapping("/me/badges/representative")
     public ResponseEntity<ProfileBadgeResponse> setRepresentative(
         @AuthenticationPrincipal CustomUserDetails userDetails,

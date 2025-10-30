@@ -77,7 +77,7 @@ public class ProfileBadgeEntityServiceTest {
 
     @Test
     @DisplayName("대표 배지 단건 조회 - DSL 위임 (있음)")
-    void findRepresentative_present() {
+    void findMyRepresentative_present() {
         UUID profileId = UUID.randomUUID();
         var dto = new ProfileBadgeResponse(
             UUID.randomUUID(),
@@ -101,10 +101,39 @@ public class ProfileBadgeEntityServiceTest {
 
     @Test
     @DisplayName("대표 배지 단건 조회 - DSL 위임 (없음)")
-    void findRepresentative_absent() {
+    void findMyRepresentative_absent() {
         UUID profileId = UUID.randomUUID();
         given(profileBadgeDslRepository.findRepresentativeByProfileId(profileId))
             .willReturn(Optional.empty());
+
+        var res = entityService.getRepresentativeByProfileId(profileId);
+
+        assertThat(res).isEmpty();
+        verify(profileBadgeDslRepository).findRepresentativeByProfileId(eq(profileId));
+    }
+
+    @Test
+    @DisplayName("특정 프로필 대표 배지 - DSL 위임 (있음)")
+    void findUserRepresentative_present() {
+        UUID profileId = UUID.randomUUID();
+        var dto = new ProfileBadgeResponse(
+            UUID.randomUUID(), "REP", "대표", "https://rep", "REP_CODE",
+            LocalDateTime.now(), LocalDateTime.now(), true
+        );
+        given(profileBadgeDslRepository.findRepresentativeByProfileId(profileId)).willReturn(Optional.of(dto));
+
+        var res = entityService.getRepresentativeByProfileId(profileId);
+
+        assertThat(res).isPresent();
+        assertThat(res.get().representative()).isTrue();
+        verify(profileBadgeDslRepository).findRepresentativeByProfileId(eq(profileId));
+    }
+
+    @Test
+    @DisplayName("특정 프로필 대표 배지 - DSL 위임 (없음)")
+    void findUserRepresentative_absent() {
+        UUID profileId = UUID.randomUUID();
+        given(profileBadgeDslRepository.findRepresentativeByProfileId(profileId)).willReturn(Optional.empty());
 
         var res = entityService.getRepresentativeByProfileId(profileId);
 
