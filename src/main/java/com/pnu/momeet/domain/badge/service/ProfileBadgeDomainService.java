@@ -1,6 +1,5 @@
 package com.pnu.momeet.domain.badge.service;
 
-import aj.org.objectweb.asm.commons.Remapper;
 import com.pnu.momeet.domain.badge.dto.request.BadgeAwardRequest;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgeRepresentativeRequest;
@@ -11,7 +10,6 @@ import com.pnu.momeet.domain.badge.entity.ProfileBadge;
 import com.pnu.momeet.domain.badge.service.mapper.ProfileBadgeDtoMapper;
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.service.ProfileDomainService;
-import jakarta.validation.Valid;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
