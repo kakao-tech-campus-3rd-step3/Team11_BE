@@ -33,6 +33,7 @@ public class ParticipantDomainService {
     private final MeetupEntityService meetupService;
     private final ProfileEntityService profileService;
     private final CoreEventPublisher eventPublisher;
+    private final BanParticipantService banService;
 
     @Transactional(readOnly = true)
     public List<ParticipantResponse> getParticipantsByMeetupId(UUID meetupId) {
@@ -85,6 +86,11 @@ public class ParticipantDomainService {
             log.info("이미 참여한 모임에 다시 참여 시도. meetupId={}, profileId={}", meetupId, profile.getId());
             throw new IllegalStateException("이미 참여한 모임입니다.");
         }
+        if (banService.isBanned(meetupId, profile.getId())) {
+            log.info("강제 탈퇴된 모임에 참여 시도. meetupId={}, profileId={}", meetupId, profile.getId());
+            throw new SecurityException("강제 탈퇴된 모임에는 다시 참여할 수 없습니다.");
+        }
+
         Meetup meetup = meetupService.getById(meetupId);
         if (meetup.getStatus() != MeetupStatus.OPEN) {
             log.info("모임에 참여할 수 없는 상태에서 참여 시도. meetupId={}, profileId={}, status={}",
@@ -165,6 +171,8 @@ public class ParticipantDomainService {
         eventPublisher.publish(new ParticipantKickEvent(meetupId, targetParticipant));
         // 참가자 제거 및 참가자 수 감소
         meetupService.updateMeetup(meetupService.getById(meetupId), m -> m.removeParticipant(targetParticipant));
+        // 강제 탈퇴 기록 추가
+        banService.banProfileId(meetupId, targetParticipant.getProfile().getId());
 
         log.info("참가자 강퇴 성공. byId={}, targetParticipantId={}", requester.getId(), targetParticipantId);
     }
