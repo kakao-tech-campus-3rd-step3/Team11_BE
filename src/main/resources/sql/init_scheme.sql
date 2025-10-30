@@ -137,7 +137,7 @@ CREATE TABLE chat_message (
     id              BIGSERIAL PRIMARY KEY,
     meetup_id       UUID NOT NULL REFERENCES meetup(id) ON DELETE CASCADE,
     sender_id       BIGINT REFERENCES meetup_participant(id) ON DELETE SET NULL,
-    profile_id      UUID NOT NULL REFERENCES profile(id) ON DELETE SET NULL,
+    profile_id      UUID REFERENCES profile(id) ON DELETE SET NULL,
     message_type    VARCHAR(20) NOT NULL,  -- TEXT/IMAGE/SYSTEM
     content         TEXT NOT NULL,
     created_at      TIMESTAMP NOT NULL DEFAULT NOW()

@@ -28,7 +28,7 @@ public class ChatMessageDslRepositoryImpl implements ChatMessageDslRepository{
 
         List<ChatMessage> content = jpaQueryFactory
                 .selectFrom(chatMessage)
-                .join(chatMessage.profile, profile).fetchJoin()
+                .leftJoin(chatMessage.profile, profile).fetchJoin()
                 .where(condition)
                 .orderBy(chatMessage.id.desc())
                 .limit(size + 1)
