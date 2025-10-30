@@ -51,12 +51,12 @@ public class KakaoApiClient {
                 .toUriString();
     }
 
-    public KakaoTokenResponse getAccessToken(String code) {
+    public KakaoTokenResponse getAccessToken(String code, String redirectUri) {
         KakaoTokenRequest request = new KakaoTokenRequest(
                 "authorization_code",
                 clientId,
                 clientSecret,
-                redirectUri,
+                redirectUri,  // 프론트가 사용한 redirect_uri 사용
                 code
         );
 
