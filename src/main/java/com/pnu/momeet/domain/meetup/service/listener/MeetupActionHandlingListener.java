@@ -27,6 +27,7 @@ public class MeetupActionHandlingListener {
         log.info("모임 수정 알림 전송 완료 - meetupId: {}", meetupId);
     }
 
+    @Async
     @EventListener
     public void handleOnMeetupNearlyStarted(MeetupNearStartEvent event) {
         UUID meetupId = event.getMeetupId();
@@ -50,6 +51,7 @@ public class MeetupActionHandlingListener {
         log.info("모임 취소 알림 전송 완료 - meetupId: {}", meetupId);
     }
 
+    @Async
     @EventListener
     public void handleOnMeetupNearlyEnded(MeetupNearEndEvent event) {
         UUID meetupId = event.getMeetupId();
