@@ -12,15 +12,36 @@ public class ChatEntityMapper {
         // private constructor to prevent instantiation
     }
     public static MessageResponse toMessage(ChatMessage message) {
+        Long senderId = message.getSender() != null ? message.getSender().getId() : null;
+
+        if (message.getProfile() == null) {
+            return new MessageResponse(
+                    message.getType(),
+                    message.getContent(),
+                    senderId,
+                    null,
+                    null,
+                    null,
+                    message.getCreatedAt()
+            );
+        }
+
         return new MessageResponse(
                 message.getType(),
                 message.getContent(),
-                message.getSender().getId(),
+                senderId,
+                message.getProfile().getId(),
+                message.getProfile().getNickname(),
+                message.getProfile().getImageUrl(),
                 message.getCreatedAt()
         );
     }
 
     public static ActionResponse toAction(Participant participant, ChatActionType actionType) {
+        if (participant.getProfile() == null) {
+            return toAction(participant.getId(), actionType);
+        }
+
         return new ActionResponse(
                 participant.getId(),
                 participant.getProfile().getId(),
