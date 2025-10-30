@@ -31,10 +31,10 @@ public class MeetupScheduler {
     @Scheduled(cron = "0 0/10 * * * ?")
     public void transmitMeetupState() {
         log.debug("종료할 모임 탐색 시작");
-        alertNearlyStartMeetup();
         startOpenMeetup();
-        alertNearlyFinishMeetup();
+        alertNearlyStartMeetup();
         finishProgressingMeetup();
+        alertNearlyFinishMeetup();
     }
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정마다 실행
