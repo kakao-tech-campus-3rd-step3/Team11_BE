@@ -148,33 +148,36 @@ INSERT INTO badge (
     now()
 );
 
-INSERT INTO profile_badge (id, profile_id, badge_id, created_at, is_representative)
+INSERT INTO profile_badge (id, profile_id, badge_id, created_at, updated_at, is_representative)
 SELECT
     gen_random_uuid(),
     p.id,
     (SELECT id FROM badge WHERE name = '[TEST] 테스트용 배지 1'),
+    now(),
     now(),
     TRUE
 FROM profile p
          JOIN member m ON p.member_id = m.id
 WHERE m.email = 'alice@test.com';
 
-INSERT INTO profile_badge (id, profile_id, badge_id, created_at, is_representative)
+INSERT INTO profile_badge (id, profile_id, badge_id, created_at, updated_at, is_representative)
 SELECT
     gen_random_uuid(),
     p.id,
     (SELECT id FROM badge WHERE name = '[TEST] 테스트용 배지 2'),
+    now(),
     now(),
     FALSE
 FROM profile p
          JOIN member m ON p.member_id = m.id
 WHERE m.email = 'alice@test.com';
 
-INSERT INTO profile_badge (id, profile_id, badge_id, created_at, is_representative)
+INSERT INTO profile_badge (id, profile_id, badge_id, created_at, updated_at, is_representative)
 SELECT
     gen_random_uuid(),
     p.id,
     (SELECT id FROM badge WHERE name = '[TEST] 테스트용 배지 3'),
+    now(),
     now(),
     FALSE
 FROM profile p
