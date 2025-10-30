@@ -8,6 +8,7 @@ import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.service.ParticipantEntityService;
+import com.pnu.momeet.domain.participant.service.BanParticipantService;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,10 @@ public class MeetupStateService {
     private final MeetupEntityService entityService;
     private final ProfileEntityService profileService;
     private final ParticipantEntityService participantService;
-    private final CoreEventPublisher coreEventPublisher;
     private final MeetupEntityService meetupEntityService;
+    private final BanParticipantService userBanService;
+    private final CoreEventPublisher coreEventPublisher;
+
 
     @Transactional
     public void startMeetupByMemberId(UUID memberId) {
@@ -77,6 +80,7 @@ public class MeetupStateService {
     private void cancelMeetupInternal(Meetup meetup, Role canceledBy) {
         entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.CANCELED));
         coreEventPublisher.publish(MeetupEntityMapper.toMeetupCanceledEvent(meetup, canceledBy));
+        userBanService.clearBanList(meetup.getId());
         log.info("모임 취소 성공. id={}, canceledBy={}", meetup.getId(), canceledBy);
     }
 
@@ -122,6 +126,7 @@ public class MeetupStateService {
 
         log.info("모임 종료 완료. meetupId={}, ownerProfileId={}, finisherCount={}",
                 meetup.getId(), meetup.getOwner().getId(), participants.size());
+        userBanService.clearBanList(meetup.getId());
     }
 
     @Transactional

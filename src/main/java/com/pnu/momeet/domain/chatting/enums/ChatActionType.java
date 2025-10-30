@@ -13,11 +13,9 @@ public enum ChatActionType {
 
     // 모임 상태 관련
     MODIFIED,   // 모임 정보 수정
+    NEAR_STARTED, // 모임 시작 임박 알림
     STARTED,      // 모임 시작(OPEN -> IN_PROGRESS)
     CANCELED,     // 모임 취소
-    CANCELED_BY_ADMIN, // 관리자에 의한 모임 취소
     NEAR_END,   // 모임 종료 임박 알림
-    END,     // 모임 종료
-    END_BY_ADMIN, // 관리자에 의한 모임 종료
-    END_BY_SYSTEM // 시스템에 의한 모임 종료
+    END     // 모임 종료
 }
