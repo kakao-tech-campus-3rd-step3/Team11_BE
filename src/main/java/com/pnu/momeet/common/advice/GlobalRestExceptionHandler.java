@@ -21,6 +21,7 @@ import java.util.*;
 public class GlobalRestExceptionHandler {
 
     private static final String UNIQUE_BLOCK = "uq_user_block";
+    private static final String UNIQUE_PROFILE_BADGE = "uq_profile_badge";
 
     private Map<String, List<String>> extractValidationErrors(MethodArgumentNotValidException e) {
         // 필드 에러 처리
@@ -170,11 +171,18 @@ public class GlobalRestExceptionHandler {
     public ResponseEntity<ProblemDetail> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
         String constraint = (e.getCause() instanceof ConstraintViolationException cve)
             ? cve.getConstraintName() : null;
+
         if (constraint != null && constraint.equalsIgnoreCase(UNIQUE_BLOCK)) {
             ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "이미 차단한 사용자입니다.");
             problemDetail.setTitle("데이터 무결성 오류");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
         }
+        if (constraint != null && constraint.equalsIgnoreCase(UNIQUE_PROFILE_BADGE)) {
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "이미 보유한 배지입니다.");
+            problemDetail.setTitle("데이터 무결성 오류");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
+        }
+
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "데이터 무결성 제약을 위반했습니다.");
         problemDetail.setTitle("데이터 무결성 오류");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
