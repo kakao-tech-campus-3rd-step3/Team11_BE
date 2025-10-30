@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.chatting.util.ChatMessagingTemplate;
 import com.pnu.momeet.domain.meetup.event.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -26,8 +27,7 @@ public class MeetupActionHandlingListener {
         log.info("모임 수정 알림 전송 완료 - meetupId: {}", meetupId);
     }
 
-    @Async
-    @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handleOnMeetupNearlyStarted(MeetupNearStartEvent event) {
         UUID meetupId = event.getMeetupId();
         messagingTemplate.sendAction(meetupId, ChatActionType.NEAR_STARTED);
@@ -50,8 +50,7 @@ public class MeetupActionHandlingListener {
         log.info("모임 취소 알림 전송 완료 - meetupId: {}", meetupId);
     }
 
-    @Async
-    @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
+    @EventListener
     public void handleOnMeetupNearlyEnded(MeetupNearEndEvent event) {
         UUID meetupId = event.getMeetupId();
         messagingTemplate.sendAction(meetupId, ChatActionType.NEAR_END);
