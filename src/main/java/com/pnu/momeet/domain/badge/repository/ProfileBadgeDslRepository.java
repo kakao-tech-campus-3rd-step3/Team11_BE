@@ -86,6 +86,24 @@ public class ProfileBadgeDslRepository {
         return orders.toArray(OrderSpecifier[]::new);
     }
 
+    public Optional<ProfileBadgeResponse> findRepresentativeByProfileId(UUID profileId) {
+        QProfileBadge pb = QProfileBadge.profileBadge;
+        QBadge b = QBadge.badge;
+
+        return Optional.ofNullable(jpaQueryFactory
+            .select(Projections.constructor(
+                ProfileBadgeResponse.class,
+                b.id, b.name, b.description, b.iconUrl, b.code,
+                pb.createdAt, pb.updatedAt, pb.representative
+            ))
+            .from(pb)
+            .join(b).on(b.id.eq(pb.badgeId))
+            .where(pb.profileId.eq(profileId)
+                .and(pb.representative.isTrue()))
+            .fetchFirst()
+        );
+    }
+
     public boolean isRepresentative(UUID profileId, UUID badgeId) {
         QProfileBadge pb = QProfileBadge.profileBadge;
 

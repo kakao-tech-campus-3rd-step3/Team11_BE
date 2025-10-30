@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.badge.entity.ProfileBadge;
 import com.pnu.momeet.domain.badge.repository.ProfileBadgeDslRepository;
 import com.pnu.momeet.domain.badge.repository.ProfileBadgeRepository;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,12 @@ public class ProfileBadgeEntityService {
         log.debug("프로필 배지 페이지 조회. profileId={}, page={}, size={}",
             profileId, pageable.getPageNumber(), pageable.getPageSize());
         return profileBadgeDslRepository.findBadgesByProfileId(profileId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<ProfileBadgeResponse> getRepresentativeByProfileId(UUID profileId) {
+        log.debug("프로필 대표 배지 조회. profileId={}", profileId);
+        return profileBadgeDslRepository.findRepresentativeByProfileId(profileId);
     }
 
     @Transactional(readOnly = true)

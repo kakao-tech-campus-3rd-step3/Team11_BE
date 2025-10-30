@@ -11,6 +11,7 @@ import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.repository.ProfileBadgeDslRepository;
 import com.pnu.momeet.domain.badge.service.ProfileBadgeEntityService;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -72,6 +73,43 @@ public class ProfileBadgeEntityServiceTest {
         verify(profileBadgeDslRepository).findBadgesByProfileId(eq(profileId), pageableCaptor.capture());
         assertThat(pageableCaptor.getValue().getPageNumber()).isEqualTo(1);
         assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("대표 배지 단건 조회 - DSL 위임 (있음)")
+    void findRepresentative_present() {
+        UUID profileId = UUID.randomUUID();
+        var dto = new ProfileBadgeResponse(
+            UUID.randomUUID(),
+            "REP",
+            "대표",
+            "https://rep",
+            "REP_CODE",
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            true
+        );
+        given(profileBadgeDslRepository.findRepresentativeByProfileId(profileId))
+            .willReturn(Optional.of(dto));
+
+        var res = entityService.getRepresentativeByProfileId(profileId);
+
+        assertThat(res).isPresent();
+        assertThat(res.get().representative()).isTrue();
+        verify(profileBadgeDslRepository).findRepresentativeByProfileId(eq(profileId));
+    }
+
+    @Test
+    @DisplayName("대표 배지 단건 조회 - DSL 위임 (없음)")
+    void findRepresentative_absent() {
+        UUID profileId = UUID.randomUUID();
+        given(profileBadgeDslRepository.findRepresentativeByProfileId(profileId))
+            .willReturn(Optional.empty());
+
+        var res = entityService.getRepresentativeByProfileId(profileId);
+
+        assertThat(res).isEmpty();
+        verify(profileBadgeDslRepository).findRepresentativeByProfileId(eq(profileId));
     }
 
     @Test

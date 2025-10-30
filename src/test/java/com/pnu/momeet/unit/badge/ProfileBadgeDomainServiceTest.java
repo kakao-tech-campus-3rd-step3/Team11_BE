@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
@@ -27,6 +28,7 @@ import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -199,6 +201,76 @@ class ProfileBadgeDomainServiceTest {
 
         verify(profileService).getProfileById(profileId);
         verify(entityService, never()).findBadgesByProfileId(any(), any());
+    }
+
+    @Test
+    @DisplayName("내 대표 배지 조회 - 프로필 식별 후 EntityService 위임 (있음)")
+    void getMyRepresentative_present() {
+        UUID memberId = UUID.randomUUID();
+        UUID profileId = UUID.randomUUID();
+
+        when(profileService.getProfileByMemberId(memberId))
+            .thenReturn(new ProfileResponse(
+                profileId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                0,
+                0,
+                null,
+                null)
+            );
+
+        var dto = new ProfileBadgeResponse(
+            UUID.randomUUID(), "REP", "대표", "https://rep", "REP_CODE",
+            LocalDateTime.now(), LocalDateTime.now(), true
+        );
+        when(entityService.getRepresentativeByProfileId(profileId))
+            .thenReturn(Optional.of(dto));
+
+        var res = profileBadgeService.getMyRepresentativeBadge(memberId);
+
+        assertThat(res).isPresent();
+        assertThat(res.get().representative()).isTrue();
+        verify(profileService).getProfileByMemberId(memberId);
+        verify(entityService).getRepresentativeByProfileId(eq(profileId));
+    }
+
+    @Test
+    @DisplayName("내 대표 배지 조회 - 프로필 식별 후 EntityService 위임 (없음)")
+    void getMyRepresentative_absent() {
+        UUID memberId = UUID.randomUUID();
+        UUID profileId = UUID.randomUUID();
+
+        when(profileService.getProfileByMemberId(memberId))
+            .thenReturn(new ProfileResponse(
+                profileId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                0,
+                0,
+                null,
+                null)
+            );
+        when(entityService.getRepresentativeByProfileId(profileId))
+            .thenReturn(Optional.empty());
+
+        var res = profileBadgeService.getMyRepresentativeBadge(memberId);
+
+        assertThat(res).isEmpty();
+        verify(profileService).getProfileByMemberId(memberId);
+        verify(entityService).getRepresentativeByProfileId(eq(profileId));
     }
 
     @Test

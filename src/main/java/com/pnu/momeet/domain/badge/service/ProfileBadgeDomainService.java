@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.badge.service;
 
+import aj.org.objectweb.asm.commons.Remapper;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgeRepresentativeRequest;
 import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
@@ -9,6 +10,7 @@ import com.pnu.momeet.domain.badge.service.mapper.ProfileBadgeDtoMapper;
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,16 @@ public class ProfileBadgeDomainService {
         profileService.getProfileById(profileId); // 존재 검증
         log.debug("특정 사용자 배지 조회. profileId={}", profileId);
         return entityService.findBadgesByProfileId(profileId, pageRequest);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<ProfileBadgeResponse> getMyRepresentativeBadge(UUID memberId) {
+        log.debug("내 대표 배지 조회 시도. memberId={}", memberId);
+        ProfileResponse profile = profileService.getProfileByMemberId(memberId);
+        Optional<ProfileBadgeResponse> representative = entityService
+            .getRepresentativeByProfileId(profile.id());
+        log.debug("내 대표 배지 조회 완료. memberId={}, representative={}", memberId, representative);
+        return representative;
     }
 
     @Transactional

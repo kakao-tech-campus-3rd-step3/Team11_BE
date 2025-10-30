@@ -11,7 +11,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-public class ProfileBadgeRepresentativeTest extends BaseProfileBadgeTest {
+public class ProfileBadgeRepresentativeSetTest extends BaseProfileBadgeTest {
 
     @Test
     @DisplayName("내 대표 배지 설정 - 성공 (멱등 포함)")
