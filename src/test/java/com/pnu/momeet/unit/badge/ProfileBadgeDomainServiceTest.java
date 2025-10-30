@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -12,11 +14,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.domain.badge.dto.request.BadgeAwardRequest;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgeRepresentativeRequest;
+import com.pnu.momeet.domain.badge.dto.response.BadgeAwardResponse;
 import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.entity.ProfileBadge;
+import com.pnu.momeet.domain.badge.service.BadgeAwardService;
 import com.pnu.momeet.domain.badge.service.BadgeDomainService;
 import com.pnu.momeet.domain.badge.service.BadgeEntityService;
 import com.pnu.momeet.domain.badge.service.ProfileBadgeDomainService;
@@ -41,10 +46,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -53,6 +60,7 @@ class ProfileBadgeDomainServiceTest {
     @Mock private ProfileBadgeEntityService entityService;
     @Mock private BadgeDomainService badgeService;
     @Mock private ProfileDomainService profileService;
+    @Mock private BadgeAwardService badgeAwardService;
 
     @InjectMocks
     private ProfileBadgeDomainService profileBadgeService;
@@ -453,5 +461,102 @@ class ProfileBadgeDomainServiceTest {
         verify(entityService, never()).resetRepresentative(any());
         verify(entityService, never()).setRepresentative(any(), any());
         verify(entityService, never()).getByProfileIdAndBadgeId(any(), any());
+    }
+
+    @Test
+    @DisplayName("배지 수동 부여 성공 - 코드 정규화(대문자) + 저장 후 단건 조회/매핑")
+    void award_success() {
+        UUID profileId = UUID.randomUUID();
+        UUID badgeId = UUID.randomUUID();
+        LocalDateTime createdAt = LocalDateTime.now();
+
+        // 프로필/배지 준비
+        ProfileResponse profile = new ProfileResponse(
+            profileId, "닉", 20, null, null, "소개",
+            26410L, "부산 북구", BigDecimal.valueOf(36.5), 0, 0,
+            LocalDateTime.now().minusDays(1), LocalDateTime.now()
+        );
+        Badge badge = Badge.create("매뉴얼", "설명", "https://icon.png", "MANUAL_CODE");
+        ReflectionTestUtils.setField(badge, "id", badgeId);
+
+        given(profileService.getProfileById(profileId)).willReturn(profile);
+        // getByCode는 IgnoreCase 지원, 서비스단에서 정규화 수행
+        given(badgeService.getByCode("MANUAL_CODE")).willReturn(badge);
+
+        willDoNothing().given(badgeAwardService).award(profileId, "MANUAL_CODE");
+
+        // 저장은 내부 badgeAwardService.award(...)가 처리하므로 여기서는 최종 조회만 검증
+        ProfileBadge pb = new ProfileBadge(profileId, badgeId);
+        ReflectionTestUtils.setField(pb, "createdAt", createdAt);
+
+        given(entityService.getByProfileIdAndBadgeId(profileId, badgeId)).willReturn(pb);
+
+        BadgeAwardResponse res = profileBadgeService.award(profileId, new BadgeAwardRequest("MANUAL_CODE"));
+
+        assertThat(res.targetProfileId()).isEqualTo(profileId);
+        assertThat(res.badgeId()).isEqualTo(badgeId);
+        assertThat(res.badgeName()).isEqualTo("매뉴얼");
+        assertThat(res.badgeCode()).isEqualTo("MANUAL_CODE");
+        assertThat(res.profileBadgeCreatedAt()).isNotNull();
+
+        verify(profileService).getProfileById(profileId);
+        verify(badgeService).getByCode("MANUAL_CODE");
+        verify(entityService).getByProfileIdAndBadgeId(profileId, badgeId);
+    }
+
+    @Test
+    @DisplayName("배지 수동 부여 - 배지 없음 → NoSuchElementException 전파")
+    void award_badgeNotFound() {
+        UUID profileId = UUID.randomUUID();
+
+        given(badgeService.getByCode("NOT_EXIST"))
+            .willThrow(new NoSuchElementException("존재하지 않는 배지입니다."));
+
+        assertThatThrownBy(() -> profileBadgeService.award(profileId, new BadgeAwardRequest("NOT_EXIST")))
+            .isInstanceOf(NoSuchElementException.class);
+    }
+
+    @Test
+    @DisplayName("배지 수동 부여 - 프로필 없음 → NoSuchElementException 전파")
+    void award_profileNotFound() {
+        UUID profileId = UUID.randomUUID();
+        given(profileService.getProfileById(profileId)).willThrow(new NoSuchElementException("프로필 없음"));
+
+        assertThatThrownBy(() -> profileBadgeService.award(profileId, new BadgeAwardRequest("ANY")))
+            .isInstanceOf(NoSuchElementException.class);
+    }
+
+    @Test
+    @DisplayName("배지 수동 부여 - 중복(UNIQUE 위반) → DataIntegrityViolationException 전파(전역 핸들러 409)")
+    void award_conflict_duplicate() {
+        UUID profileId = UUID.randomUUID();
+
+        ProfileResponse profile = new ProfileResponse(
+            profileId,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            0,
+            0,
+            null,
+            null
+        );
+        given(profileService.getProfileById(profileId)).willReturn(profile);
+
+        Badge badge = Badge.create("dup", "중복 배지", "https://icon.png", "DUP_CODE");
+        given(badgeService.getByCode("DUP_CODE")).willReturn(badge);
+
+        // 저장 경로에서 UNIQUE 위반을 터뜨리는 것으로 가정(전역 핸들러에서 409 매핑)
+        willThrow(new DataIntegrityViolationException("unique"))
+            .given(badgeAwardService).award(profileId, "DUP_CODE");
+
+        assertThatThrownBy(() ->
+            profileBadgeService.award(profileId, new BadgeAwardRequest("DUP_CODE"))
+        ).isInstanceOf(DataIntegrityViolationException.class);
     }
 }

@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.badge.service.mapper;
 
+import com.pnu.momeet.domain.badge.dto.response.BadgeAwardResponse;
 import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.entity.ProfileBadge;
@@ -16,6 +17,18 @@ public final class ProfileBadgeDtoMapper {
             profileBadge.getCreatedAt(),
             profileBadge.getUpdatedAt(),
             profileBadge.isRepresentative()
+        );
+    }
+
+    public static BadgeAwardResponse toBadgeAwardResponse(ProfileBadge profileBadge, Badge badge) {
+        return new BadgeAwardResponse(
+            profileBadge.getProfileId(),
+            badge.getId(),
+            badge.getName(),
+            badge.getDescription(),
+            badge.getIconUrl(),
+            badge.getCode(),
+            profileBadge.getCreatedAt()
         );
     }
 }

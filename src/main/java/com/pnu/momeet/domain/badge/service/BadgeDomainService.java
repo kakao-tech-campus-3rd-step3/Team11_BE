@@ -10,6 +10,8 @@ import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.service.mapper.BadgeDtoMapper;
 import com.pnu.momeet.domain.profile.service.ProfileDomainService;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -108,5 +110,13 @@ public class BadgeDomainService {
     @Transactional(readOnly = true)
     public Badge getById(UUID badgeId) {
         return entityService.getById(badgeId);
+    }
+
+    @Transactional(readOnly = true)
+    public Badge getByCode(String code) {
+        log.debug("배지 코드로 조회. code={}", code);
+        Badge badge = entityService.getByCode(code);
+        log.debug("배지 조회 완료. id={}, name={}", badge.getId(), badge.getName());
+        return badge;
     }
 }

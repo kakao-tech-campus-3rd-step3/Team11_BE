@@ -1,11 +1,15 @@
 package com.pnu.momeet.domain.badge.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
+import com.pnu.momeet.domain.badge.dto.request.BadgeAwardRequest;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgeRepresentativeRequest;
+import com.pnu.momeet.domain.badge.dto.response.BadgeAwardResponse;
 import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.service.ProfileBadgeDomainService;
 import jakarta.validation.Valid;
+import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -73,5 +77,16 @@ public class ProfileBadgeController {
         @Valid @RequestBody ProfileBadgeRepresentativeRequest request
     ) {
         return ResponseEntity.ok(profileBadgeService.setRepresentativeBadge(userDetails.getMemberId(), request));
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/{profileId}/badges/award")
+    public ResponseEntity<BadgeAwardResponse> award(
+        @PathVariable UUID profileId,
+        @Valid @RequestBody BadgeAwardRequest request
+    ) {
+        BadgeAwardResponse result = profileBadgeService.award(profileId, request);
+        URI location = URI.create("/api/admin/profiles/" + profileId + "/badges/" + result.badgeCode());
+        return ResponseEntity.created(location).body(result);
     }
 }

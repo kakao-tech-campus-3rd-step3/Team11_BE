@@ -1,14 +1,17 @@
 package com.pnu.momeet.domain.badge.service;
 
 import aj.org.objectweb.asm.commons.Remapper;
+import com.pnu.momeet.domain.badge.dto.request.BadgeAwardRequest;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgeRepresentativeRequest;
+import com.pnu.momeet.domain.badge.dto.response.BadgeAwardResponse;
 import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.entity.ProfileBadge;
 import com.pnu.momeet.domain.badge.service.mapper.ProfileBadgeDtoMapper;
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.service.ProfileDomainService;
+import jakarta.validation.Valid;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +30,7 @@ public class ProfileBadgeDomainService {
     private final ProfileBadgeEntityService entityService;
     private final ProfileDomainService profileService;
     private final BadgeDomainService badgeService;
+    private final BadgeAwardService badgeAwardService;
 
     @Transactional(readOnly = true)
     public Page<ProfileBadgeResponse> getMyBadges(UUID memberId, ProfileBadgePageRequest request) {
@@ -91,5 +95,24 @@ public class ProfileBadgeDomainService {
         ProfileBadge profileBadge = entityService.getByProfileIdAndBadgeId(profile.id(), request.badgeId());
         log.debug("대표 배지 설정 완료. profileId={}, badgeId={}", profile.id(), request.badgeId());
         return ProfileBadgeDtoMapper.toProfileBadgeResponse(profileBadge, badge);
+    }
+
+    @Transactional
+    public BadgeAwardResponse award(UUID targetProfileId, BadgeAwardRequest request) {
+        String rawCode = request.code();
+        String normalizedCode = rawCode == null ? null : rawCode.trim().toUpperCase();
+        Badge badge = badgeService.getByCode(normalizedCode);
+        ProfileResponse profile = profileService.getProfileById(targetProfileId);
+
+        if (entityService.existsByProfileIdAndBadgeId(profile.id(), badge.getId())) {
+            log.info("이미 배지 부여된 프로필. profileId={}, badgeId={}", profile.id(), badge.getId());
+            throw new IllegalStateException("이미 배지 부여된 프로필입니다.");
+        }
+
+        badgeAwardService.award(profile.id(), badge.getCode());
+
+        log.debug("배지 부여 완료. profileId={}, badgeId={}", profile.id(), badge.getId());
+        ProfileBadge profileBadge = entityService.getByProfileIdAndBadgeId(profile.id(), badge.getId());
+        return ProfileBadgeDtoMapper.toBadgeAwardResponse(profileBadge, badge);
     }
 }

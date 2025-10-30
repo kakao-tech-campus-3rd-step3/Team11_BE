@@ -29,6 +29,16 @@ public class BadgeEntityService {
     }
 
     @Transactional(readOnly = true)
+    public Badge getByCode(String code) {
+        log.debug("배지 코드로 조회. code={}", code);
+        return badgeRepository.findByCodeIgnoreCase(code)
+            .orElseThrow(() -> {
+                log.info("존재하지 않는 배지 조회 시도. badgeCode={}", code);
+                return new NoSuchElementException("존재하지 않는 배지입니다.");
+            });
+    }
+
+    @Transactional(readOnly = true)
     public boolean existsByNameIgnoreCase(String name) {
         return badgeRepository.existsByNameIgnoreCase(name);
     }
