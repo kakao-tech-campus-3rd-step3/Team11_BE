@@ -157,6 +157,7 @@ public class ParticipantDomainService {
             log.info("스스로를 강퇴 시도. requesterId={}", requester.getId());
             throw new IllegalArgumentException("스스로를 강퇴할 수 없습니다.");
         }
+
         Participant targetParticipant = entityService.getByIdAndMeetupId(targetParticipantId, meetupId);
 
         entityService.updateParticipant(requester, p -> p.setLastActiveAt(LocalDateTime.now()));

@@ -6,10 +6,7 @@ import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupSummaryResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.entity.MeetupHashTag;
-import com.pnu.momeet.domain.meetup.event.MeetupCanceledEvent;
-import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
-import com.pnu.momeet.domain.meetup.event.MeetupNearEndEvent;
-import com.pnu.momeet.domain.meetup.event.MeetupStartEvent;
+import com.pnu.momeet.domain.meetup.event.*;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.enums.MeetupRole;
@@ -105,6 +102,10 @@ MeetupEntityMapper {
                 .profile(meetup.getOwner())
                 .role(MeetupRole.HOST)
                 .build();
+    }
+
+    public static MeetupNearStartEvent toMeetupNearStartEvent(Meetup meetup) {
+        return new MeetupNearStartEvent(meetup.getId());
     }
 
     public static MeetupStartEvent toMeetupStartEvent(Meetup meetup) {

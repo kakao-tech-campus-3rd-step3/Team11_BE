@@ -28,6 +28,14 @@ public class MeetupActionHandlingListener {
 
     @Async
     @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
+    public void handleOnMeetupNearlyStarted(MeetupNearStartEvent event) {
+        UUID meetupId = event.getMeetupId();
+        messagingTemplate.sendAction(meetupId, ChatActionType.NEAR_STARTED);
+        log.info("모임 시작 임박 알림 전송 완료 - meetupId: {}", meetupId);
+    }
+
+    @Async
+    @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
     public void handleOnMeetupStarted(MeetupStartEvent event) {
         UUID meetupId = event.getMeetupId();
         messagingTemplate.sendAction(meetupId, ChatActionType.STARTED);
@@ -38,13 +46,7 @@ public class MeetupActionHandlingListener {
     @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
     public void handleOnMeetupCanceled(MeetupCanceledEvent event) {
         UUID meetupId = event.getMeetupId();
-        switch (event.getRequestedBy()) {
-            case ROLE_USER ->
-                    messagingTemplate.sendAction(meetupId, ChatActionType.CANCELED);
-            case ROLE_ADMIN ->
-                    messagingTemplate.sendAction(meetupId, ChatActionType.CANCELED_BY_ADMIN);
-            default -> { }
-        }
+        messagingTemplate.sendAction(meetupId, ChatActionType.CANCELED);
         log.info("모임 취소 알림 전송 완료 - meetupId: {}", meetupId);
     }
 
@@ -60,11 +62,7 @@ public class MeetupActionHandlingListener {
     @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
     public void handleOnMeetupFinished(MeetupFinishedEvent event) {
         UUID meetupId = event.getMeetupId();
-        switch (event.getRequestedBy()) {
-            case ROLE_USER -> messagingTemplate.sendAction(meetupId, ChatActionType.END);
-            case ROLE_ADMIN -> messagingTemplate.sendAction(meetupId, ChatActionType.END_BY_ADMIN);
-            case ROLE_SYSTEM -> messagingTemplate.sendAction(meetupId, ChatActionType.END_BY_SYSTEM);
-        }
+        messagingTemplate.sendAction(meetupId, ChatActionType.END);
         log.info("모임 종료 알림 전송 완료 - meetupId: {}", meetupId);
     }
 }
