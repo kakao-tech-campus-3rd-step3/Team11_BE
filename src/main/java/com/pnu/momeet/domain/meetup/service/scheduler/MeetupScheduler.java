@@ -7,7 +7,6 @@ import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.meetup.service.MeetupStateService;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
 import com.pnu.momeet.domain.member.enums.Role;
-import com.querydsl.core.types.Operator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
 
 @Slf4j
 @Component
@@ -68,9 +66,9 @@ public class MeetupScheduler {
                 MeetupStatus.OPEN,
                 LocalDateTime.now().plusMinutes(MEETUP_INTERVAL_MIN).plusSeconds(IDLE_TIMEOUT_SEC)
         );
-        taskExecutor("시작 임박 알림", meetupsToAlert, meetup -> {
-            coreEventPublisher.publish(MeetupEntityMapper.toMeetupNearStartEvent(meetup));
-        });
+        taskExecutor("시작 임박 알림", meetupsToAlert, meetup ->
+            coreEventPublisher.publish(MeetupEntityMapper.toMeetupNearStartEvent(meetup))
+        );
     }
 
     private void startOpenMeetup() {
@@ -87,9 +85,9 @@ public class MeetupScheduler {
                 MeetupStatus.IN_PROGRESS,
                 LocalDateTime.now().plusMinutes(MEETUP_INTERVAL_MIN).plusSeconds(IDLE_TIMEOUT_SEC)
         );
-        taskExecutor("종료 임박 알림", meetupsToAlert, meetup -> {
-            coreEventPublisher.publish(MeetupEntityMapper.toMeetupNearEndEvent(meetup));
-        });
+        taskExecutor("종료 임박 알림", meetupsToAlert, meetup ->
+            coreEventPublisher.publish(MeetupEntityMapper.toMeetupNearEndEvent(meetup))
+        );
     }
 
     private void finishProgressingMeetup() {
