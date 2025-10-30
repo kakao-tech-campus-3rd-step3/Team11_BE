@@ -86,7 +86,7 @@ public class ProfileBadgeController {
         @Valid @RequestBody BadgeAwardRequest request
     ) {
         BadgeAwardResponse result = profileBadgeService.award(profileId, request);
-        URI location = URI.create("/api/admin/profiles/" + profileId + "/badges/" + result.badgeCode());
+        URI location = URI.create(String.format("/api/profiles/%s/badges", profileId));
         return ResponseEntity.created(location).body(result);
     }
 }
