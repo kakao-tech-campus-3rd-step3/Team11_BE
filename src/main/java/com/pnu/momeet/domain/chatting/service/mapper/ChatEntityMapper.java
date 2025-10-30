@@ -6,16 +6,35 @@ import com.pnu.momeet.domain.chatting.entity.ChatMessage;
 import com.pnu.momeet.domain.chatting.enums.ChatActionType;
 import com.pnu.momeet.domain.participant.entity.Participant;
 
+import java.util.UUID;
+
 public class ChatEntityMapper {
 
     private ChatEntityMapper() {
         // private constructor to prevent instantiation
     }
     public static MessageResponse toMessage(ChatMessage message) {
+        Long senderId = message.getSender() != null ? message.getSender().getId() : null;
+
+        if (message.getProfile() == null) {
+            return new MessageResponse(
+                    message.getType(),
+                    message.getContent(),
+                    senderId,
+                    null,
+                    null,
+                    null,
+                    message.getCreatedAt()
+            );
+        }
+
         return new MessageResponse(
                 message.getType(),
                 message.getContent(),
-                message.getSender().getId(),
+                senderId,
+                message.getProfile().getId(),
+                message.getProfile().getNickname(),
+                message.getProfile().getImageUrl(),
                 message.getCreatedAt()
         );
     }
