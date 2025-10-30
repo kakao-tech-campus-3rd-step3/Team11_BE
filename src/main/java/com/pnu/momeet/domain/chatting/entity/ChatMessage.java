@@ -24,10 +24,12 @@ public class ChatMessage extends SimpleCreationEntity {
     private Meetup meetup;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     @JoinColumn(name = "sender_id")
     private Participant sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     @JoinColumn(name = "profile_id")
     private Profile profile;
 
