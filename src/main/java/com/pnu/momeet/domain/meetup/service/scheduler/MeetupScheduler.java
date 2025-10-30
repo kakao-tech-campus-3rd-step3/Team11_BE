@@ -28,7 +28,7 @@ public class MeetupScheduler {
     private final MeetupEntityService meetupEntityService;
     private final CoreEventPublisher coreEventPublisher;
 
-    @Scheduled(cron = "30 0/10 * * * ?")
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void transmitMeetupState() {
         log.debug("종료할 모임 탐색 시작");
         alertNearlyStartMeetup();
