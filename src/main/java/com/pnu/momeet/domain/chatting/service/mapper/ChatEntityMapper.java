@@ -6,8 +6,6 @@ import com.pnu.momeet.domain.chatting.entity.ChatMessage;
 import com.pnu.momeet.domain.chatting.enums.ChatActionType;
 import com.pnu.momeet.domain.participant.entity.Participant;
 
-import java.util.UUID;
-
 public class ChatEntityMapper {
 
     private ChatEntityMapper() {
@@ -40,6 +38,10 @@ public class ChatEntityMapper {
     }
 
     public static ActionResponse toAction(Participant participant, ChatActionType actionType) {
+        if (participant.getProfile() == null) {
+            return toAction(participant.getId(), actionType);
+        }
+
         return new ActionResponse(
                 participant.getId(),
                 participant.getProfile().getId(),
