@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 
 import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
-import com.pnu.momeet.domain.badge.repository.BadgeDslRepository;
+import com.pnu.momeet.domain.badge.repository.ProfileBadgeDslRepository;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import com.pnu.momeet.domain.badge.service.BadgeEntityService;
 import java.time.LocalDateTime;
@@ -36,9 +36,6 @@ class BadgeEntityServiceTest {
 
     @Mock
     private BadgeRepository badgeRepository;
-
-    @Mock
-    private BadgeDslRepository badgeDslRepository;
 
     @InjectMocks
     private BadgeEntityService entityService;
@@ -106,45 +103,6 @@ class BadgeEntityServiceTest {
 
         assertThat(page.getTotalElements()).isZero();
         verify(badgeRepository).findAll(pageable);
-    }
-
-    @Test
-    @DisplayName("findBadgesByProfileId - DslRepository 위임 & Pageable 전달")
-    void findBadgesByProfileId() {
-        UUID profileId = UUID.randomUUID();
-
-        var rows = java.util.List.of(
-            new ProfileBadgeResponse(
-                UUID.randomUUID(),
-                "A",
-                "A",
-                "https://a",
-                "A",
-                LocalDateTime.now().minusDays(1),
-                true
-            ),
-            new ProfileBadgeResponse(
-                UUID.randomUUID(),
-                "B",
-                "B",
-                "https://b",
-                "B",
-                LocalDateTime.now().minusDays(2),
-                false
-            )
-        );
-        Pageable pageable = PageRequest.of(1, 3);
-        Page<ProfileBadgeResponse> fake = new PageImpl<>(rows, pageable, 7);
-
-        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        given(badgeDslRepository.findBadgesByProfileId(eq(profileId), any(Pageable.class))).willReturn(fake);
-
-        var page = entityService.findBadgesByProfileId(profileId, pageable);
-
-        assertThat(page.getTotalElements()).isEqualTo(7);
-        verify(badgeDslRepository).findBadgesByProfileId(eq(profileId), pageableCaptor.capture());
-        assertThat(pageableCaptor.getValue().getPageNumber()).isEqualTo(1);
-        assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(3);
     }
 
     @Test

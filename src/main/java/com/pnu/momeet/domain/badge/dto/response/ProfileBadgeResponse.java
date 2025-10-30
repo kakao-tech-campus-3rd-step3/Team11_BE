@@ -10,6 +10,7 @@ public record ProfileBadgeResponse(
     String iconUrl,
     String code,
     LocalDateTime createdAt,
+    LocalDateTime updatedAt,
     boolean representative
 ) {
 }

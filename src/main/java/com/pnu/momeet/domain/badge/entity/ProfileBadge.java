@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.badge.entity;
 
 import com.pnu.momeet.domain.common.entity.BaseCreatedEntity;
+import com.pnu.momeet.domain.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
     })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class ProfileBadge extends BaseCreatedEntity {
+public class ProfileBadge extends BaseEntity {
 
     @Column(name = "profile_id", nullable = false)
     private UUID profileId;

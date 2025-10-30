@@ -1,8 +1,6 @@
 package com.pnu.momeet.domain.badge.service;
 
-import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
-import com.pnu.momeet.domain.badge.repository.BadgeDslRepository;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -19,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class BadgeEntityService {
 
     private final BadgeRepository badgeRepository;
-    private final BadgeDslRepository badgeDslRepository;
 
     @Transactional(readOnly = true)
     public Badge getById(UUID badgeId) {
@@ -27,6 +24,16 @@ public class BadgeEntityService {
         return badgeRepository.findById(badgeId)
             .orElseThrow(() -> {
                 log.info("존재하지 않는 배지 조회 시도. badgeId={}", badgeId);
+                return new NoSuchElementException("존재하지 않는 배지입니다.");
+            });
+    }
+
+    @Transactional(readOnly = true)
+    public Badge getByCode(String code) {
+        log.debug("배지 코드로 조회. code={}", code);
+        return badgeRepository.findByCodeIgnoreCase(code)
+            .orElseThrow(() -> {
+                log.info("존재하지 않는 배지 조회 시도. badgeCode={}", code);
                 return new NoSuchElementException("존재하지 않는 배지입니다.");
             });
     }
@@ -60,12 +67,5 @@ public class BadgeEntityService {
     public Page<Badge> findAll(Pageable pageable) {
         log.debug("배지 페이지 조회. page={}, size={}", pageable.getPageNumber(), pageable.getPageSize());
         return badgeRepository.findAll(pageable);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ProfileBadgeResponse> findBadgesByProfileId(UUID profileId, Pageable pageable) {
-        log.debug("프로필 배지 페이지 조회. profileId={}, page={}, size={}",
-            profileId, pageable.getPageNumber(), pageable.getPageSize());
-        return badgeDslRepository.findBadgesByProfileId(profileId, pageable);
     }
 }
