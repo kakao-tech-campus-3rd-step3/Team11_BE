@@ -277,7 +277,6 @@ class ProfileBadgeDomainServiceTest {
     @Test
     @DisplayName("특정 프로필 대표 배지 조회 - 프로필 존재 검증 후 EntityService로 위임 (있음)")
     void getUserRepresentative_present() {
-        UUID memberId = UUID.randomUUID();
         UUID profileId = UUID.randomUUID();
 
         var stubProfile = new ProfileResponse(
@@ -315,7 +314,6 @@ class ProfileBadgeDomainServiceTest {
     @Test
     @DisplayName("특정 프로필 대표 배지 조회 - 프로필 존재 검증 후 EntityService로 위임 (없음)")
     void getUserRepresentative_absent() {
-        UUID memberId = UUID.randomUUID();
         UUID profileId = UUID.randomUUID();
 
         var stubProfile = new ProfileResponse(
