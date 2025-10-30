@@ -104,11 +104,6 @@ public class ProfileBadgeDomainService {
         Badge badge = badgeService.getByCode(normalizedCode);
         ProfileResponse profile = profileService.getProfileById(targetProfileId);
 
-        if (entityService.existsByProfileIdAndBadgeId(profile.id(), badge.getId())) {
-            log.info("이미 배지 부여된 프로필. profileId={}, badgeId={}", profile.id(), badge.getId());
-            throw new IllegalStateException("이미 배지 부여된 프로필입니다.");
-        }
-
         badgeAwardService.award(profile.id(), badge.getCode());
 
         log.debug("배지 부여 완료. profileId={}, badgeId={}", profile.id(), badge.getId());
