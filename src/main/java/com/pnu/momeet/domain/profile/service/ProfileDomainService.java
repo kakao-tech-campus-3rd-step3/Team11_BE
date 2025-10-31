@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.profile.service;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.common.util.ImageHashUtil;
 import com.pnu.momeet.domain.profile.command.ProfileChanges;
 import com.pnu.momeet.domain.profile.dto.request.LocationInput;
 import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
@@ -20,6 +21,8 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -32,6 +35,7 @@ public class ProfileDomainService {
     private final S3StorageService s3StorageService;
     private final SigunguEntityService sigunguService;
     private final GeometryFactory geometryFactory;
+    private final ImageHashUtil imageHashUtil;
 
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile(UUID memberId) {
@@ -131,14 +135,23 @@ public class ProfileDomainService {
         ));
 
         if (request.image() != null && !request.image().isEmpty()) {
-            // 1. 기존 이미지가 있다면 S3에서 삭제
-            if (profile.getImageUrl() != null) {
-                s3StorageService.deleteImage(profile.getImageUrl());
+            String incomingHash = imageHashUtil.sha256Hex(request.image());
+            if (imageHashUtil.equalsHash(incomingHash, profile.getImageHash())) {
+                log.info("동일 이미지 감지 - 업로드 생략. id={}, hash={}", profile.getId(), incomingHash);
+            } else {
+                String oldUrl = profile.getImageUrl();
+                String newUrl = s3StorageService.uploadImage(request.image(), PROFILE_IMAGE_PREFIX);
+                profile.updateImage(newUrl, incomingHash);
+
+                // 커밋 후 기존 파일 삭제
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        if (oldUrl != null) s3StorageService.deleteImage(oldUrl);
+                    }
+                });
+                log.info("프로필 이미지 변경 성공. id={}, newUrl={}", profile.getId(), newUrl);
             }
-            // 2. 새 이미지 업로드 및 URL 업데이트
-            String newImageUrl = s3StorageService.uploadImage(request.image(), PROFILE_IMAGE_PREFIX);
-            profile.updateImageUrl(newImageUrl);
-            log.info("프로필 이미지 변경 감지. id={}, memberId={}", profile.getId(), memberId);
         }
 
         log.info("프로필 수정 성공. id={}, memberId={}", profile.getId(), memberId);
