@@ -87,6 +87,11 @@ public class ProfileEntityService {
         return profileRepository.existsByNicknameIgnoreCase(nickname);
     }
 
+    @Transactional(readOnly = true)
+    public boolean existsByNicknameIgnoreCaseAndIdNot(String nickname, UUID profileId) {
+        return profileRepository.existsByNicknameIgnoreCaseAndIdNot(nickname, profileId);
+    }
+
     @Transactional
     public Profile createProfile(Profile profile) {
         log.debug("프로필 생성 시도. memberId={}", profile.getMemberId());

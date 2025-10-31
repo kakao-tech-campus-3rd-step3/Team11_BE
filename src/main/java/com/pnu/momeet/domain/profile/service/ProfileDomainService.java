@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.profile.service;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.domain.profile.command.ProfileChanges;
 import com.pnu.momeet.domain.profile.dto.request.LocationInput;
 import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
 import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
@@ -103,21 +104,30 @@ public class ProfileDomainService {
 
     @Transactional
     public ProfileResponse updateMyProfile(UUID memberId, ProfileUpdateRequest request) {
+        log.debug("프로필 수정 시도. memberId={}", memberId);
         Profile profile = entityService.getByMemberId(memberId);
-        if (request.nickname() != null && entityService.existsByNicknameIgnoreCase(request.nickname().trim())) {
-            log.info("이미 존재하는 닉네임으로 프로필 수정 시도. id={}, nickname={}", profile.getId(), profile.getNickname());
+
+        ProfileChanges changes = change(request, profile);
+
+        if (!(changes.nickChanged() || changes.ageChanged() || changes.genderChanged()
+            || changes.descChanged() || changes.baseChanged())) {
+            log.info("프로필 수정 건너뜀(변경 없음). id={}, memberId={}", profile.getId(), memberId);
+            return ProfileEntityMapper.toResponseDto(profile);
+        }
+
+        if (request.nickname() != null && entityService.existsByNicknameIgnoreCaseAndIdNot(
+            request.nickname().trim(), profile.getId())
+        ) {
+            log.info("이미 존재하는 닉네임으로 프로필 수정 시도. id={}, nickname={}", profile.getId(), changes.nickname());
             throw new IllegalArgumentException("이미 존재하는 닉네임입니다. nickname=" + profile.getNickname());
         }
-        Sigungu sigungu = (request.baseLocation() == null)
-            ? null
-            : resolveSigungu(request.baseLocation());
 
         profile = entityService.updateProfile(profile, p -> p.updateProfile(
-            request.nickname(),
-            request.age(),
-            request.gender() != null ? Gender.valueOf(request.gender().toUpperCase()) : null,
-            request.description(),
-            sigungu
+            changes.nickChanged() ? changes.nickname() : null,
+            changes.ageChanged() ? changes.age() : null,
+            changes.genderChanged() ? changes.gender() : null,
+            changes.descChanged() ? changes.description() : null,
+            changes.baseChanged() ? changes.baseLocation() : null
         ));
 
         if (request.image() != null && !request.image().isEmpty()) {
@@ -133,5 +143,29 @@ public class ProfileDomainService {
 
         log.info("프로필 수정 성공. id={}, memberId={}", profile.getId(), memberId);
         return ProfileEntityMapper.toResponseDto(profile);
+    }
+
+    private ProfileChanges change(ProfileUpdateRequest request, Profile profile) {
+        // 정규화
+        String inNickname = request.nickname() == null ? null : request.nickname().trim();
+        Integer inAge = request.age();
+        Gender inGender = request.gender() != null ? Gender.valueOf(request.gender().toUpperCase()) : null;
+        String inDesc = request.description();
+        Sigungu inSigungu = (request.baseLocation() == null) ? null : resolveSigungu(request.baseLocation());
+
+        // 변경 감지
+        boolean nickChanged = inNickname != null && !inNickname.equalsIgnoreCase(profile.getNickname());
+        boolean ageChanged = inAge != null && !inAge.equals(profile.getAge());
+        boolean genderChanged = inGender != null && inGender != profile.getGender();
+        boolean descChanged = inDesc != null && !inDesc.equals(profile.getDescription());
+        boolean baseChanged = inSigungu != null && !inSigungu.equals(profile.getBaseLocation());
+
+        return new ProfileChanges(
+            inNickname, nickChanged,
+            inAge, ageChanged,
+            inGender, genderChanged,
+            inDesc, descChanged,
+            inSigungu, baseChanged
+        );
     }
 }

@@ -122,6 +122,28 @@ public class ProfileUpdateTest extends BaseProfileTest {
         verify(s3StorageService, never()).uploadImage(any(), anyString());
     }
 
+    @Test
+    @DisplayName("프로필 수정 - 동일 닉네임 전달 시 변경 없음(200 OK, 중복검사 스킵)")
+    void updateMyProfile_sameNickname_noop_success() {
+        // given: 현재 닉네임은 BaseProfileTest.TEST_USER_PROFILE_NICKNAME = "테스트유저"
+        // (data.sql 기반으로 이미 존재)
+
+        // when & then
+        RestAssured
+            .given().log().all()
+            .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
+            .contentType(ContentType.MULTIPART)
+            .multiPart(new MultiPartSpecBuilder(TEST_USER_PROFILE_NICKNAME)
+                .controlName("nickname").charset(StandardCharsets.UTF_8).build())
+            .when()
+            .patch("/me")
+            .then().log().all()
+            .statusCode(HttpStatus.OK.value())
+            // 닉네임이 그대로 유지되는지 확인
+            .body("nickname", equalTo(TEST_USER_PROFILE_NICKNAME));
+        // 이미지 미첨부이므로 S3 호출 기대 없음
+    }
+
     // --- 이하 실패 테스트 케이스들 (Multipart 형식으로 통일) ---
 
     @Test
