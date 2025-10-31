@@ -54,8 +54,6 @@ public class S3StorageService {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
-                // TODO: 운영 전환 시 PUBLIC_READ 제거하고 버킷 정책/CloudFront/프리사인드 URL 검토
-                .acl(ObjectCannedACL.PUBLIC_READ)
                 .contentType(toMime(extension))
                 .contentLength(multipartFile.getSize())
                 .cacheControl("public, max-age=31536000, immutable")
