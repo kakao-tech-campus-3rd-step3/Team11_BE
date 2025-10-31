@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.common.util.ImageHashUtil;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
@@ -20,8 +21,9 @@ import io.restassured.RestAssured;
 import io.restassured.builder.MultiPartSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.MultiPartSpecification;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,11 +31,13 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @Tag("e2e")
 class BadgeUpdateTest extends BaseBadgeTest {
@@ -43,6 +47,12 @@ class BadgeUpdateTest extends BaseBadgeTest {
 
     @Autowired
     private S3StorageService s3StorageService;
+
+    @Autowired
+    private ImageHashUtil imageHashUtil;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @TestConfiguration
     static class MockS3Config {
@@ -135,6 +145,47 @@ class BadgeUpdateTest extends BaseBadgeTest {
             .body("name", equalTo("텍스트만수정"))
             .body("iconUrl", equalTo(initialIconUrl)); // 기존 아이콘 유지
 
+        verify(s3StorageService, never()).uploadImage(any(), anyString());
+        verify(s3StorageService, never()).deleteImage(anyString());
+    }
+
+    @Test
+    @DisplayName("배지 수정 - 이름/설명 동일 + 동일 아이콘 업로드 시 S3 미호출(NO-OP)")
+    void updateBadge_sameIcon_skipUpload() throws Exception {
+        // given: 저장된 배지의 iconHash를 업로드할 파일과 동일하게 세팅
+        byte[] sameBytes = new ClassPathResource("/image/badger.png").getInputStream().readAllBytes();
+        String sameHash = imageHashUtil.sha256Hex(new java.io.ByteArrayInputStream(sameBytes));
+        var saved = badgeRepository.findById(targetBadgeId).orElseThrow();
+        String initialIconUrl = saved.getIconUrl(); // 응답 검증을 위해 캡처
+        ReflectionTestUtils.setField(saved, "iconHash", sameHash);
+
+        badgeRepository.saveAndFlush(saved);
+        entityManager.clear();
+
+        // S3 mock은 호출되면 안됨
+        org.mockito.Mockito.reset(s3StorageService);
+
+        TokenResponse admin = getToken(Role.ROLE_ADMIN);
+
+        // when & then
+        RestAssured
+            .given().log().all()
+            .header(AUTH_HEADER, BEAR_PREFIX + admin.accessToken())
+            .contentType(ContentType.MULTIPART)
+            // 텍스트는 그대로(변경 없음)
+            .multiPart(new MultiPartSpecBuilder(saved.getName())
+                .controlName("name").charset(StandardCharsets.UTF_8).build())
+            .multiPart(new MultiPartSpecBuilder(saved.getDescription() == null ? "" : saved.getDescription())
+                .controlName("description").charset(StandardCharsets.UTF_8).build())
+            // 동일 아이콘 업로드
+            .multiPart("iconImage", "badge.png", sameBytes, "image/png")
+            .when()
+            .patch("/{badgeId}", targetBadgeId)
+            .then().log().all()
+            .statusCode(HttpStatus.OK.value())
+            .body("iconUrl", equalTo(initialIconUrl)); // 동일 파일이면 URL 유지
+
+        // then: 업로드/삭제 모두 미호출
         verify(s3StorageService, never()).uploadImage(any(), anyString());
         verify(s3StorageService, never()).deleteImage(anyString());
     }
