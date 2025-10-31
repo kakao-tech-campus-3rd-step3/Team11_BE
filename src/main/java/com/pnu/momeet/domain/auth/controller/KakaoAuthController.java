@@ -5,13 +5,12 @@ import com.pnu.momeet.domain.auth.dto.request.KakaoCallbackRequest;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
 import com.pnu.momeet.domain.auth.dto.response.WithdrawResponse;
 import com.pnu.momeet.domain.auth.service.KakaoAuthService;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.UUID;
 
 @RestController
@@ -20,23 +19,12 @@ import java.util.UUID;
 public class KakaoAuthController {
     private final KakaoAuthService kakaoAuthService;
 
-    // 카카오 로그인 시작
-    @GetMapping
-    public void kakaoLogin(HttpServletResponse response) throws IOException {
-        String kakaoAuthUrl = kakaoAuthService.getKakaoAuthUrl();
-        response.sendRedirect(kakaoAuthUrl);
-    }
-
-    // 카카오 로그인 콜백
-    @GetMapping("/callback")
+    // 카카오 로그인 콜백 - 프론트에서 code와 redirectUri를 받아서 처리
+    @PostMapping("")
     public ResponseEntity<TokenResponse> kakaoCallback(
-            @ModelAttribute KakaoCallbackRequest request
+            @Valid @RequestBody KakaoCallbackRequest request
     ) {
-        if (request.error() != null) {
-            throw new IllegalArgumentException("카카오 로그인 실패: " + request.error_description());
-        }
-
-        TokenResponse tokenResponse = kakaoAuthService.kakaoLogin(request.code());
+        TokenResponse tokenResponse = kakaoAuthService.kakaoLogin(request.code(), request.redirectUri());
         return ResponseEntity.ok(tokenResponse);
     }
 
