@@ -1,6 +1,7 @@
 package com.pnu.momeet.domain.profile.service;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.common.tx.AfterCommitExecutor;
 import com.pnu.momeet.common.util.ImageHashUtil;
 import com.pnu.momeet.domain.profile.command.ProfileChanges;
 import com.pnu.momeet.domain.profile.dto.request.LocationInput;
@@ -21,8 +22,6 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -36,6 +35,7 @@ public class ProfileDomainService {
     private final SigunguEntityService sigunguService;
     private final GeometryFactory geometryFactory;
     private final ImageHashUtil imageHashUtil;
+    private final AfterCommitExecutor afterCommitExecutor;
 
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile(UUID memberId) {
@@ -113,45 +113,40 @@ public class ProfileDomainService {
 
         ProfileChanges changes = change(request, profile);
 
-        if (!(changes.nickChanged() || changes.ageChanged() || changes.genderChanged()
-            || changes.descChanged() || changes.baseChanged())) {
+        if (changes.nothingToDo()) {
             log.info("프로필 수정 건너뜀(변경 없음). id={}, memberId={}", profile.getId(), memberId);
             return ProfileEntityMapper.toResponseDto(profile);
         }
 
-        if (request.nickname() != null && entityService.existsByNicknameIgnoreCaseAndIdNot(
-            request.nickname().trim(), profile.getId())
-        ) {
+        // 닉네임은 '실제 변경 시'에만 + 자기자신 제외 중복 검사
+        if (changes.nickChanged() &&
+            entityService.existsByNicknameIgnoreCaseAndIdNot(changes.nickname(), profile.getId())) {
             log.info("이미 존재하는 닉네임으로 프로필 수정 시도. id={}, nickname={}", profile.getId(), changes.nickname());
-            throw new IllegalArgumentException("이미 존재하는 닉네임입니다. nickname=" + profile.getNickname());
+            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
         }
 
-        profile = entityService.updateProfile(profile, p -> p.updateProfile(
-            changes.nickChanged() ? changes.nickname() : null,
-            changes.ageChanged() ? changes.age() : null,
-            changes.genderChanged() ? changes.gender() : null,
-            changes.descChanged() ? changes.description() : null,
-            changes.baseChanged() ? changes.baseLocation() : null
-        ));
+        // 텍스트 필드 반영 (null은 무시)
+        if (changes.textChanged()) {
+            profile = entityService.updateProfile(profile, p -> p.updateProfile(
+                changes.nickChanged()   ? changes.nickname()     : null,
+                changes.ageChanged()    ? changes.age()          : null,
+                changes.genderChanged() ? changes.gender()       : null,
+                changes.descChanged()   ? changes.description()  : null,
+                changes.baseChanged()   ? changes.baseLocation() : null
+            ));
+        }
 
-        if (request.image() != null && !request.image().isEmpty()) {
-            String incomingHash = imageHashUtil.sha256Hex(request.image());
-            if (imageHashUtil.equalsHash(incomingHash, profile.getImageHash())) {
-                log.info("동일 이미지 감지 - 업로드 생략. id={}, hash={}", profile.getId(), incomingHash);
-            } else {
-                String oldUrl = profile.getImageUrl();
-                String newUrl = s3StorageService.uploadImage(request.image(), PROFILE_IMAGE_PREFIX);
-                profile.updateImage(newUrl, incomingHash);
+        // 이미지 교체: 동일 파일은 스킵, 다르면 업로드 + 커밋 후 기존 삭제
+        if (changes.hasImagePart() && changes.imageChanged()) {
+            String oldUrl = profile.getImageUrl();
+            String newUrl = s3StorageService.uploadImage(request.image(), PROFILE_IMAGE_PREFIX);
+            profile.updateImage(newUrl, changes.imageHash());
 
-                // 커밋 후 기존 파일 삭제
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        if (oldUrl != null) s3StorageService.deleteImage(oldUrl);
-                    }
-                });
-                log.info("프로필 이미지 변경 성공. id={}, newUrl={}", profile.getId(), newUrl);
-            }
+            // 트랜잭션 있으면 커밋 후, 없으면 즉시 실행
+            afterCommitExecutor.run(() -> {
+                if (oldUrl != null) s3StorageService.deleteImage(oldUrl);
+            });
+            log.info("프로필 이미지 변경 성공. id={}, newUrl={}", profile.getId(), newUrl);
         }
 
         log.info("프로필 수정 성공. id={}, memberId={}", profile.getId(), memberId);
@@ -166,19 +161,29 @@ public class ProfileDomainService {
         String inDesc = request.description();
         Sigungu inSigungu = (request.baseLocation() == null) ? null : resolveSigungu(request.baseLocation());
 
-        // 변경 감지
+        // 텍스트 변경 감지
         boolean nickChanged = inNickname != null && !inNickname.equalsIgnoreCase(profile.getNickname());
         boolean ageChanged = inAge != null && !inAge.equals(profile.getAge());
         boolean genderChanged = inGender != null && inGender != profile.getGender();
         boolean descChanged = inDesc != null && !inDesc.equals(profile.getDescription());
         boolean baseChanged = inSigungu != null && !inSigungu.equals(profile.getBaseLocation());
 
+        // 이미지 변경 감지
+        boolean hasImagePart = request.image() != null && !request.image().isEmpty();
+        String incomingHash = null;
+        boolean imageChanged = false;
+        if (hasImagePart) {
+            incomingHash = imageHashUtil.sha256Hex(request.image());
+            imageChanged = incomingHash != null && !incomingHash.equals(profile.getImageHash());
+        }
+
         return new ProfileChanges(
             inNickname, nickChanged,
             inAge, ageChanged,
             inGender, genderChanged,
             inDesc, descChanged,
-            inSigungu, baseChanged
+            inSigungu, baseChanged,
+            hasImagePart, incomingHash, imageChanged
         );
     }
 }

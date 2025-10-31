@@ -8,6 +8,15 @@ public record ProfileChanges(
     Integer age, boolean ageChanged,
     Gender gender, boolean genderChanged,
     String  description, boolean descChanged,
-    Sigungu baseLocation, boolean baseChanged
+    Sigungu baseLocation, boolean baseChanged,
+    boolean hasImagePart,
+    String  imageHash,
+    boolean imageChanged
 ) {
+    public boolean textChanged() {
+        return nickChanged || ageChanged || genderChanged || descChanged || baseChanged;
+    }
+    public boolean nothingToDo() {
+        return !textChanged() && (!hasImagePart || !imageChanged);
+    }
 }
