@@ -28,12 +28,6 @@ public class KakaoAuthService {
     private final MemberEntityService memberEntityService;
     private final KakaoApiClient kakaoApiClient;
 
-    @Value("Kakao")
-
-    public String getKakaoAuthUrl() {
-        return kakaoApiClient.getKakaoAuthUrl();
-    }
-
     public KakaoUserInfo getKakaoUserInfo(String code, String redirectUri) {
         KakaoTokenResponse tokenResponse = kakaoApiClient.getAccessToken(code, redirectUri);
         KakaoUserInfo userInfoResponse = kakaoApiClient.getUserInfo(tokenResponse.access_token());

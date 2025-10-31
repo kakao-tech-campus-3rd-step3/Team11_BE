@@ -25,9 +25,6 @@ public class KakaoApiClient {
     @Value("${kakao.client-secret}")
     private String clientSecret;
 
-    @Value("${kakao.redirect-uri}")
-    private String redirectUri;
-
     @Value("${kakao.admin-key}")
     private String adminKey;
 
@@ -41,15 +38,6 @@ public class KakaoApiClient {
     private String unlinkUrl;
 
     private final RestTemplate restTemplate;
-
-    public String getKakaoAuthUrl() {
-        return UriComponentsBuilder.fromUriString("https://kauth.kakao.com/oauth/authorize")
-                .queryParam("response_type", "code")
-                .queryParam("client_id", clientId)
-                .queryParam("redirect_uri", redirectUri)
-                .build(true)
-                .toUriString();
-    }
 
     public KakaoTokenResponse getAccessToken(String code, String redirectUri) {
         KakaoTokenRequest request = new KakaoTokenRequest(
