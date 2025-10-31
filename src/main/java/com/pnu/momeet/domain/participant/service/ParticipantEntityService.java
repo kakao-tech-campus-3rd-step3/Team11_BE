@@ -1,9 +1,7 @@
 package com.pnu.momeet.domain.participant.service;
 
 import com.pnu.momeet.domain.participant.entity.Participant;
-import com.pnu.momeet.domain.participant.repository.ParticipantDslRepository;
 import com.pnu.momeet.domain.participant.repository.ParticipantRepository;
-import java.util.Collection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
@@ -20,7 +18,6 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class ParticipantEntityService {
     private final ParticipantRepository participantRepository;
-    private final ParticipantDslRepository participantDslRepository;
 
     @Transactional(readOnly = true)
     public List<Participant> getAllByMeetupId(UUID meetupId) {
@@ -29,7 +26,7 @@ public class ParticipantEntityService {
 
     @Transactional(readOnly = true)
     public List<Participant> findAllVisibleByMeetupId(UUID meetupId, UUID viewerMemberId) {
-        return participantDslRepository.findAllVisibleByMeetupId(meetupId, viewerMemberId);
+        return participantRepository.findAllVisibleByMeetupId(meetupId, viewerMemberId);
     }
 
     @Transactional(readOnly = true)
@@ -119,12 +116,5 @@ public class ParticipantEntityService {
         }
         participantRepository.deleteById(id);
         log.debug("특정 id의 참가자 삭제 성공. id={}", id);
-    }
-
-    @Transactional
-    public void deleteAllByMeetupId(UUID meetupId) {
-        log.debug("특정 모임 ID의 참가자 전체 삭제 시도. meetupId={}", meetupId);
-        participantRepository.deleteAllByMeetupId(meetupId);
-        log.debug("특정 모임 ID의 참가자 전체 삭제 성공. meetupId={}", meetupId);
     }
 }

@@ -1,19 +1,27 @@
 package com.pnu.momeet.common.advice;
 
 import com.pnu.momeet.common.exception.*;
+import jakarta.servlet.http.HttpServletRequest;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.*;
 
 @RestControllerAdvice
 public class GlobalRestExceptionHandler {
+
+    private static final String UNIQUE_BLOCK = "uq_user_block";
+    private static final String UNIQUE_PROFILE_BADGE = "uq_profile_badge";
 
     private Map<String, List<String>> extractValidationErrors(MethodArgumentNotValidException e) {
         // 필드 에러 처리
@@ -58,6 +66,14 @@ public class GlobalRestExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ProblemDetail> handleNoSuchElementException(NoSuchElementException e) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+        problemDetail.setTitle("요청한 리소스를 찾을 수 없음");
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ProblemDetail> handleNoResourceFoundException(NoResourceFoundException  e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다.");
         problemDetail.setTitle("요청한 리소스를 찾을 수 없음");
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
@@ -109,6 +125,13 @@ public class GlobalRestExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
     }
 
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAuthorizationDeniedException(AuthorizationDeniedException e) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "권한이 부족하여 요청한 리소스에 접근할 수 없습니다 : " + e.getMessage());
+        problemDetail.setTitle("접근 거부 오류");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
+    }
+
     @ExceptionHandler(DuplicateKeyException.class)
     public ResponseEntity<ProblemDetail> handleDuplicateKeyException(DuplicateKeyException e) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "중복된 키 오류: " + e.getMessage());
@@ -144,4 +167,24 @@ public class GlobalRestExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ProblemDetail> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        String constraint = (e.getCause() instanceof ConstraintViolationException cve)
+            ? cve.getConstraintName() : null;
+
+        if (constraint != null && constraint.equalsIgnoreCase(UNIQUE_BLOCK)) {
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "이미 차단한 사용자입니다.");
+            problemDetail.setTitle("데이터 무결성 오류");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
+        }
+        if (constraint != null && constraint.equalsIgnoreCase(UNIQUE_PROFILE_BADGE)) {
+            ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "이미 보유한 배지입니다.");
+            problemDetail.setTitle("데이터 무결성 오류");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
+        }
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "데이터 무결성 제약을 위반했습니다.");
+        problemDetail.setTitle("데이터 무결성 오류");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+    }
 }

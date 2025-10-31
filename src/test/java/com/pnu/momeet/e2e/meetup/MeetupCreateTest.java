@@ -5,6 +5,8 @@ import com.pnu.momeet.domain.meetup.dto.request.MeetupCreateRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupDetail;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,15 +29,19 @@ class MeetupCreateTest extends BaseMeetupTest {
                 "부산광역시 금정구 부산대학로 63번길 2"
         );
 
+        LocalDateTime base = baseSlot();
+        String startAt = slot(base, 2); // +1h
+        String endAt   = slot(base, 5); // +2.5h
+
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "테스트 모임",
                 "GAME",
-                "BOARD_GAME",
                 "테스트용 보드게임 모임입니다.",
                 List.of("보드게임", "친목"),
                 6,
                 35.0,
-                3,
+                startAt,
+                endAt,
                 location
         );
 
@@ -43,6 +49,7 @@ class MeetupCreateTest extends BaseMeetupTest {
             .given()
                 .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
                 .contentType(ContentType.JSON)
+                .log().body()
                 .body(request)
             .when()
                 .post()
@@ -53,7 +60,6 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "id", notNullValue(),
                     "name", equalTo(request.name()),
                     "category", equalTo("GAME"),
-                    "subCategory", equalTo("BOARD_GAME"),
                     "description", equalTo(request.description()),
                     "capacity", equalTo(request.capacity()),
                     "scoreLimit", equalTo(request.scoreLimit().floatValue()),
@@ -81,15 +87,19 @@ class MeetupCreateTest extends BaseMeetupTest {
                 "부산광역시 금정구 부산대학로 63번길 2"
         );
 
+        LocalDateTime base = baseSlot();
+        String startAt = slot(base, 2); // +1h
+        String endAt   = slot(base, 5); // +2.5h
+
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "기본값 테스트 모임",
                 "SPORTS",
-                "SOCCER",
                 null, // description default to ""
                 null, // hashTags default to empty list
                 null, // capacity default to 10
                 null, // scoreLimit default to 0.0
-                2,
+                startAt,
+                endAt,
                 location
         );
 
@@ -107,7 +117,6 @@ class MeetupCreateTest extends BaseMeetupTest {
                     "id", notNullValue(),
                     "name", equalTo("기본값 테스트 모임"),
                     "category", equalTo("SPORTS"),
-                    "subCategory", equalTo("SOCCER"),
                     "description", equalTo(""),
                     "capacity", equalTo(10),
                     "scoreLimit", equalTo(0.0f),
@@ -126,8 +135,8 @@ class MeetupCreateTest extends BaseMeetupTest {
                 Map.of(
                     // name 누락
                     "category", "GAME",
-                    "subCategory", "BOARD_GAME",
-                    "durationHours", 3,
+                    "startAt", "2025-10-18T15:00",
+                    "endAt", "2025-10-18T18:00",
                     "location", Map.of(
                         "latitude", 35.23203443995263,
                         "longitude", 129.08262659183725,
@@ -137,8 +146,8 @@ class MeetupCreateTest extends BaseMeetupTest {
                 Map.of(
                     "name", "테스트 모임",
                     // category 누락
-                    "subCategory", "BOARD_GAME",
-                    "durationHours", 3,
+                    "startAt", "2025-10-18T15:00",
+                    "endAt", "2025-10-18T18:00",
                     "location", Map.of(
                         "latitude", 35.23203443995263,
                         "longitude", 129.08262659183725,
@@ -147,9 +156,8 @@ class MeetupCreateTest extends BaseMeetupTest {
                 ),
                 Map.of(
                     "name", "테스트 모임",
-                    "category", "GAME",
-                    "subCategory", "BOARD_GAME"
-                    // durationHours, location 누락
+                    "category", "GAME"
+                    // startAt, endAt, location 누락
                 )
         ).forEach(body ->
             RestAssured
@@ -179,111 +187,100 @@ class MeetupCreateTest extends BaseMeetupTest {
                 Map.of(
                     "name", "", // 빈 이름
                     "category", "GAME",
-                    "subCategory", "BOARD_GAME",
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
                     "scoreLimit", 35.0,
-                    "durationHours", 3,
+                    "startAt", "2025-10-18T15:00",
+                    "endAt", "2025-10-18T18:00",
                     "location", location
                 ),
                 Map.of(
                     "name", "A".repeat(61), // 너무 긴 이름 (60자 초과)
                     "category", "GAME",
-                    "subCategory", "BOARD_GAME",
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
                     "scoreLimit", 35.0,
-                    "durationHours", 3,
+                    "startAt", "2025-10-18T15:00",
+                    "endAt", "2025-10-18T18:00",
                     "location", location
                 ),
                 Map.of(
                     "name", "테스트 모임",
                     "category", "GAME",
-                    "subCategory", "BOARD_GAME",
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 1, // 최소 인원 미만
                     "scoreLimit", 35.0,
-                    "durationHours", 3,
+                    "startAt", "2025-10-18T15:00",
+                    "endAt", "2025-10-18T18:00",
                     "location", location
                 ),
                 Map.of(
                     "name", "테스트 모임",
                     "category", "GAME",
-                    "subCategory", "BOARD_GAME",
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 100, // 최대 인원 초과 (99명 초과)
                     "scoreLimit", 35.0,
-                    "durationHours", 3,
+                    "startAt", "2025-10-18T15:00",
+                    "endAt", "2025-10-18T18:00",
                     "location", location
                 ),
                 Map.of(
                     "name", "테스트 모임",
                     "category", "GAME",
-                    "subCategory", "BOARD_GAME",
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
                     "scoreLimit", 35.0,
-                    "durationHours", 0, // 지속 시간 최소값 미만
+                    "startAt", "2025-10-18T15:00",
+                    "endAt", "2025-10-18T14:00", // 종료 시간이 시작 시간보다 이전
                     "location", location
                 ),
                 Map.of(
                     "name", "테스트 모임",
                     "category", "GAME",
-                    "subCategory", "BOARD_GAME",
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
                     "scoreLimit", 35.0,
-                    "durationHours", 25, // 지속 시간 최대값 초과
+                    "startAt", "invalid-time", // 잘못된 시간 형식
+                    "endAt", "2025-10-18T18:00",
                     "location", location
                 ),
                 Map.of(
                     "name", "테스트 모임",
                     "category", "GAME",
-                    "subCategory", "BOARD_GAME",
                     "description", "설명",
                     "hashTags", List.of("태그1", "태그2", "태그3", "태그4", "태그5", "태그6", "태그7", "태그8", "태그9", "태그10", "태그11"), // 해시태그 11개 (10개 초과)
                     "capacity", 5,
                     "scoreLimit", 35.0,
-                    "durationHours", 3,
+                    "startAt", "2025-10-18T15:00",
+                    "endAt", "2025-10-18T18:00",
                     "location", location
                 ),
                 Map.of(
                     "name", "테스트 모임",
                     "category", "GAME",
-                    "subCategory", "BOARD_GAME",
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
                     "scoreLimit", -1.0, // 음수 점수 제한
-                    "durationHours", 3,
+                    "startAt", "2025-10-18T15:00",
+                    "endAt", "2025-10-18T18:00",
                     "location", location
                 ),
                 Map.of(
                     "name", "테스트 모임",
                     "category", "INVALID_CATEGORY", // 잘못된 카테고리
-                    "subCategory", "BOARD_GAME",
                     "description", "설명",
                     "hashTags", List.of(),
                     "capacity", 5,
                     "scoreLimit", 35.0,
-                    "durationHours", 3,
-                    "location", location
-                ),
-                Map.of(
-                    "name", "테스트 모임",
-                    "category", "GAME",
-                    "subCategory", "INVALID_SUB_CATEGORY", // 잘못된 서브카테고리
-                    "description", "설명",
-                    "hashTags", List.of(),
-                    "capacity", 5,
-                    "scoreLimit", 35.0,
-                    "durationHours", 3,
+                    "startAt", "2025-10-18T15:00",
+                    "endAt", "2025-10-18T18:00",
                     "location", location
                 )
         ).forEach(body ->
@@ -301,63 +298,6 @@ class MeetupCreateTest extends BaseMeetupTest {
         );
     }
 
-    @Test
-    @DisplayName("카테고리 불일치 실패 테스트 - 400 Bad Request")
-    void create_meetup_fail_by_category_mismatch() {
-        Map<String, Object> location = Map.of(
-                "latitude", 35.23203443995263,
-                "longitude", 129.08262659183725,
-                "address", "부산광역시 금정구"
-        );
-
-        List.of(
-                Map.of(
-                    "name", "테스트 모임",
-                    "category", "GAME", // GAME 카테고리
-                    "subCategory", "SOCCER", // SPORTS 서브카테고리 (불일치)
-                    "description", "설명",
-                    "hashTags", List.of(),
-                    "capacity", 5,
-                    "scoreLimit", 35.0,
-                    "durationHours", 3,
-                    "location", location
-                ),
-                Map.of(
-                    "name", "테스트 모임",
-                    "category", "SPORTS", // SPORTS 카테고리
-                    "subCategory", "BOARD_GAME", // GAME 서브카테고리 (불일치)
-                    "description", "설명",
-                    "hashTags", List.of(),
-                    "capacity", 5,
-                    "scoreLimit", 35.0,
-                    "durationHours", 3,
-                    "location", location
-                ),
-                Map.of(
-                    "name", "테스트 모임",
-                    "category", "STUDY", // STUDY 카테고리
-                    "subCategory", "BASKETBALL", // SPORTS 서브카테고리 (불일치)
-                    "description", "설명",
-                    "hashTags", List.of(),
-                    "capacity", 5,
-                    "scoreLimit", 35.0,
-                    "durationHours", 3,
-                    "location", location
-                )
-        ).forEach(body ->
-            RestAssured
-                .given()
-                    .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
-                    .contentType(ContentType.JSON)
-                    .body(body)
-                .when()
-                    .post()
-                .then()
-                    .log().all()
-                    .statusCode(400)
-                    .body("validationErrors", not(empty()))
-        );
-    }
 
     @Test
     @DisplayName("모임 생성 실패 테스트 - 401 Unauthorized - 인증 실패")
@@ -371,12 +311,12 @@ class MeetupCreateTest extends BaseMeetupTest {
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "테스트 모임",
                 "GAME",
-                "BOARD_GAME",
                 "설명",
                 List.of(),
                 5,
                 35.0,
-                3,
+                "2025-10-18T15:00",
+                "2025-10-18T18:00",
                 location
         );
 

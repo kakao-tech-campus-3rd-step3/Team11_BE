@@ -1,5 +1,6 @@
 package com.pnu.momeet.common.security.config;
 
+import com.pnu.momeet.common.security.handler.JwtHandshakeHandler;
 import com.pnu.momeet.common.security.interceptor.MessageAuthenticateInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
@@ -34,6 +35,7 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
     private final SecurityProperties securityProperties;
     private final ApplicationContext applicationContext;
     private final MessageAuthenticateInterceptor messageAuthenticateInterceptor;
+    private final JwtHandshakeHandler jwtHandshakeHandler;
 
     @Bean
     public ThreadPoolTaskScheduler customMessageBrokerTaskScheduler() {
@@ -66,6 +68,10 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
                 .setAllowedOriginPatterns(allowOrigins)
                 .withSockJS()
                 .setHeartbeatTime(25000);
+
+        registry.addEndpoint("/ws/chat-native")
+                .setAllowedOriginPatterns(allowOrigins)
+                .setHandshakeHandler(jwtHandshakeHandler);
     }
 
     @Override

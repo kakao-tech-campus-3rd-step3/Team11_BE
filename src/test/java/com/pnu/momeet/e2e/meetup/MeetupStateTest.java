@@ -3,7 +3,6 @@ package com.pnu.momeet.e2e.meetup;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
-import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.meetup.repository.MeetupRepository;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
@@ -290,13 +289,13 @@ class MeetupStateTest extends BaseMeetupTest {
                 .owner(userProfiles.get(ownerEmail))
                 .name("테스트 모임 - " + status.name())
                 .category(MainCategory.GAME)
-                .subCategory(SubCategory.BOARD_GAME)
                 .description("테스트용 모임입니다.")
                 .capacity(6)
                 .scoreLimit(35.0)
                 .locationPoint(point)
                 .address("부산광역시 금정구 부산대학로 63번길 2")
                 .sigungu(sigungu)
+                .startAt(LocalDateTime.now())
                 .endAt(LocalDateTime.now().plusHours(3))
                 .status(status)
                 .build();

@@ -1,15 +1,16 @@
 package com.pnu.momeet.domain.evaluation.service;
 
 import com.pnu.momeet.domain.evaluation.entity.Evaluation;
-import com.pnu.momeet.domain.evaluation.repository.EvaluationDslRepository;
 import com.pnu.momeet.domain.evaluation.repository.EvaluationRepository;
-import com.pnu.momeet.domain.profile.entity.Profile;
+
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class EvaluationEntityService {
 
     private final EvaluationRepository evaluationRepository;
-    private final EvaluationDslRepository evaluationDslRepository;
 
     @Transactional(readOnly = true)
     public boolean existsByMeetupAndPair(UUID meetupId, UUID evaluatorPid, UUID targetPid) {
@@ -40,6 +40,13 @@ public class EvaluationEntityService {
         log.debug("최근 evaluator→target 평가 조회. evaluatorPid={}, targetPid={}, exists={}",
             evaluatorPid, targetPid, found.isPresent());
         return found;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, LocalDateTime> getLastCreatedAtByTargets(UUID evaluatorPid, Set<UUID> targetPids) {
+        log.debug("모임 참가자들에 대해 최근 생성한 평가 시각 조회. evaluatorPid={}, targetPids={}", evaluatorPid, targetPids);
+        if (targetPids == null || targetPids.isEmpty()) return Map.of();
+        return evaluationRepository.findLastCreatedAtByTargets(evaluatorPid, targetPids);
     }
 
     @Transactional(readOnly = true)
@@ -82,6 +89,6 @@ public class EvaluationEntityService {
     }
 
     public Set<UUID> getMeetupIdsEvaluatedBy(UUID evaluatorId, List<UUID> meetupIds) {
-        return evaluationDslRepository.findEvaluatedMeetupIds(evaluatorId, meetupIds);
+        return evaluationRepository.findEvaluatedMeetupIds(evaluatorId, meetupIds);
     }
 }

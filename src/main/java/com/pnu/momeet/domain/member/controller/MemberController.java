@@ -46,7 +46,7 @@ public class MemberController {
     @GetMapping("/me")
     public ResponseEntity<MemberResponse> memberSelf(
             @AuthenticationPrincipal UserDetails userDetails
-            ) {
+    ) {
         var member = memberService.getMemberById(UUID.fromString(userDetails.getUsername()));
         return ResponseEntity.ok(member);
     }
@@ -55,7 +55,7 @@ public class MemberController {
     @PostMapping
     public ResponseEntity<MemberResponse> memberCreate(
             @Valid @RequestBody MemberCreateRequest request
-            ) {
+    ) {
         var savedMember = memberService.saveMember(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedMember);
     }
@@ -97,6 +97,15 @@ public class MemberController {
             @Valid @PathVariable UUID id
     ) {
         memberService.deleteMemberById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> memberSelfDelete(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        memberService.deleteMemberById(userDetails.getMemberId());
         return ResponseEntity.noContent().build();
     }
 }

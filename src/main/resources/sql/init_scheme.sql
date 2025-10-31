@@ -32,16 +32,6 @@ CREATE TABLE member (
     UNIQUE(provider, provider_id)
 );
 
-CREATE TABLE member_verification (
-    code uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    member_id uuid UNIQUE NOT NULL REFERENCES member(id) ON DELETE CASCADE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMP NOT NULL
-);
-
-create index if not exists idx_verification_expires_at on member_verification(expires_at);
-
-
 CREATE TABLE member_role (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     member_id uuid NOT NULL REFERENCES member(id) ON DELETE CASCADE,
@@ -51,7 +41,7 @@ CREATE TABLE member_role (
 
 CREATE TABLE refresh_token (
     member_id uuid PRIMARY KEY REFERENCES member(id) ON DELETE CASCADE,
-    token_value varchar(500) NOT NULL
+    token_value varchar(512) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS public.sigungu_boundary (
@@ -99,7 +89,6 @@ CREATE TABLE meetup (
     owner_id        UUID        NOT NULL REFERENCES profile(id),
     name            VARCHAR(60) NOT NULL,
     category        VARCHAR(30) NOT NULL,
-    sub_category    VARCHAR(30) NOT NULL,
     description     TEXT        NOT NULL,
     participant_count INTEGER     NOT NULL DEFAULT 1,
     capacity        INTEGER     NOT NULL DEFAULT 10,
@@ -108,6 +97,7 @@ CREATE TABLE meetup (
     address         TEXT        NOT NULL,
     sgg_code        BIGINT      NOT NULL REFERENCES sigungu_boundary(sgg_code),
     status          VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    start_at        TIMESTAMP   NOT NULL,
     end_at          TIMESTAMP,
     created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMP   NOT NULL DEFAULT NOW()
@@ -117,7 +107,7 @@ CREATE INDEX IF NOT EXISTS idx_meetup_location_point ON meetup USING GIST (locat
 CREATE INDEX IF NOT EXISTS idx_meetup_status ON meetup (status);
 CREATE INDEX IF NOT EXISTS idx_meetup_owner ON meetup (owner_id);
 CREATE INDEX IF NOT EXISTS idx_category ON meetup (category);
-CREATE INDEX IF NOT EXISTS idx_sub_category ON meetup (sub_category);
+CREATE INDEX IF NOT EXISTS idx_meetup_state_start_time ON meetup (status, start_at);
 CREATE INDEX IF NOT EXISTS idx_meetup_state_end_time ON meetup (status, end_at);
 
 CREATE TABLE meetup_hash_tag (
@@ -147,7 +137,7 @@ CREATE TABLE chat_message (
     id              BIGSERIAL PRIMARY KEY,
     meetup_id       UUID NOT NULL REFERENCES meetup(id) ON DELETE CASCADE,
     sender_id       BIGINT REFERENCES meetup_participant(id) ON DELETE SET NULL,
-    profile_id      UUID NOT NULL REFERENCES profile(id) ON DELETE SET NULL,
+    profile_id      UUID REFERENCES profile(id) ON DELETE SET NULL,
     message_type    VARCHAR(20) NOT NULL,  -- TEXT/IMAGE/SYSTEM
     content         TEXT NOT NULL,
     created_at      TIMESTAMP NOT NULL DEFAULT NOW()
@@ -194,6 +184,7 @@ CREATE TABLE IF NOT EXISTS profile_badge (
     profile_id UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
     badge_id UUID NOT NULL REFERENCES badge(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     is_representative BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT uq_profile_badge UNIQUE(profile_id, badge_id)
 );
@@ -213,9 +204,6 @@ CREATE TABLE IF NOT EXISTS user_block (
     CONSTRAINT uq_user_block UNIQUE (blocker_id, blocked_id),
     CONSTRAINT ck_user_block_self CHECK (blocker_id <> blocked_id)
 );
-
-CREATE INDEX IF NOT EXISTS idx_user_block_blocker ON user_block (blocker_id);
-CREATE INDEX IF NOT EXISTS idx_user_block_blocked ON user_block (blocked_id);
 
 CREATE TABLE user_report (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),

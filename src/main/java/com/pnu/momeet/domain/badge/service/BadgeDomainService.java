@@ -4,20 +4,18 @@ import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
-import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
 import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
-import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.service.mapper.BadgeDtoMapper;
-import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.service.ProfileDomainService;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,22 +29,6 @@ public class BadgeDomainService {
     private final BadgeEntityService entityService;
     private final ProfileDomainService profileService;
     private final S3StorageService s3StorageService;
-
-    @Transactional(readOnly = true)
-    public Page<ProfileBadgeResponse> getMyBadges(UUID memberId, ProfileBadgePageRequest request) {
-        PageRequest pageRequest = request.toPageRequest();
-        ProfileResponse profile = profileService.getProfileByMemberId(memberId);
-        log.debug("내 배지 조회. memberId={}, profileId={}", memberId, profile.id());
-        return entityService.findBadgesByProfileId(profile.id(), pageRequest);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<ProfileBadgeResponse> getUserBadges(UUID profileId, ProfileBadgePageRequest request) {
-        PageRequest pageRequest = request.toPageRequest();
-        profileService.getProfileById(profileId); // 존재 검증
-        log.debug("특정 사용자 배지 조회. profileId={}", profileId);
-        return entityService.findBadgesByProfileId(profileId, pageRequest);
-    }
 
     @Transactional
     public BadgeCreateResponse createBadge(BadgeCreateRequest request) {
@@ -123,5 +105,18 @@ public class BadgeDomainService {
         log.debug("배지 목록 조회. page={}, size={}, total={}",
             pageRequest.getPageNumber(), pageRequest.getPageSize(), page.getTotalElements());
         return page.map(BadgeDtoMapper::toBadgeResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Badge getById(UUID badgeId) {
+        return entityService.getById(badgeId);
+    }
+
+    @Transactional(readOnly = true)
+    public Badge getByCode(String code) {
+        log.debug("배지 코드로 조회. code={}", code);
+        Badge badge = entityService.getByCode(code);
+        log.debug("배지 조회 완료. id={}, name={}", badge.getId(), badge.getName());
+        return badge;
     }
 }

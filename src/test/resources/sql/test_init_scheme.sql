@@ -10,37 +10,38 @@ DROP TABLE IF EXISTS public_test.badge CASCADE;
 DROP TABLE IF EXISTS public_test.meetup_participant CASCADE;
 DROP TABLE IF EXISTS public_test.meetup_hash_tag CASCADE;
 DROP TABLE IF EXISTS public_test.meetup CASCADE;
+DROP TABLE IF EXISTS public_test.chat_message CASCADE;
 DROP TABLE IF EXISTS public_test.refresh_token CASCADE;
 DROP TABLE IF EXISTS public_test.member_role CASCADE;
-DROP TABLE IF EXISTS public_test.role CASCADE;
+DROP TABLE IF EXISTS public_test.member_verification CASCADE;
 DROP TABLE IF EXISTS public_test.profile CASCADE;
 DROP TABLE IF EXISTS public_test.member CASCADE;
 
 CREATE TABLE public_test.member (
     id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     email          varchar(255) UNIQUE NOT NULL,
-    password       varchar(255) DEFAULT NULL,                       -- 외부 인증만 사용할 땐 NULL 가능
-    provider       VARCHAR(20) NOT NULL DEFAULT 'EMAIL',-- EMAIL/KAKAO/GOOGLE/...
-    provider_id    varchar(255) DEFAULT NULL,                        -- 외부 식별자(소셜)
+    password       varchar(255) DEFAULT NULL,
+    provider       VARCHAR(20) NOT NULL DEFAULT 'EMAIL',
+    provider_id    varchar(255) DEFAULT NULL,
     created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
     token_issued_at  TIMESTAMP DEFAULT NULL,
     enabled        BOOLEAN NOT NULL DEFAULT TRUE,
+    verified       BOOLEAN NOT NULL DEFAULT FALSE,
     is_account_non_locked BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE(provider, provider_id)
 );
-
 
 CREATE TABLE public_test.member_role (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     member_id uuid NOT NULL REFERENCES public_test.member(id) ON DELETE CASCADE,
     name varchar(50) NOT NULL,
-granted_at TIMESTAMP NOT NULL DEFAULT NOW()
+    granted_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE public_test.refresh_token (
     member_id uuid PRIMARY KEY REFERENCES public_test.member(id) ON DELETE CASCADE,
-    token_value varchar(500) NOT NULL
+    token_value varchar(512) NOT NULL
 );
 
 CREATE TABLE public_test.profile (
@@ -70,15 +71,13 @@ CREATE TABLE public_test.profile (
 
 -- 닉네임 대소문자 무시 유니크
 CREATE UNIQUE INDEX IF NOT EXISTS uq_profile_nickname_ci ON public_test.profile (LOWER(btrim(nickname)));
-CREATE INDEX IF NOT EXISTS idx_profile_base_location_id ON profile(base_location_id);
-
+CREATE INDEX IF NOT EXISTS idx_profile_base_location_id ON public_test.profile(base_location_id);
 
 CREATE TABLE public_test.meetup (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id        UUID        NOT NULL REFERENCES public_test.profile(id),
     name            VARCHAR(60) NOT NULL,
     category        VARCHAR(30) NOT NULL,
-    sub_category    VARCHAR(30) NOT NULL,
     description     TEXT        NOT NULL,
     participant_count INTEGER     NOT NULL DEFAULT 1,
     capacity        INTEGER     NOT NULL DEFAULT 10,
@@ -87,6 +86,7 @@ CREATE TABLE public_test.meetup (
     address         TEXT        NOT NULL,
     sgg_code        BIGINT      NOT NULL REFERENCES public.sigungu_boundary(sgg_code),
     status          VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    start_at        TIMESTAMP   NOT NULL,
     end_at          TIMESTAMP,
     created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMP   NOT NULL DEFAULT NOW()
@@ -96,7 +96,8 @@ CREATE INDEX IF NOT EXISTS idx_meetup_location_point ON public_test.meetup USING
 CREATE INDEX IF NOT EXISTS idx_meetup_status ON public_test.meetup (status);
 CREATE INDEX IF NOT EXISTS idx_meetup_owner ON public_test.meetup (owner_id);
 CREATE INDEX IF NOT EXISTS idx_category ON public_test.meetup (category);
-CREATE INDEX IF NOT EXISTS idx_sub_category ON public_test.meetup (sub_category);
+CREATE INDEX IF NOT EXISTS idx_meetup_state_start_time ON public_test.meetup (status, start_at);
+CREATE INDEX IF NOT EXISTS idx_meetup_state_end_time ON public_test.meetup (status, end_at);
 
 CREATE TABLE public_test.meetup_hash_tag (
     id              BIGSERIAL PRIMARY KEY,
@@ -112,27 +113,37 @@ CREATE TABLE public_test.meetup_participant (
     role            VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
     is_active       BOOLEAN NOT NULL DEFAULT FALSE,
     is_rated        BOOLEAN NOT NULL DEFAULT FALSE,
+    is_finished     BOOLEAN NOT NULL DEFAULT FALSE,
     last_active_at  TIMESTAMP,
     created_at      TIMESTAMP   NOT NULL DEFAULT NOW(),
     UNIQUE(meetup_id, profile_id)
 );
 
-
 CREATE INDEX IF NOT EXISTS idx_meetup_participant_meetup ON public_test.meetup_participant (meetup_id);
 CREATE INDEX IF NOT EXISTS idx_meetup_participant_profile ON public_test.meetup_participant (profile_id);
 
+CREATE TABLE public_test.chat_message (
+    id              BIGSERIAL PRIMARY KEY,
+    meetup_id       UUID NOT NULL REFERENCES public_test.meetup(id) ON DELETE CASCADE,
+    sender_id       BIGINT REFERENCES public_test.meetup_participant(id) ON DELETE SET NULL,
+    profile_id      UUID REFERENCES public_test.profile(id) ON DELETE SET NULL,
+    message_type    VARCHAR(20) NOT NULL,
+    content         TEXT NOT NULL,
+    created_at      TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_chat_message_meetup ON public_test.chat_message (meetup_id);
+CREATE INDEX IF NOT EXISTS idx_chat_message_sender ON public_test.chat_message (sender_id);
 
 CREATE TABLE public_test.evaluation (
     id UUID PRIMARY KEY,
     meetup_id UUID  NOT NULL,
     evaluator_profile_id UUID  NOT NULL,
     target_profile_id UUID  NOT NULL,
-    rating VARCHAR(20) NOT NULL,
+    rating VARCHAR(10) NOT NULL,
     ip_hash VARCHAR(128) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT uq_evaluation_meetup_id_evaluator_profile_id_target_profile_id
-        UNIQUE (meetup_id, evaluator_profile_id, target_profile_id),
+    CONSTRAINT uq_evaluation UNIQUE (meetup_id, evaluator_profile_id, target_profile_id, ip_hash),
     CONSTRAINT fk_evaluation_meetup FOREIGN KEY (meetup_id) REFERENCES public_test.meetup(id),
     CONSTRAINT fk_evaluation_evaluator_profile FOREIGN KEY (evaluator_profile_id) REFERENCES public_test.profile(id),
     CONSTRAINT fk_evaluation_target_profile FOREIGN KEY (target_profile_id) REFERENCES public_test.profile(id)
@@ -161,6 +172,7 @@ CREATE TABLE public_test.profile_badge (
     profile_id        UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
     badge_id          UUID NOT NULL REFERENCES public_test.badge(id)   ON DELETE CASCADE,
     created_at        TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMP NOT NULL DEFAULT NOW(),
     is_representative BOOLEAN   NOT NULL DEFAULT FALSE,
     CONSTRAINT uq_profile_badge UNIQUE(profile_id, badge_id)
 );
@@ -185,7 +197,7 @@ CREATE INDEX IF NOT EXISTS idx_user_block_blocker ON public_test.user_block (blo
 CREATE INDEX IF NOT EXISTS idx_user_block_blocked ON public_test.user_block (blocked_id);
 
 CREATE TABLE public_test.user_report (
-    id           UUID PRIMARY KEY,
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reporter_profile_id  UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
     target_profile_id    UUID NOT NULL REFERENCES public_test.profile(id) ON DELETE CASCADE,
     category     VARCHAR(30) NOT NULL,
@@ -201,7 +213,7 @@ CREATE TABLE public_test.user_report (
 );
 
 CREATE TABLE public_test.report_attachment (
-    id           UUID PRIMARY KEY,
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     report_id    UUID NOT NULL REFERENCES public_test.user_report(id) ON DELETE CASCADE,
     url          TEXT NOT NULL,
     created_at   TIMESTAMP NOT NULL DEFAULT NOW()

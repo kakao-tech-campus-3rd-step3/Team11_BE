@@ -22,14 +22,11 @@ public class BadgeAwardService {
 
     @Transactional
     public void award(UUID profileId, String code) {
+        log.debug("배지 부여 시도. profileId={}, code={}", profileId, code);
         String normalized = code == null ? null : code.trim().toUpperCase();
         Badge badge = badgeRepository.findByCodeIgnoreCase(normalized)
             .orElseThrow(() -> new NoSuchElementException("배지 코드 매핑 누락: " + normalized));
-        try {
-            profileBadgeRepository.save(new ProfileBadge(profileId, badge.getId()));
-        } catch (DataIntegrityViolationException e) {
-            // UNIQUE (profile_id, badge_id) 제약 조건 위반 → 중복 배지 부여 무시
-            log.debug("중복 배지 부여 시도 무시. profileId={}, badgeId={}", profileId, badge.getId());
-        }
+        profileBadgeRepository.save(new ProfileBadge(profileId, badge.getId()));
+        log.debug("배지 부여 완료. profileId={}, badgeId={}", profileId, badge.getId());
     }
 }
