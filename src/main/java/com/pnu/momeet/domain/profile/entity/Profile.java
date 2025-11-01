@@ -65,6 +65,9 @@ public class Profile extends BaseEntity {
     @Column(name = "completed_join_meetups", nullable = false)
     private int completedJoinMeetups = 0;
 
+    @Column(name = "image_hash")
+    private String imageHash;
+
     private Profile(
         UUID memberId,
         String nickname,
@@ -109,8 +112,9 @@ public class Profile extends BaseEntity {
         if (baseLocation != null) this.baseLocation = baseLocation;
     }
 
-    public void updateImageUrl(String imageUrl) {
+    public void updateImage(String imageUrl, String imageHash) {
         this.imageUrl = imageUrl;
+        this.imageHash = imageHash;
     }
 
     public void increaseLikesAndRecalc(double priorK) {

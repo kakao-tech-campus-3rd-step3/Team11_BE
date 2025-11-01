@@ -1,6 +1,9 @@
 package com.pnu.momeet.domain.badge.service;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.common.tx.AfterCommitExecutor;
+import com.pnu.momeet.common.util.ImageHashUtil;
+import com.pnu.momeet.domain.badge.command.BadgeChanges;
 import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
@@ -18,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -27,8 +32,9 @@ public class BadgeDomainService {
     private static final String ICON_IMAGE_PREFIX = "/badges";
 
     private final BadgeEntityService entityService;
-    private final ProfileDomainService profileService;
     private final S3StorageService s3StorageService;
+    private final ImageHashUtil imageHashUtil;
+    private final AfterCommitExecutor afterCommitExecutor;
 
     @Transactional
     public BadgeCreateResponse createBadge(BadgeCreateRequest request) {
@@ -59,31 +65,71 @@ public class BadgeDomainService {
 
     @Transactional
     public BadgeUpdateResponse updateBadge(UUID badgeId, BadgeUpdateRequest request) {
+        log.debug("배지 수정 시도. id={}", badgeId);
         Badge badge = entityService.getById(badgeId);
 
-        // 이름 중복 검증 (이름이 변경되는 경우에만)
-        if (request.name() != null && !badge.getName().equalsIgnoreCase(request.name().trim())) {
-            if (entityService.existsByNameIgnoreCase(request.name().trim())) {
-                log.info("중복 이름으로 배지 수정 시도. id={}, newName={}", badgeId, request.name());
-                throw new IllegalArgumentException("이미 존재하는 배지 이름입니다.");
-            }
+        BadgeChanges changes = change(request, badge);
+
+        // 아무 것도 바뀌지 않으면 바로 반환
+        if (changes.nothingToDo()) {
+            log.info("배지 수정 건너뜀(변경 없음). id={}", badge.getId());
+            return BadgeDtoMapper.toUpdateResponseDto(badge);
         }
 
-        // 아이콘 교체
-        String oldImageUrl = badge.getIconUrl();
-        if (request.iconImage() != null && !request.iconImage().isEmpty()) {
-            String newImageUrl = s3StorageService.uploadImage(request.iconImage(), ICON_IMAGE_PREFIX);
-            badge.updateIconUrl(newImageUrl);
-            log.info("배지 아이콘 변경. id={}, newIconUrl={}", badgeId, newImageUrl);
-            s3StorageService.deleteImage(oldImageUrl);
-            log.debug("배지 기존 아이콘 삭제 완료. id={}, oldIconUrl={}", badgeId, oldImageUrl);
+        // 이름 중복 검증 (이름이 변경되는 경우에만)
+        if (changes.nameChanged() &&
+            entityService.existsByNameIgnoreCaseAndIdNot(changes.name(), badge.getId())) {
+            log.debug("이미 존재하는 배지 이름으로 배지 수정 시도. id={}, name={}", badgeId, changes.name());
+            throw new IllegalArgumentException("이미 존재하는 배지 이름입니다.");
         }
 
         // 텍스트 정보 변경
-        badge.updateBadge(request.name(), request.description());
+        if (changes.textChanged()) {
+            badge = entityService.updateBadge(badge, b -> b.updateBadge(
+                changes.nameChanged() ? changes.name() : null,
+                changes.descChanged() ? changes.description() : null
+            ));
+        }
         log.info("배지 수정 성공. id={}, name={}", badge.getId(), badge.getName());
 
+        // 아이콘 교체
+        if (changes.hasIconPart() && changes.iconChanged()) {
+            String oldUrl = badge.getIconUrl();
+            String newUrl = s3StorageService.uploadImage(request.iconImage(), ICON_IMAGE_PREFIX);
+            badge.updateIcon(newUrl, changes.iconHash());
+
+            afterCommitExecutor.run(() -> {
+                if (oldUrl != null) s3StorageService.deleteImage(oldUrl);
+            });
+            log.info("배지 아이콘 변경 완료. id={}, newUrl={}", badge.getId(), newUrl);
+        }
+
         return BadgeDtoMapper.toUpdateResponseDto(badge);
+    }
+
+    private BadgeChanges change(BadgeUpdateRequest request, Badge badge) {
+        // 정규화
+        String inName = request.name() == null ? null : request.name().trim();
+        String inDesc = request.description();
+
+        // 텍스트 변경 감지
+        boolean nameChanged = inName != null && !inName.equalsIgnoreCase(badge.getName());
+        boolean descChanged = inDesc != null && !inDesc.equals(badge.getDescription());
+
+        // 아이콘 변경 감지
+        boolean hasIconPart = request.iconImage() != null && !request.iconImage().isEmpty();
+        String incomingHash = null;
+        boolean iconChanged = false;
+        if (hasIconPart) {
+            incomingHash = imageHashUtil.sha256Hex(request.iconImage());
+            iconChanged = incomingHash != null && !incomingHash.equals(badge.getIconHash());
+        }
+
+        return new BadgeChanges(
+            inName, nameChanged,
+            inDesc, descChanged,
+            hasIconPart, incomingHash, iconChanged
+        );
     }
 
     @Transactional

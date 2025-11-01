@@ -68,6 +68,7 @@ CREATE TABLE profile (
     likes                    INTEGER      NOT NULL DEFAULT 0,
     dislikes                 INTEGER      NOT NULL DEFAULT 0,
     completed_join_meetups   INTEGER      NOT NULL DEFAULT 0,
+    image_hash               VARCHAR(128),
     created_at               TIMESTAMP  NOT NULL DEFAULT NOW(),
     updated_at               TIMESTAMP  NOT NULL DEFAULT NOW(),
     CONSTRAINT ck_profile_nickname_len        CHECK (char_length(btrim(nickname)) BETWEEN 2 AND 20),
@@ -167,6 +168,7 @@ CREATE TABLE IF NOT EXISTS badge (
     description VARCHAR(255),
     icon_url VARCHAR(255) NOT NULL,
     code VARCHAR(50)  NOT NULL,
+    icon_hash VARCHAR(128),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
 

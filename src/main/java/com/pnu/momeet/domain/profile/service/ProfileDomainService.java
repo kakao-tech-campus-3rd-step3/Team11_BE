@@ -1,6 +1,9 @@
 package com.pnu.momeet.domain.profile.service;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.common.tx.AfterCommitExecutor;
+import com.pnu.momeet.common.util.ImageHashUtil;
+import com.pnu.momeet.domain.profile.command.ProfileChanges;
 import com.pnu.momeet.domain.profile.dto.request.LocationInput;
 import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
 import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
@@ -31,6 +34,8 @@ public class ProfileDomainService {
     private final S3StorageService s3StorageService;
     private final SigunguEntityService sigunguService;
     private final GeometryFactory geometryFactory;
+    private final ImageHashUtil imageHashUtil;
+    private final AfterCommitExecutor afterCommitExecutor;
 
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile(UUID memberId) {
@@ -103,35 +108,82 @@ public class ProfileDomainService {
 
     @Transactional
     public ProfileResponse updateMyProfile(UUID memberId, ProfileUpdateRequest request) {
+        log.debug("프로필 수정 시도. memberId={}", memberId);
         Profile profile = entityService.getByMemberId(memberId);
-        if (request.nickname() != null && entityService.existsByNicknameIgnoreCase(request.nickname().trim())) {
-            log.info("이미 존재하는 닉네임으로 프로필 수정 시도. id={}, nickname={}", profile.getId(), profile.getNickname());
-            throw new IllegalArgumentException("이미 존재하는 닉네임입니다. nickname=" + profile.getNickname());
+
+        ProfileChanges changes = change(request, profile);
+
+        if (changes.nothingToDo()) {
+            log.info("프로필 수정 건너뜀(변경 없음). id={}, memberId={}", profile.getId(), memberId);
+            return ProfileEntityMapper.toResponseDto(profile);
         }
-        Sigungu sigungu = (request.baseLocation() == null)
-            ? null
-            : resolveSigungu(request.baseLocation());
 
-        profile = entityService.updateProfile(profile, p -> p.updateProfile(
-            request.nickname(),
-            request.age(),
-            request.gender() != null ? Gender.valueOf(request.gender().toUpperCase()) : null,
-            request.description(),
-            sigungu
-        ));
+        // 닉네임은 '실제 변경 시'에만 + 자기자신 제외 중복 검사
+        if (changes.nickChanged() &&
+            entityService.existsByNicknameIgnoreCaseAndIdNot(changes.nickname(), profile.getId())) {
+            log.info("이미 존재하는 닉네임으로 프로필 수정 시도. id={}, nickname={}", profile.getId(), changes.nickname());
+            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+        }
 
-        if (request.image() != null && !request.image().isEmpty()) {
-            // 1. 기존 이미지가 있다면 S3에서 삭제
-            if (profile.getImageUrl() != null) {
-                s3StorageService.deleteImage(profile.getImageUrl());
-            }
-            // 2. 새 이미지 업로드 및 URL 업데이트
-            String newImageUrl = s3StorageService.uploadImage(request.image(), PROFILE_IMAGE_PREFIX);
-            profile.updateImageUrl(newImageUrl);
-            log.info("프로필 이미지 변경 감지. id={}, memberId={}", profile.getId(), memberId);
+        // 텍스트 필드 반영 (null은 무시)
+        if (changes.textChanged()) {
+            profile = entityService.updateProfile(profile, p -> p.updateProfile(
+                changes.nickChanged()   ? changes.nickname()     : null,
+                changes.ageChanged()    ? changes.age()          : null,
+                changes.genderChanged() ? changes.gender()       : null,
+                changes.descChanged()   ? changes.description()  : null,
+                changes.baseChanged()   ? changes.baseLocation() : null
+            ));
+        }
+
+        // 이미지 교체: 동일 파일은 스킵, 다르면 업로드 + 커밋 후 기존 삭제
+        if (changes.hasImagePart() && changes.imageChanged()) {
+            String oldUrl = profile.getImageUrl();
+            String newUrl = s3StorageService.uploadImage(request.image(), PROFILE_IMAGE_PREFIX);
+            profile.updateImage(newUrl, changes.imageHash());
+
+            // 트랜잭션 있으면 커밋 후, 없으면 즉시 실행
+            afterCommitExecutor.run(() -> {
+                if (oldUrl != null) s3StorageService.deleteImage(oldUrl);
+            });
+            log.info("프로필 이미지 변경 성공. id={}, newUrl={}", profile.getId(), newUrl);
         }
 
         log.info("프로필 수정 성공. id={}, memberId={}", profile.getId(), memberId);
         return ProfileEntityMapper.toResponseDto(profile);
+    }
+
+    private ProfileChanges change(ProfileUpdateRequest request, Profile profile) {
+        // 정규화
+        String inNickname = request.nickname() == null ? null : request.nickname().trim();
+        Integer inAge = request.age();
+        Gender inGender = request.gender() != null ? Gender.valueOf(request.gender().toUpperCase()) : null;
+        String inDesc = request.description();
+        Sigungu inSigungu = (request.baseLocation() == null) ? null : resolveSigungu(request.baseLocation());
+
+        // 텍스트 변경 감지
+        boolean nickChanged = inNickname != null && !inNickname.equalsIgnoreCase(profile.getNickname());
+        boolean ageChanged = inAge != null && !inAge.equals(profile.getAge());
+        boolean genderChanged = inGender != null && inGender != profile.getGender();
+        boolean descChanged = inDesc != null && !inDesc.equals(profile.getDescription());
+        boolean baseChanged = inSigungu != null && !inSigungu.equals(profile.getBaseLocation());
+
+        // 이미지 변경 감지
+        boolean hasImagePart = request.image() != null && !request.image().isEmpty();
+        String incomingHash = null;
+        boolean imageChanged = false;
+        if (hasImagePart) {
+            incomingHash = imageHashUtil.sha256Hex(request.image());
+            imageChanged = incomingHash != null && !incomingHash.equals(profile.getImageHash());
+        }
+
+        return new ProfileChanges(
+            inNickname, nickChanged,
+            inAge, ageChanged,
+            inGender, genderChanged,
+            inDesc, descChanged,
+            inSigungu, baseChanged,
+            hasImagePart, incomingHash, imageChanged
+        );
     }
 }
