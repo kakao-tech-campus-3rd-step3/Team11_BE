@@ -54,6 +54,8 @@ class S3StorageServiceTest {
     void setUp() {
         // @Value 주입 필드 세팅
         ReflectionTestUtils.setField(sut, "bucket", BUCKET);
+        // CloudFront(또는 프론트) 도메인 주입 유지
+        ReflectionTestUtils.setField(sut, "cdnBaseUrl", "https://www.momeet.click");
     }
 
     // ---- helpers ----
@@ -69,14 +71,6 @@ class S3StorageServiceTest {
         }
     }
 
-    /** 성공 케이스에서만 호출: utilities().getUrl(Consumer<Builder>) 스텁 */
-    private void stubGetUrlToDummy() {
-        when(s3Client.utilities()).thenReturn(s3Utilities);
-        // Consumer 오버로드로 명확히 스텁 (모호성/strict stubbing 방지)
-        doReturn(url("https://test-bucket.s3.amazonaws.com/dummy"))
-            .when(s3Utilities).getUrl(any(Consumer.class));
-    }
-
     private URL url(String s) {
         try { return new URL(s); } catch (Exception e) { throw new RuntimeException(e); }
     }
@@ -87,7 +81,6 @@ class S3StorageServiceTest {
     @DisplayName("성공 - 정상 PNG 업로드 시 URL 반환 및 PutObjectRequest 검증")
     void upload_success_png() {
         // given
-        stubGetUrlToDummy();
         byte[] bytes = pngBytes(2, 2);
         MockMultipartFile file = new MockMultipartFile(
             "image", "avatar.PNG", "image/png", bytes); // 대문자 확장자도 허용
@@ -97,14 +90,13 @@ class S3StorageServiceTest {
         String url = sut.uploadImage(file, prefix);
 
         // then
-        assertThat(url).startsWith("https://test-bucket.s3.amazonaws.com/");
+        assertThat(url).startsWith("https://www.momeet.click/");
 
         ArgumentCaptor<PutObjectRequest> cap = ArgumentCaptor.forClass(PutObjectRequest.class);
         verify(s3Client).putObject(cap.capture(), any(RequestBody.class));
         PutObjectRequest req = cap.getValue();
 
         assertThat(req.bucket()).isEqualTo(BUCKET);
-        assertThat(req.acl()).isEqualTo(ObjectCannedACL.PUBLIC_READ); // TODO: 운영 시 제거 예정
         assertThat(req.contentType()).isEqualTo("image/png");
         assertThat(req.cacheControl()).contains("max-age");
         assertThat(req.key()).startsWith(prefix + "/");
@@ -114,7 +106,6 @@ class S3StorageServiceTest {
     @Test
     @DisplayName("성공 - JPG는 image/jpeg 로 매핑된다")
     void upload_success_jpg_mime() {
-        stubGetUrlToDummy();
         byte[] bytes = pngBytes(1, 1); // 내용은 PNG여도 디코딩만 되면 테스트 단순화 목적 OK
         MockMultipartFile file = new MockMultipartFile(
             "image", "face.jpg", "image/jpeg", bytes);
@@ -148,7 +139,6 @@ class S3StorageServiceTest {
     @DisplayName("키는 prefix/UUID.ext 형식을 따르며 원본 파일명은 포함되지 않는다")
     void key_does_not_include_original_name() {
         // given
-        stubGetUrlToDummy();
         byte[] bytes = pngBytes(1, 1);
         MockMultipartFile file = new MockMultipartFile(
             "image", "My Pretty Cat .png", "image/png", bytes);
@@ -171,7 +161,6 @@ class S3StorageServiceTest {
     @DisplayName("prefix 정규화 - 중복 슬래시/역슬래시는 정리되고 선행 슬래시는 제거된다")
     void prefix_normalized() {
         // given
-        stubGetUrlToDummy();
         byte[] bytes = pngBytes(1, 1);
         MockMultipartFile file = new MockMultipartFile(
             "image", "a.png", "image/png", bytes);
@@ -184,7 +173,6 @@ class S3StorageServiceTest {
         verify(s3Client).putObject(cap.capture(), any(RequestBody.class));
         String key = cap.getValue().key();
 
-        // 서비스의 buildKey에서 선행 "/" 제거 로직을 적용했다는 가정 하에 검증
         assertThat(key).startsWith("profiles/");
         assertThat(key).doesNotStartWith("/profiles/");
     }
@@ -193,16 +181,16 @@ class S3StorageServiceTest {
     @DisplayName("deleteByUrl: 퍼블릭 S3 URL에서 key를 추출해 DeleteObject 호출")
     void deleteByUrl_publicUrl() {
         S3StorageService service = new S3StorageService(s3Client);
-        ReflectionTestUtils.setField(service, "bucket", "momeet-dev-bucket");
+        ReflectionTestUtils.setField(service, "bucket", "momeet-dev-bucket-1");
 
-        String url = "https://momeet-dev-bucket.s3.ap-northeast-2.amazonaws.com/profiles/abc.png";
+        String url = "https://www.momeet.click/profiles/abc.png";
         service.deleteImage(url);
 
         ArgumentCaptor<DeleteObjectRequest> captor = ArgumentCaptor.forClass(DeleteObjectRequest.class);
         verify(s3Client, times(1)).deleteObject(captor.capture());
 
         DeleteObjectRequest req = captor.getValue();
-        assertThat(req.bucket()).isEqualTo("momeet-dev-bucket");
+        assertThat(req.bucket()).isEqualTo("momeet-dev-bucket-1");
         assertThat(req.key()).isEqualTo("profiles/abc.png");
     }
 
@@ -210,7 +198,7 @@ class S3StorageServiceTest {
     @DisplayName("deleteByUrl: CDN URL에서도 key만 올바르게 추출")
     void deleteByUrl_cdnUrl() {
         S3StorageService service = new S3StorageService(s3Client);
-        ReflectionTestUtils.setField(service, "bucket", "momeet-dev-bucket");
+        ReflectionTestUtils.setField(service, "bucket", "momeet-dev-bucket-1");
 
         String url = "https://cdn.momeet.app/profiles/xyz.webp";
         service.deleteImage(url);
@@ -219,7 +207,8 @@ class S3StorageServiceTest {
         verify(s3Client, times(1)).deleteObject(captor.capture());
 
         DeleteObjectRequest req = captor.getValue();
-        assertThat(req.bucket()).isEqualTo("momeet-dev-bucket");
+        // 최소 수정: 버킷 단정 오타 수정 (-1 포함)
+        assertThat(req.bucket()).isEqualTo("momeet-dev-bucket-1");
         assertThat(req.key()).isEqualTo("profiles/xyz.webp");
     }
 
@@ -251,4 +240,3 @@ class S3StorageServiceTest {
         assertThat(req.key()).isEqualTo("profiles/abc.png");
     }
 }
-

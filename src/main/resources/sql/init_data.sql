@@ -46,7 +46,7 @@ VALUES (
         '앨리스',
         24,
         'FEMALE',
-        'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/profiles/alice.png',
+        'https://www.momeet.click/profiles/alice.png',
         '보드게임/카페 모임 좋아해요 ☕',
         26410
        );
@@ -71,7 +71,7 @@ VALUES (
         '크리스',
         27,
         'MALE',
-        'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/profiles/chris.png',
+        'https://www.momeet.click/profiles/chris.png',
         '풋살·등산 러버 🏔️',
         26260
        );
@@ -82,7 +82,7 @@ INSERT INTO badge (
     gen_random_uuid(),
     '모임 새싹',
     '모임 첫 참여 배지',
-    'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/badges/meetup-first.png',
+    'https://www.momeet.click/badges/meetup-first.png',
     'FIRST_JOIN',
     now(),
     now()
@@ -94,7 +94,7 @@ INSERT INTO badge (
     gen_random_uuid(),
     '모임 고수',
     '모임 10회 참여 배지',
-    'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/badges/meetup-ten.png',
+    'https://www.momeet.click/badges/meetup-ten.png',
     'TEN_JOINS',
     now(),
     now()
@@ -106,7 +106,7 @@ INSERT INTO badge (
     gen_random_uuid(),
     '호감 인기인',
     '좋아요 10개',
-    'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/badges/like-five.png',
+    'https://www.momeet.click/badges/like-five.png',
     'LIKE_10',
     now(),
     now()
@@ -118,7 +118,7 @@ INSERT INTO badge (
     gen_random_uuid(),
     '[TEST] 테스트용 배지 1',
     '테스트용 배지 1',
-    'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/badges/test-1.png',
+    'https://www.momeet.click/badges/test-1.png',
     'TEST_1',
     now(),
     now()
@@ -130,7 +130,7 @@ INSERT INTO badge (
     gen_random_uuid(),
     '[TEST] 테스트용 배지 2',
     '테스트용 배지 2',
-    'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/badges/test-2.png',
+    'https://www.momeet.click/badges/test-2.png',
     'TEST_2',
     now(),
     now()
@@ -142,7 +142,7 @@ INSERT INTO badge (
     gen_random_uuid(),
     '[TEST] 테스트용 배지 3',
     '테스트용 배지 3',
-    'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/badges/test-3.png',
+    'https://www.momeet.click/badges/test-3.png',
     'TEST_3',
     now(),
     now()
@@ -205,7 +205,7 @@ VALUES (
     '방장1',
     30,
     'MALE',
-    'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/profiles/meetupOwner.png',
+    'https://www.momeet.click/profiles/meetupOwner.png',
     '방장1 테스트 프로필',
     26260
 );
@@ -252,7 +252,7 @@ VALUES (
     '방장2',
     50,
     'MALE',
-    'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/profiles/meetupOwner2.png',
+    'https://www.momeet.click/profiles/meetupOwner2.png',
     '방장2 테스트 프로필',
     26260
 );
@@ -299,7 +299,7 @@ VALUES (
            '방장3',
            33,
            'FEMALE',
-           'https://momeet-dev-bucket-1.s3.ap-northeast-2.amazonaws.com/profiles/meetupOwner3.png',
+           'https://www.momeet.click/profiles/meetupOwner3.png',
            '방장3 테스트 프로필',
            26260
        );
