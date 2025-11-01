@@ -219,7 +219,7 @@ public class ProfileUpdateTest extends BaseProfileTest {
             .contentType(ContentType.MULTIPART)
             .multiPart(nickname)
             .when()
-            .patch("/api/v1/profiles/me")
+            .patch("/me")
             .then().log().all()
             .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
