@@ -64,6 +64,11 @@ public class ProfileDomainService {
         return ProfileEntityMapper.toResponseDto(entityService.getById(profileId));
     }
 
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID profileId) {
+        return entityService.existsById(profileId);
+    }
+
     private boolean has(String s){
         return s != null && !s.isBlank();
     }
