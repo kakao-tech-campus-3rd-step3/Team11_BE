@@ -59,14 +59,9 @@ public class BlockDomainService {
             throw new IllegalStateException("이미 차단한 사용자입니다.");
         }
 
-        try {
-            UserBlock block = entityService.save(me, targetId);
-            log.info("차단 완료. blockerId={}, blockedId={}", me, targetId);
-            return BlockEntityMapper.toBlockResponse(block);
-        } catch (DataIntegrityViolationException e) {
-            log.info("경쟁 상태 중복 차단. blockerId={}, blockedId={}", me, targetId);
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 차단한 사용자입니다.");
-        }
+        UserBlock block = entityService.save(me, targetId);
+        log.info("차단 완료. blockerId={}, blockedId={}", me, targetId);
+        return BlockEntityMapper.toBlockResponse(block);
     }
 
     @Transactional

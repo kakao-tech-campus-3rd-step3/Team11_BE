@@ -112,16 +112,17 @@ public class ReportDomainService {
         entityService.save(report);
 
         List<String> uploadedUrls = new ArrayList<>();
+        List<ReportAttachment> attachments = new ArrayList<>();
         try {
             List<MultipartFile> images = request.images();
             if (images != null && !images.isEmpty()) {
                 for (MultipartFile image : images) {
                     String prefix = REPORT_IMAGE_PREFIX + "/" + report.getId();
                     String url = s3StorageService.uploadImage(image, prefix);
-                    ReportAttachment attachment = ReportDtoMapper.toAttachment(report.getId(), url);
-                    entityService.save(attachment);
                     uploadedUrls.add(url);
+                    attachments.add(ReportDtoMapper.toAttachment(report.getId(), url));
                 }
+                entityService.saveAll(attachments);
             }
         } catch (Exception e) {     // S3 업로드 실패 시 지금까지 업로드 된 이미지 제거
             for (int i = uploadedUrls.size() - 1; i >= 0; i--) {
@@ -171,16 +172,15 @@ public class ReportDomainService {
 
     @Transactional
     public ReportDetailResponse processReport(UUID memberId, UUID reportId, ReportProcessRequest request) {
-        Profile adminProfile = profileService.getByMemberId(memberId);
         UserReport report = entityService.getById(reportId);
         if (report.getStatus() != ReportStatus.OPEN) {
             log.info("OPEN 상태가 아닌 신고 처리 시도. reportId={}", reportId);
             throw new IllegalStateException("OPEN 상태의 신고가 아닙니다.");
         }
         String reply = (request == null) ? null : request.reply();
-        entityService.processReport(report, adminProfile.getId(), reply);
+        entityService.processReport(report, memberId, reply);
         List<String> urls = entityService.getAttachmentUrls(reportId);
-        log.info("신고 처리 성공. reportId={}, adminProfileId={}", reportId, adminProfile.getId());
+        log.info("신고 처리 성공. reportId={}, adminMemberId={}", reportId, memberId);
         return ReportEntityMapper.toReportDetailResponse(report, urls);
     }
 }

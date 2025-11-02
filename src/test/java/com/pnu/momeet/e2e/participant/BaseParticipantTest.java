@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -129,15 +130,22 @@ public abstract class BaseParticipantTest extends BaseE2ETest {
     }
 
     protected MeetupDetail createTestMeetup(int index) {
+        LocalDateTime nextDay = LocalDateTime.now().plusDays(1);
+        String testStartAt = String.format("%d-%02d-%02dT15:00",
+                nextDay.getYear(), nextDay.getMonthValue(), nextDay.getDayOfMonth());
+        
+        String testEndAt = String.format("%d-%02d-%02dT19:00",
+                nextDay.getYear(), nextDay.getMonthValue(), nextDay.getDayOfMonth());
+
         MeetupCreateRequest request = new MeetupCreateRequest(
                 "테스트 밋업 " + index,
                 "STUDY",
-                "CERTIFICATE",
                 "테스트 밋업 설명",
                 List.of("테스트", "밋업", "해시태그" + index),
                 10,
                 10.0,
-                10,
+                testStartAt,
+                testEndAt,
                 new LocationRequest(35.243322, 129.088287, "부산시 금정구")
         );
 

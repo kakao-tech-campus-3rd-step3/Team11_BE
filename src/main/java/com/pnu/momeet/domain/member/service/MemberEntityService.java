@@ -5,6 +5,7 @@ import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -85,6 +86,7 @@ public class MemberEntityService {
     }
 
     @Transactional
+    @CacheEvict(value = "MEMBER_INFO", key = "#member.id")
     public Member updateMember(Member member, Consumer<Member> updater) {
         log.debug("사용자 정보 수정 시도. id={}", member.getId());
         String oldHashedPassword = member.getPassword();
@@ -100,6 +102,7 @@ public class MemberEntityService {
     }
 
     @Transactional
+    @CacheEvict(value = "MEMBER_INFO", key = "#id")
     public void deleteById(UUID id) {
         log.debug("사용자 삭제 시도. id={}", id);
         if (!memberRepository.existsById(id)) { // 존재하지 않는 회원 삭제 방지

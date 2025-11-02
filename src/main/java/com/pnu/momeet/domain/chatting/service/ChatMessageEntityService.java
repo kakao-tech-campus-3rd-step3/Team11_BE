@@ -2,7 +2,6 @@ package com.pnu.momeet.domain.chatting.service;
 
 import com.pnu.momeet.domain.chatting.entity.ChatMessage;
 import com.pnu.momeet.domain.chatting.enums.ChatMessageType;
-import com.pnu.momeet.domain.chatting.repository.ChatMessageDslRepository;
 import com.pnu.momeet.domain.chatting.repository.ChatMessageRepository;
 import com.pnu.momeet.domain.common.dto.response.CursorInfo;
 import com.pnu.momeet.domain.participant.entity.Participant;
@@ -18,14 +17,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ChatMessageEntityService {
     private final ChatMessageRepository chatMessageRepository;
-    private final ChatMessageDslRepository chatMessageDslRepository;
 
     @Transactional
     public CursorInfo<ChatMessage> getHistories(UUID meetupId, int size, Long cursorId) {
         log.debug("채팅 메시지 히스토리 조회 시도 - meetupId: {}, size: {}, cursorId: {}",
             meetupId, size, cursorId
         );
-        var histories = chatMessageDslRepository.findHistoriesByMeetupId(meetupId, size, cursorId);
+        var histories = chatMessageRepository.findHistoriesByMeetupId(meetupId, size, cursorId);
         log.debug("채팅 메시지 히스토리 조회 완료 - meetupId: {}, size: {}, cursorId: {}, resultSize: {}",
                 meetupId, size, cursorId, histories.getSize());
         return histories;

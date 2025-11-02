@@ -27,7 +27,6 @@ import com.pnu.momeet.domain.meetup.dto.response.MeetupSummaryResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.enums.MainCategory;
 import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
-import com.pnu.momeet.domain.meetup.enums.SubCategory;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.enums.MeetupRole;
@@ -40,7 +39,6 @@ import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
 import java.lang.reflect.Constructor;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -130,7 +128,6 @@ class EvaluationDomainServiceTest {
             .owner(evaluator)
             .name("종료모임")
             .category(MainCategory.SPORTS)
-            .subCategory(SubCategory.SOCCER)
             .description("desc")
             .capacity(10)
             .scoreLimit(3.0)
@@ -478,17 +475,21 @@ class EvaluationDomainServiceTest {
     }
 
     @Test
-    @DisplayName("getEvaluatableUsers 성공 - 자기 자신 제외 + 기존 평가 매핑")
+    @DisplayName("getEvaluatableUsers 성공 - 자기 자신 제외 + currentEvaluation=null")
     void getEvaluatableUsers_success() {
         // given
         given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        given(meetupService.getById(meetupId)).willReturn(meetup);
 
         Participant meP = Participant.builder().meetup(meetup).profile(evaluator).role(MeetupRole.MEMBER).build();
         Participant tgP = Participant.builder().meetup(meetup).profile(target).role(MeetupRole.MEMBER).build();
         given(participantService.getAllByMeetupId(meetupId)).willReturn(List.of(meP, tgP));
+        given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId))
+            .willReturn(true);
 
-        Evaluation existing = Evaluation.create(meetupId, evaluatorPid, targetPid, Rating.LIKE, "h");
-        given(entityService.getByMeetupAndEvaluator(meetupId, evaluatorPid)).willReturn(List.of(existing));
+        // 동일 대상 24h 기록 없음 → 후보 포함
+        given(entityService.getLastCreatedAtByTargets(eq(evaluatorPid), any(Set.class)))
+            .willReturn(java.util.Collections.emptyMap());
 
         // when
         List<EvaluatableProfileResponse> list = service.getEvaluatableUsers(meetupId, memberId);
@@ -497,6 +498,62 @@ class EvaluationDomainServiceTest {
         assertThat(list).hasSize(1);
         EvaluatableProfileResponse one = list.getFirst();
         assertThat(one.profileId()).isEqualTo(targetPid);
-        assertThat(one.currentEvaluation()).isEqualTo(Rating.LIKE);
+        assertThat(one.currentEvaluation()).isNull();
+    }
+
+    @Test
+    @DisplayName("getEvaluatableUsers - evaluator→target 최근 24h 기록이 있으면 제외")
+    void getEvaluatableUsers_excludesWithin24h() {
+        // given
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        given(meetupService.getById(meetupId)).willReturn(meetup);
+
+        Participant meP = Participant.builder().meetup(meetup).profile(evaluator).role(MeetupRole.MEMBER).build();
+        Participant tgP = Participant.builder().meetup(meetup).profile(target).role(MeetupRole.MEMBER).build();
+        given(participantService.getAllByMeetupId(meetupId)).willReturn(List.of(meP, tgP));
+        given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId))
+            .willReturn(true);
+
+        // 최근 기록(now) 세팅 → 24h 위반
+        given(entityService.getLastCreatedAtByTargets(eq(evaluatorPid), any(Set.class)))
+            .willReturn(java.util.Map.of(targetPid, java.time.LocalDateTime.now()));
+
+        // when
+        List<EvaluatableProfileResponse> list = service.getEvaluatableUsers(meetupId, memberId);
+
+        // then
+        assertThat(list).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getEvaluatableUsers - 상태가 ENDED가 아니면 빈 목록을 반환한다")
+    void getEvaluatableUsers_returnsEmpty_whenStatusNotEnded() {
+        // given
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        given(meetupService.getById(meetupId)).willReturn(meetup);
+        given(participantService.existsByProfileIdAndMeetupId(evaluatorPid, meetupId))
+            .willReturn(true);
+
+        // 모임 상태를 ENDED가 아닌 값으로 설정
+        ReflectionTestUtils.setField(meetup, "status", MeetupStatus.IN_PROGRESS);
+
+        // when
+        List<EvaluatableProfileResponse> list = service.getEvaluatableUsers(meetupId, memberId);
+
+        // then
+        assertThat(list).isEmpty();
+    }
+
+    @Test
+    @DisplayName("참가자가 아니면 후보 조회 시 예외가 발생한다")
+    void getEvaluatableUsers_throws_whenEvaluatorNotParticipant() {
+        // given
+        given(profileService.getByMemberId(memberId)).willReturn(evaluator);
+        given(meetupService.getById(meetupId)).willReturn(meetup);
+        given(participantService.existsByProfileIdAndMeetupId(evaluator.getId(), meetupId)).willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> service.getEvaluatableUsers(meetupId, memberId))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }

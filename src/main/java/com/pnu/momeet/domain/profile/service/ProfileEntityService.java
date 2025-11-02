@@ -2,7 +2,7 @@ package com.pnu.momeet.domain.profile.service;
 
 import com.pnu.momeet.domain.profile.dto.response.BlockedProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
-import com.pnu.momeet.domain.profile.repository.ProfileDslRepository;
+import com.pnu.momeet.domain.profile.repository.ProfileDslRepositoryImpl;
 import com.pnu.momeet.domain.profile.repository.ProfileRepository;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfileEntityService {
 
     private final ProfileRepository profileRepository;
-    private final ProfileDslRepository profileDslRepository;
 
     @Transactional(readOnly = true)
     public Profile getByMemberId(UUID memberId) {
@@ -60,7 +59,7 @@ public class ProfileEntityService {
 
     @Transactional(readOnly = true)
     public Page<BlockedProfileResponse> getBlockedProfiles(UUID blockerId, Pageable pageable) {
-        return profileDslRepository.findBlockedProfiles(blockerId, pageable);
+        return profileRepository.findBlockedProfiles(blockerId, pageable);
     }
 
     @Transactional(readOnly = true)

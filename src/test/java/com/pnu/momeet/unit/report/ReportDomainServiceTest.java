@@ -353,7 +353,7 @@ class ReportDomainServiceTest {
         var resp = reportService.createReport(memberId, form, "hash");
 
         assertThat(resp.images()).hasSize(2);
-        verify(entityService, times(2)).save(any(ReportAttachment.class));
+        verify(entityService, times(1)).saveAll(any(List.class));
     }
 
     @Test
@@ -439,12 +439,7 @@ class ReportDomainServiceTest {
     @DisplayName("processReport - OPEN→ENDED 전이 및 상세 매핑")
     void processReport_success() {
         UUID adminMemberId = UUID.randomUUID();
-        UUID adminProfileId = UUID.randomUUID();
         UUID reportId = UUID.randomUUID();
-
-        Profile adminProfile = mock(Profile.class);
-        given(profileService.getByMemberId(adminMemberId)).willReturn(adminProfile);
-        given(adminProfile.getId()).willReturn(adminProfileId);
 
         // reporter/target은 임의
         UserReport report = UserReport.create(UUID.randomUUID(), UUID.randomUUID(),
@@ -457,10 +452,10 @@ class ReportDomainServiceTest {
         willAnswer(inv -> {
             ReflectionTestUtils.setField(report, "status", ReportStatus.ENDED);
             ReflectionTestUtils.setField(report, "adminReply", "메모");
-            ReflectionTestUtils.setField(report, "processedBy", adminProfileId);
+            ReflectionTestUtils.setField(report, "processedBy", adminMemberId);
             ReflectionTestUtils.setField(report, "processedAt", LocalDateTime.now());
             return null;
-        }).given(entityService).processReport(eq(report), eq(adminProfileId), eq("메모"));
+        }).given(entityService).processReport(eq(report), eq(adminMemberId), eq("메모"));
         given(entityService.getAttachmentUrls(reportId)).willReturn(List.of("https://cdn/x.png"));
 
         var resp = reportService.processReport(adminMemberId, reportId, new ReportProcessRequest("메모"));
@@ -471,7 +466,7 @@ class ReportDomainServiceTest {
         assertThat(resp.processedAt()).isNotNull();
 
         verify(entityService).getById(reportId);
-        verify(entityService).processReport(eq(report), eq(adminProfileId), eq("메모"));
+        verify(entityService).processReport(eq(report), eq(adminMemberId), eq("메모"));
         verify(entityService).getAttachmentUrls(reportId);
     }
 
@@ -479,12 +474,11 @@ class ReportDomainServiceTest {
     @DisplayName("processReport - ENDED 상태면 409")
     void processReport_conflict() {
         UUID adminMemberId = UUID.randomUUID();
-        UUID adminProfileId = UUID.randomUUID();
         UUID reportId = UUID.randomUUID();
 
         UserReport report = UserReport.create(UUID.randomUUID(), UUID.randomUUID(),
             ReportCategory.SPAM, "d", "ip");
-        report.processReport(adminProfileId, "x");
+        report.processReport(adminMemberId, "x");
 
         given(entityService.getById(reportId)).willReturn(report);
 

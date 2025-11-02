@@ -14,6 +14,7 @@ import com.pnu.momeet.domain.evaluation.service.mapper.EvaluationEntityMapper;
 import com.pnu.momeet.domain.meetup.dto.request.MeetupSummaryPageRequest;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupSummaryResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
+import com.pnu.momeet.domain.meetup.enums.MeetupStatus;
 import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupDtoMapper;
@@ -282,24 +283,48 @@ public class EvaluationDomainService {
         Profile evaluator = profileService.getByMemberId(evaluatorMemberId);
 
         // 모임 존재 확인
-        meetupService.getById(meetupId);
+        Meetup meetup = meetupService.getById(meetupId);
+        LocalDateTime now = LocalDateTime.now();
 
-        // 1) 모임 참가자 & 자기 자신 제외
+        // 평가자는 해당 모임의 참가자여야 함
+        if (!participantService.existsByProfileIdAndMeetupId(evaluator.getId(), meetupId)) {
+            log.debug("해당 모임에 참여하지 않은 사용자. meetupId={}, evaluatorPid={}, now={}", meetupId, evaluator.getId(), now);
+            throw new IllegalArgumentException("모임에 참여하지 않은 사용자입니다.");
+        }
+
+        // 모임이 종료 상태가 아닐 경우 평가 불가
+        if (meetup.getStatus() != MeetupStatus.ENDED) {
+            log.debug("평가 가능 상태가 아님. meetupId={}, endAt={}, now={}", meetupId, meetup.getEndAt(), now);
+            return List.of();
+        }
+
+        // 모임 참가자 & 자기 자신 제외
         List<Participant> participants = participantService.getAllByMeetupId(meetupId);
         List<Participant> targets = participants.stream()
             .filter(p -> !p.getProfile().getId().equals(evaluator.getId()))
             .toList();
 
-        // 2) 기존 평가 맵
-        Map<UUID, Evaluation> existing = entityService
-            .getByMeetupAndEvaluator(meetupId, evaluator.getId())
-            .stream()
-            .collect(Collectors.toMap(Evaluation::getTargetProfileId, e -> e));
+        // 평가 대상 ID 집합
+        Set<UUID> targetIds = targets.stream()
+            .map(p -> p.getProfile().getId())
+            .collect(Collectors.toSet());
 
-        // 3) 응답
-        List<EvaluatableProfileResponse> result = targets.stream()
-            .map(p -> EvaluatableProfileMapper.toEvaluatableProfileResponse(p, existing.get(p.getProfile().getId())))
-            .toList();
+        // 평가 대상에 대한 최근 평가의 createdAt을 한 번에 조회
+        Map<UUID, LocalDateTime> lastMap =
+            entityService.getLastCreatedAtByTargets(evaluator.getId(), targetIds);
+
+        final LocalDateTime cutoff = now.minus(EVALUATION_COOLTIME);
+        List<EvaluatableProfileResponse> result = new ArrayList<>();
+        for (Participant p : targets) {
+            UUID targetPid = p.getProfile().getId();
+            LocalDateTime last = lastMap.get(targetPid);
+
+            // 동일 대상에 대한 평가 쿨타임 검증
+            boolean violateDaily = (last != null) && !last.isBefore(cutoff);
+            if (violateDaily) continue;
+
+            result.add(EvaluatableProfileMapper.toEvaluatableProfileResponse(p, null));
+        }
 
         log.debug("평가 가능 사용자 조회 완료. meetupId={}, evaluatorPid={}, candidates={}",
             meetupId, evaluator.getId(), result.size());

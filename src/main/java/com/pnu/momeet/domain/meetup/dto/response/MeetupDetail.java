@@ -12,7 +12,6 @@ public record MeetupDetail(
         UUID id,
         String name,
         String category,
-        String subCategory,
         String description,
         Integer participantCount,
         Integer capacity,
@@ -22,6 +21,7 @@ public record MeetupDetail(
         LocationResponse location,
         List<String> hashTags,
         String status,
+        LocalDateTime startAt,
         LocalDateTime endAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt

@@ -15,7 +15,7 @@ import java.util.UUID;
 public class RefreshToken {
     @Id
     private UUID memberId;
-    @Column(name = "token_value", nullable = false)
+    @Column(name = "token_value", nullable = false, length = 512)
     private String value;
 
     public RefreshToken(UUID memberId, String value) {

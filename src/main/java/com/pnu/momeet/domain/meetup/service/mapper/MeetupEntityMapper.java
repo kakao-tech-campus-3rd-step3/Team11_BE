@@ -6,8 +6,7 @@ import com.pnu.momeet.domain.meetup.dto.response.MeetupResponse;
 import com.pnu.momeet.domain.meetup.dto.response.MeetupSummaryResponse;
 import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.entity.MeetupHashTag;
-import com.pnu.momeet.domain.meetup.event.MeetupCanceledEvent;
-import com.pnu.momeet.domain.meetup.event.MeetupFinishedEvent;
+import com.pnu.momeet.domain.meetup.event.*;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.enums.MeetupRole;
@@ -15,7 +14,8 @@ import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
 import com.pnu.momeet.domain.sigungu.service.mapper.SigunguEntityMapper;
 import java.util.List;
 
-public class MeetupEntityMapper {
+public class
+MeetupEntityMapper {
 
     private MeetupEntityMapper() {
         // private constructor to prevent instantiation
@@ -39,13 +39,13 @@ public class MeetupEntityMapper {
                 meetup.getSigungu().getId(),
                 meetup.getName(),
                 meetup.getCategory().name(),
-                meetup.getSubCategory().name(),
                 hashTags,
                 meetup.getParticipantCount(),
                 meetup.getCapacity(),
                 meetup.getScoreLimit(),
                 location,
                 meetup.getStatus().name(),
+                meetup.getStartAt(),
                 meetup.getEndAt(),
                 meetup.getCreatedAt(),
                 meetup.getUpdatedAt()
@@ -67,7 +67,6 @@ public class MeetupEntityMapper {
                 meetup.getId(),
                 meetup.getName(),
                 meetup.getCategory().name(),
-                meetup.getSubCategory().name(),
                 meetup.getDescription(),
                 meetup.getParticipantCount(),
                 meetup.getCapacity(),
@@ -77,6 +76,7 @@ public class MeetupEntityMapper {
                 location,
                 hashTags,
                 meetup.getStatus().name(),
+                meetup.getStartAt(),
                 meetup.getEndAt(),
                 meetup.getCreatedAt(),
                 meetup.getUpdatedAt()
@@ -88,7 +88,7 @@ public class MeetupEntityMapper {
             meetup.getId(),
             meetup.getName(),
             meetup.getCategory(),
-            meetup.getSubCategory(),
+            meetup.getStartAt(),
             meetup.getEndAt(),
             meetup.getParticipantCount(),
             meetup.getCapacity(),
@@ -104,13 +104,28 @@ public class MeetupEntityMapper {
                 .build();
     }
 
-    public static MeetupFinishedEvent toMeetupFinishedEvent(Meetup meetup, List<Participant> participants) {
+    public static MeetupNearStartEvent toMeetupNearStartEvent(Meetup meetup) {
+        return new MeetupNearStartEvent(meetup.getId());
+    }
+
+    public static MeetupStartEvent toMeetupStartEvent(Meetup meetup) {
+        return new MeetupStartEvent(
+                meetup.getId()
+        );
+    }
+
+    public static MeetupFinishedEvent toMeetupFinishedEvent(Meetup meetup, List<Participant> participants, Role finishedBy) {
         return new MeetupFinishedEvent(
                 meetup.getId(),
                 participants.stream()
                         .map(p -> p.getProfile().getId())
-                        .toList()
+                        .toList(),
+                finishedBy
         );
+    }
+
+    public static MeetupNearEndEvent toMeetupNearEndEvent(Meetup meetup) {
+        return new MeetupNearEndEvent(meetup.getId());
     }
 
     public static MeetupCanceledEvent toMeetupCanceledEvent(Meetup meetup, Role requestedBy) {

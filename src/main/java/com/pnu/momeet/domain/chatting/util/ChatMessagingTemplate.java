@@ -9,7 +9,6 @@ import com.pnu.momeet.domain.participant.entity.Participant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -19,7 +18,6 @@ public class ChatMessagingTemplate {
     private final SimpMessagingTemplate messagingTemplate;
     private final static String TOPIC_PREFIX = "/topic/meetups/";
 
-    @Transactional
     public void sendMessage(UUID meetupId, MessageResponse response) {
         try {
             messagingTemplate.convertAndSend(TOPIC_PREFIX + meetupId + "/messages", response);
@@ -30,7 +28,6 @@ public class ChatMessagingTemplate {
         }
     }
 
-    @Transactional
     public void sendAction(UUID meetupId, Participant participant, ChatActionType action) {
         ActionResponse actionResponse = ChatEntityMapper.toAction(participant, action);
         try {
@@ -43,9 +40,20 @@ public class ChatMessagingTemplate {
         }
     }
 
-    @Transactional
     public void sendAction(UUID meetupId, Long participantId, ChatActionType action) {
         ActionResponse actionResponse = ChatEntityMapper.toAction(participantId, action);
+        try {
+            messagingTemplate.convertAndSend(
+                    TOPIC_PREFIX + meetupId + "/actions",
+                    actionResponse
+            );
+        } catch (Exception e) {
+            throw new MessageSendFailureException(e.getMessage());
+        }
+    }
+
+    public void sendAction(UUID meetupId, ChatActionType action) {
+        ActionResponse actionResponse = ChatEntityMapper.toAction(action);
         try {
             messagingTemplate.convertAndSend(
                     TOPIC_PREFIX + meetupId + "/actions",

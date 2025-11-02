@@ -1,11 +1,13 @@
 package com.pnu.momeet.e2e;
 
 
+import com.pnu.momeet.config.TestMailConfig;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 @Tag("e2e")
@@ -13,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
+@Import(TestMailConfig.class)
 public abstract class BaseE2ETest {
 
     @Value("${local.server.port}")

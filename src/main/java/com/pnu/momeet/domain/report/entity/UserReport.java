@@ -67,10 +67,10 @@ public class UserReport extends BaseEntity {
         return entity;
     }
 
-    public void processReport(UUID adminProfileId, String reply) {
+    public void processReport(UUID adminMemberId, String reply) {
         this.status = ReportStatus.ENDED;
         this.adminReply = (reply == null || reply.isBlank()) ? null : reply.strip();
-        this.processedBy = adminProfileId;
+        this.processedBy = adminMemberId;
         this.processedAt = LocalDateTime.now();
     }
 }

@@ -1,7 +1,6 @@
 package com.pnu.momeet.domain.meetup.dto.request;
 
 import com.pnu.momeet.common.validation.annotation.ValidMainCategory;
-import com.pnu.momeet.common.validation.annotation.ValidSubCategory;
 import jakarta.validation.constraints.*;
 
 import java.util.List;
@@ -12,9 +11,6 @@ public record MeetupUpdateRequest(
 
     @ValidMainCategory
     String category,
-
-    @ValidSubCategory
-    String subCategory,
 
     String description,
 
@@ -34,7 +30,6 @@ public record MeetupUpdateRequest(
     public MeetupUpdateRequest(
         String name,
         String category,
-        String subCategory,
         String description,
         List<String> hashTags,
         Integer capacity,
@@ -43,7 +38,6 @@ public record MeetupUpdateRequest(
     ) {
         this.name = name;
         this.category = category != null ? category.toUpperCase() : null;
-        this.subCategory = subCategory != null ? subCategory.toUpperCase() : null;
         this.description = description;
         this.hashTags = hashTags;
         this.capacity = capacity;

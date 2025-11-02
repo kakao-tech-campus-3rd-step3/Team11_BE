@@ -1,9 +1,8 @@
 package com.pnu.momeet.domain.auth.service;
 
 import com.pnu.momeet.common.event.CoreEventPublisher;
-import com.pnu.momeet.common.security.config.SecurityProperties;
+import com.pnu.momeet.domain.auth.dto.persistence.VerificationCode;
 import com.pnu.momeet.domain.auth.dto.response.TokenResponse;
-import com.pnu.momeet.domain.auth.entity.VerificationCode;
 import com.pnu.momeet.domain.auth.event.SendVerificationEmailEvent;
 import com.pnu.momeet.domain.auth.repository.VerificationCodeRepository;
 import com.pnu.momeet.domain.member.enums.Provider;
@@ -18,10 +17,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -32,7 +29,6 @@ public class EmailAuthService {
     private final MemberEntityService memberService;
     private final PasswordEncoder passwordEncoder;
     private final VerificationCodeRepository verificationCodeRepository;
-    private final SecurityProperties securityProperties;
     private final CoreEventPublisher eventPublisher;
 
     @Transactional
@@ -50,19 +46,15 @@ public class EmailAuthService {
         Member savedMember = memberService.createMember(
                 new Member(email, password, List.of(Role.ROLE_USER), false)
         );
-        Optional<VerificationCode> existingCode = verificationCodeRepository.findByMemberId(savedMember.getId());
-        if (existingCode.isPresent()) {
-            verificationCodeRepository.delete(existingCode.get());
-            log.debug("기존 인증 코드 삭제: {}", email);
-        }
-        int expiresInMinutes = securityProperties.getVerification().getExpirationInMinute();
-        log.info("새 인증 코드 발급: {}", email);
-        VerificationCode verificationCode = new VerificationCode(savedMember.getId(), expiresInMinutes);
-        
+
+        VerificationCode verificationCode = VerificationCode.generate(savedMember.getId());
         verificationCodeRepository.save(verificationCode);
+        log.info("새 인증 코드 발급: {}", email);
+
+        // 이메일 전송 이벤트 발행
         eventPublisher.publish(new SendVerificationEmailEvent(
                 savedMember.getEmail(),
-                verificationCode.getCode()
+                verificationCode.body()
         ));
     }
 
@@ -99,22 +91,21 @@ public class EmailAuthService {
     @Transactional
     public void verifyEmail(UUID code) {
         log.debug("이메일 인증 시도: 코드 - {}", code);
-        VerificationCode verificationCode = verificationCodeRepository.findById(code)
+        String strCode = code.toString();
+
+        VerificationCode verificationCode = verificationCodeRepository.findByBody(strCode)
                 .orElseThrow(() -> {
                     log.debug("이메일 인증 실패: 존재하지 않는 코드 - {}", code);
-                    return new IllegalArgumentException("유효하지 않은 인증 코드입니다.");
+                    return new IllegalArgumentException("인증 코드가 유효하지 않거나 만료되었습니다.");
                 });
-        Member member = memberService.getById(verificationCode.getMemberId());
+        Member member = memberService.getById(verificationCode.getMemberUUID());
+
         if (member.isVerified()) {
             log.debug("이메일 인증 실패: 이미 인증된 이메일 - {}", member.getEmail());
             verificationCodeRepository.delete(verificationCode);
             throw new IllegalArgumentException("이미 인증된 이메일입니다.");
         }
-        if (verificationCode.getExpiresAt().isBefore(LocalDateTime.now())) {
-            verificationCodeRepository.delete(verificationCode);
-            log.debug("이메일 인증 실패: 만료된 코드 - {}", code);
-            throw new IllegalArgumentException("만료된 인증 코드입니다.");
-        }
+
         memberService.updateMember(member, m -> m.setVerified(true));
         log.info("이메일 인증 성공: {}", member.getEmail());
         verificationCodeRepository.delete(verificationCode);

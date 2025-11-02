@@ -1,32 +1,28 @@
 package com.pnu.momeet.domain.badge.controller;
 
 import com.pnu.momeet.common.security.details.CustomUserDetails;
-import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
-import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
+import com.pnu.momeet.domain.badge.dto.request.BadgeAwardRequest;
 import com.pnu.momeet.domain.badge.dto.request.ProfileBadgePageRequest;
-import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
-import com.pnu.momeet.domain.badge.dto.response.BadgeCreateResponse;
-import com.pnu.momeet.domain.badge.dto.response.BadgeResponse;
+import com.pnu.momeet.domain.badge.dto.request.ProfileBadgeRepresentativeRequest;
+import com.pnu.momeet.domain.badge.dto.response.BadgeAwardResponse;
 import com.pnu.momeet.domain.badge.dto.response.ProfileBadgeResponse;
-import com.pnu.momeet.domain.badge.dto.response.BadgeUpdateResponse;
-import com.pnu.momeet.domain.badge.service.BadgeDomainService;
+import com.pnu.momeet.domain.badge.service.ProfileBadgeDomainService;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -34,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ProfileBadgeController {
 
-    private final BadgeDomainService badgeService;
+    private final ProfileBadgeDomainService profileBadgeService;
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @GetMapping("/me/badges")
@@ -42,7 +38,7 @@ public class ProfileBadgeController {
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @Valid @ModelAttribute ProfileBadgePageRequest request
     ) {
-        return badgeService.getMyBadges(userDetails.getMemberId(), request);
+        return profileBadgeService.getMyBadges(userDetails.getMemberId(), request);
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
@@ -51,6 +47,46 @@ public class ProfileBadgeController {
         @PathVariable UUID profileId,
         @Valid @ModelAttribute ProfileBadgePageRequest request
     ) {
-        return badgeService.getUserBadges(profileId, request);
+        return profileBadgeService.getUserBadges(profileId, request);
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping("/me/badges/representative")
+    public ResponseEntity<ProfileBadgeResponse> getMyRepresentativeBadge(
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return profileBadgeService.getMyRepresentativeBadge(userDetails.getMemberId())
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @GetMapping("/{profileId}/badges/representative")
+    public ResponseEntity<ProfileBadgeResponse> getUserRepresentativeBadge(
+        @PathVariable UUID profileId
+    ) {
+        return profileBadgeService.getUserRepresentativeBadge(profileId)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @PutMapping("/me/badges/representative")
+    public ResponseEntity<ProfileBadgeResponse> setRepresentative(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @Valid @RequestBody ProfileBadgeRepresentativeRequest request
+    ) {
+        return ResponseEntity.ok(profileBadgeService.setRepresentativeBadge(userDetails.getMemberId(), request));
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PostMapping("/{profileId}/badges/award")
+    public ResponseEntity<BadgeAwardResponse> award(
+        @PathVariable UUID profileId,
+        @Valid @RequestBody BadgeAwardRequest request
+    ) {
+        BadgeAwardResponse result = profileBadgeService.award(profileId, request);
+        URI location = URI.create(String.format("/api/profiles/%s/badges", profileId));
+        return ResponseEntity.created(location).body(result);
     }
 }

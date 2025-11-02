@@ -1,11 +1,17 @@
 package com.pnu.momeet.domain.member.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.pnu.momeet.domain.member.enums.Provider;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.CLASS,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "@class"
+)
 public record MemberInfo(
         UUID id,
         String email,

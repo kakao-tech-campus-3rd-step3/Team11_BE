@@ -10,6 +10,7 @@ import com.pnu.momeet.domain.member.service.mapper.MemberDtoMapper;
 import com.pnu.momeet.domain.member.service.mapper.MemberEntityMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,7 +52,9 @@ public class MemberDomainService {
         return MemberEntityMapper.toDto(member);
     }
 
+
     @Transactional(readOnly = true)
+    @Cacheable(value = "MEMBER_INFO", key = "#id")
     public MemberInfo getMemberInfoById(UUID id) {
         var member = entityService.getById(id);
         return MemberEntityMapper.toMemberInfo(member);

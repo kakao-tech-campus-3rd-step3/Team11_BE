@@ -9,6 +9,7 @@ import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.enums.Provider;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.member.service.MemberEntityService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,19 +28,16 @@ public class KakaoAuthService {
     private final MemberEntityService memberEntityService;
     private final KakaoApiClient kakaoApiClient;
 
-    public String getKakaoAuthUrl() {
-        return kakaoApiClient.getKakaoAuthUrl();
-    }
-
-    public KakaoUserInfo getKakaoUserInfo(String code) {
-        KakaoTokenResponse tokenResponse = kakaoApiClient.getAccessToken(code);
+    public KakaoUserInfo getKakaoUserInfo(String code, String redirectUri) {
+        KakaoTokenResponse tokenResponse = kakaoApiClient.getAccessToken(code, redirectUri);
         KakaoUserInfo userInfoResponse = kakaoApiClient.getUserInfo(tokenResponse.access_token());
 
         return new KakaoUserInfo(userInfoResponse.kakaoId(), userInfoResponse.email());
     }
 
-    public TokenResponse kakaoLogin(String code) {
-        KakaoUserInfo kakaoUserInfo = getKakaoUserInfo(code);
+    @Transactional
+    public TokenResponse kakaoLogin(String code, String redirectUri) {
+        KakaoUserInfo kakaoUserInfo = getKakaoUserInfo(code, redirectUri);
         UUID memberId = findOrCreateKakaoMember(kakaoUserInfo);
         TokenResponse tokenResponse = baseAuthService.generateTokenPair(memberId);
 
@@ -68,6 +66,19 @@ public class KakaoAuthService {
     }
 
     private UUID signupKakaoMember(KakaoUserInfo kakaoUserInfo) {
+        // 이메일 중복 체크 (다른 Provider로 이미 가입된 경우 방지)
+        try {
+            Member existingMember = memberEntityService.getByEmail(kakaoUserInfo.email());
+            log.error("카카오 회원가입 실패: 이미 존재하는 이메일 ({}로 가입됨) - {}", 
+                existingMember.getProvider(), kakaoUserInfo.email());
+            throw new IllegalStateException(
+                String.format("이미 %s 계정으로 가입된 이메일입니다. 해당 방법으로 로그인해주세요.", 
+                    existingMember.getProvider() == Provider.EMAIL ? "이메일" : existingMember.getProvider())
+            );
+        } catch (NoSuchElementException e) {
+            // 이메일이 없으면 정상 - 회원가입 진행
+        }
+        
         Member newMember = memberEntityService.saveMember(
                 new Member(kakaoUserInfo.email(), "", Provider.KAKAO, kakaoUserInfo.kakaoId(), List.of(Role.ROLE_USER), true)
         );
