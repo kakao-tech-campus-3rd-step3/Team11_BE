@@ -200,11 +200,11 @@ CREATE INDEX IF NOT EXISTS idx_profile_rep_only
 
 CREATE TABLE IF NOT EXISTS user_block (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    blocker_id UUID NOT NULL REFERENCES member(id) ON DELETE CASCADE,
-    blocked_id UUID NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    blocker_profile_id UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    blocked_profile_id UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_user_block UNIQUE (blocker_id, blocked_id),
-    CONSTRAINT ck_user_block_self CHECK (blocker_id <> blocked_id)
+    CONSTRAINT uq_user_block UNIQUE (blocker_profile_id, blocked_profile_id),
+    CONSTRAINT ck_user_block_self CHECK (blocker_profile_id <> blocked_profile_id)
 );
 
 CREATE TABLE user_report (

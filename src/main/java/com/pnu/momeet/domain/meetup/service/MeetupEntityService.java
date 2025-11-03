@@ -69,11 +69,11 @@ public class MeetupEntityService {
             Double radius,
             MainCategory mainCategory,
             String search,
-            UUID viewerMemberId
+            UUID viewerProfileId
     ) {
         log.debug("특정 위치 기반 meetup 목록 조회 시도. location={}, radius={}", location, radius);
         var meetups = meetupRepository.findAllByDistanceAndPredicates(
-                location, radius, mainCategory, search, viewerMemberId
+                location, radius, mainCategory, search, viewerProfileId
         );
         log.debug("특정 위치 기반 meetup 목록 조회 성공. size={}", meetups.size());
         return meetups;
@@ -180,7 +180,7 @@ public class MeetupEntityService {
     }
 
     @Transactional(readOnly = true)
-    public boolean isBlockedInMeetup(UUID meetupId, UUID viewerMemberId) {
-        return meetupRepository.existsBlockedInMeetup(meetupId, viewerMemberId);
+    public boolean isBlockedInMeetup(UUID meetupId, UUID viewerProfileId) {
+        return meetupRepository.existsBlockedInMeetup(meetupId, viewerProfileId);
     }
 }

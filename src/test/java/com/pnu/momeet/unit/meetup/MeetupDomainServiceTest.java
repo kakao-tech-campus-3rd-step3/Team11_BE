@@ -9,6 +9,9 @@ import com.pnu.momeet.domain.meetup.entity.Meetup;
 import com.pnu.momeet.domain.meetup.service.MeetupDomainService;
 import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.meetup.service.mapper.MeetupEntityMapper;
+import com.pnu.momeet.domain.profile.entity.Profile;
+import com.pnu.momeet.domain.profile.service.ProfileEntityService;
+import java.lang.reflect.Constructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +24,7 @@ import org.springframework.data.domain.*;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,12 +40,31 @@ class MeetupDomainServiceTest {
     @Mock
     private MeetupEntityService meetupEntityService;
 
+    @Mock
+    private ProfileEntityService profileService;
+
+    private static Profile profileWithId(UUID id) {
+        try {
+            Constructor<Profile> ctor = Profile.class.getDeclaredConstructor();
+            ctor.setAccessible(true);
+            Profile p = ctor.newInstance();
+            ReflectionTestUtils.setField(p, "id", id);
+            return p;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     @DisplayName("페이지 조회: DB에서 필터된 결과를 사용하므로 content/total이 일치(빈 페이지)")
     void getAllBySpecification_returnsEmptyPage_consistentTotals() {
         // given
-        UUID viewer = UUID.randomUUID();
+        UUID viewerMemberId = UUID.randomUUID();
+        UUID viewerProfileId = UUID.randomUUID();
         MeetupPageRequest req = new MeetupPageRequest();
+
+        when(profileService.getByMemberId(viewerMemberId))
+            .thenReturn(profileWithId(viewerProfileId));
 
         Page<Meetup> repoPage =
             new PageImpl<>(java.util.Collections.emptyList(),
@@ -54,7 +77,7 @@ class MeetupDomainServiceTest {
 
         // when
         Page<MeetupResponse> result =
-            meetupDomainService.getAllBySpecification(req, viewer);
+            meetupDomainService.getAllBySpecification(req, viewerMemberId);
 
         // then
         verify(meetupEntityService, times(1)).getAllBySpecificationWithPagination(
@@ -72,12 +95,16 @@ class MeetupDomainServiceTest {
     void getById_blocked_then404() {
         // given
         UUID meetupId = UUID.randomUUID();
-        UUID viewer = UUID.randomUUID();
+        UUID viewerMemberId = UUID.randomUUID();
+        UUID viewerProfileId = UUID.randomUUID();
 
-        when(meetupEntityService.isBlockedInMeetup(meetupId, viewer)).thenReturn(true);
+        when(profileService.getByMemberId(viewerMemberId))
+            .thenReturn(profileWithId(viewerProfileId));
+
+        when(meetupEntityService.isBlockedInMeetup(meetupId, viewerProfileId)).thenReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> meetupDomainService.getById(meetupId, viewer))
+        assertThatThrownBy(() -> meetupDomainService.getById(meetupId, viewerMemberId))
             .isInstanceOf(NoSuchElementException.class);
 
         verify(meetupEntityService, never()).getByIdWithDetails(any());
@@ -88,9 +115,13 @@ class MeetupDomainServiceTest {
     void getById_notBlocked_thenDelegates() {
         // given
         UUID meetupId = UUID.randomUUID();
-        UUID viewer = UUID.randomUUID();
+        UUID viewerMemberId = UUID.randomUUID();
+        UUID viewerProfileId = UUID.randomUUID();
 
-        when(meetupEntityService.isBlockedInMeetup(meetupId, viewer)).thenReturn(false);
+        when(profileService.getByMemberId(viewerMemberId))
+            .thenReturn(profileWithId(viewerProfileId));
+
+        when(meetupEntityService.isBlockedInMeetup(meetupId, viewerProfileId)).thenReturn(false);
         Meetup entity = mock(Meetup.class);
         when(meetupEntityService.getByIdWithDetails(meetupId)).thenReturn(entity);
 
@@ -99,7 +130,7 @@ class MeetupDomainServiceTest {
                 .thenReturn(mock(MeetupDetail.class));
 
             // when
-            MeetupDetail detail = meetupDomainService.getById(meetupId, viewer);
+            MeetupDetail detail = meetupDomainService.getById(meetupId, viewerMemberId);
 
             // then
             verify(meetupEntityService, times(1)).getByIdWithDetails(meetupId);

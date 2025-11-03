@@ -90,9 +90,10 @@ public class MeetupDomainService {
         Point locationPoint = geometryFactory.createPoint(new Coordinate(request.longitude(), request.latitude()));
         MainCategory mainCategory = (request.category() != null) ? MainCategory.valueOf(request.category()) : null;
         String search = request.search();
+        Profile viewerProfile = profileService.getByMemberId(viewerMemberId);
 
         return entityService.getAllByLocationAndCondition(
-            locationPoint, request.radius(), mainCategory, search, viewerMemberId
+            locationPoint, request.radius(), mainCategory, search, viewerProfile.getId()
         )
             .stream()
             .map(MeetupEntityMapper::toResponse)
@@ -105,8 +106,9 @@ public class MeetupDomainService {
         UUID viewerMemberId
     ) {
         PageRequest pageRequest = MeetupDtoMapper.toPageRequest(request);
+        Profile viewerProfile = profileService.getByMemberId(viewerMemberId);
         Specification<Meetup> specification = MeetupDtoMapper.toSpecification(request)
-            .and(MeetupSpecifications.visibleTo(viewerMemberId));
+            .and(MeetupSpecifications.visibleTo(viewerProfile.getId()));
 
         Page<Meetup> page = entityService.getAllBySpecificationWithPagination(specification, pageRequest);
 
@@ -121,7 +123,8 @@ public class MeetupDomainService {
 
     @Transactional(readOnly = true)
     public MeetupDetail getById(UUID meetupId, UUID viewerMemberId) {
-        if (entityService.isBlockedInMeetup(meetupId, viewerMemberId)) {
+        Profile viewerProfile = profileService.getByMemberId(viewerMemberId);
+        if (entityService.isBlockedInMeetup(meetupId, viewerProfile.getId())) {
             log.info("차단 관계의 사용자가 있는 모임 조회 시도. id={}", meetupId);
             throw new NoSuchElementException("해당 Id의 모임이 존재하지 않습니다. id=" + meetupId);
         }

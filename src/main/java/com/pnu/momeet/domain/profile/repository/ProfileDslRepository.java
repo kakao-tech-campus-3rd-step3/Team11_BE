@@ -7,5 +7,5 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface ProfileDslRepository {
-    Page<BlockedProfileResponse> findBlockedProfiles(UUID blockerId, Pageable pageable);
+    Page<BlockedProfileResponse> findBlockedProfiles(UUID blockerProfileId, Pageable pageable);
 }

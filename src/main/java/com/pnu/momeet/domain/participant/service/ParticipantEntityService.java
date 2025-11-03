@@ -25,8 +25,8 @@ public class ParticipantEntityService {
     }
 
     @Transactional(readOnly = true)
-    public List<Participant> findAllVisibleByMeetupId(UUID meetupId, UUID viewerMemberId) {
-        return participantRepository.findAllVisibleByMeetupId(meetupId, viewerMemberId);
+    public List<Participant> findAllVisibleByMeetupId(UUID meetupId, UUID viewerProfileId) {
+        return participantRepository.findAllVisibleByMeetupId(meetupId, viewerProfileId);
     }
 
     @Transactional(readOnly = true)

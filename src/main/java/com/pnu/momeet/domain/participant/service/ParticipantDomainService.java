@@ -52,6 +52,7 @@ public class ParticipantDomainService {
         UUID meetupId,
         UUID viewerMemberId
     ) {
+        Profile viewerProfile = profileService.getByMemberId(viewerMemberId);
         if (!profileService.existsByMemberId(viewerMemberId)) {
             log.info("존재하지 않는 멤버 ID로 참가자 조회 시도. memberId={}", viewerMemberId);
             throw new NoSuchElementException("해당 멤버가 존재하지 않습니다.");
@@ -61,7 +62,7 @@ public class ParticipantDomainService {
             log.info("존재하지 않는 모임 ID로 참가자 조회 시도. meetupId={}", meetupId);
             throw new NoSuchElementException("해당 모임이 존재하지 않습니다.");
         }
-        return entityService.findAllVisibleByMeetupId(meetupId, viewerMemberId)
+        return entityService.findAllVisibleByMeetupId(meetupId, viewerProfile.getId())
             .stream()
             .map(ParticipantEntityMapper::toDto)
             .toList();

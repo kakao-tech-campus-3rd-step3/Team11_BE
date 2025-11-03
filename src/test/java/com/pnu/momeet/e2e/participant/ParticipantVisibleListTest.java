@@ -71,7 +71,7 @@ public class ParticipantVisibleListTest extends BaseParticipantTest {
             .statusCode(200);
 
         // viewer(0) -> target(1) 차단 생성
-        blockRepository.save(UserBlock.create(members.get(0).id(), members.get(1).id()));
+        blockRepository.save(UserBlock.create(profiles.get(0).getId(), profiles.get(1).getId()));
 
         // host(0) 기준 visible 조회 → 1번은 제외, 0/2만 보임
         given()
@@ -103,7 +103,7 @@ public class ParticipantVisibleListTest extends BaseParticipantTest {
             .statusCode(200);
 
         // target(1) -> viewer(0) 역방향 차단
-        blockRepository.save(UserBlock.create(members.get(1).id(), members.get(0).id()));
+        blockRepository.save(UserBlock.create(profiles.get(1).getId(), profiles.get(0).getId()));
 
         // host(0) 기준 visible 조회 → 1번은 제외, host만 보임
         given()
@@ -134,7 +134,7 @@ public class ParticipantVisibleListTest extends BaseParticipantTest {
         }
 
         // viewer(2) -> target(host=0) 차단
-        blockRepository.save(UserBlock.create(members.get(2).id(), members.get(0).id()));
+        blockRepository.save(UserBlock.create(profiles.get(2).getId(), profiles.get(0).getId()));
 
         // 2번 시점에서 visible 조회 → host(0) 제외, 1/2만 보임
         given()
