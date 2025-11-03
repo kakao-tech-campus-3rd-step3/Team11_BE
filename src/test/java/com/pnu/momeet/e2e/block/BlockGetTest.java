@@ -21,7 +21,7 @@ public class BlockGetTest extends BaseBlockTest {
         // 테스트 간 상태 격리: USER→ADMIN 차단 관계 초기화(idempotent 204)
         given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
-            .when().delete("/{targetId}", testAdminMemberId)
+            .when().delete("/{targetProfileId}", testAdminProfileId)
             .then().statusCode(204);
     }
 
@@ -32,7 +32,7 @@ public class BlockGetTest extends BaseBlockTest {
         // 여기선 ADMIN만 차단 후 목록에 최소 1건 존재 확인
         given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
-            .when().post("/{targetId}", testAdminMemberId)
+            .when().post("/{targetProfileId}", testAdminProfileId)
             .then().statusCode(201);
 
         given()

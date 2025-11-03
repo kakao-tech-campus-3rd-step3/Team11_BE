@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record BlockResponse(
-    UUID blockerId,
-    UUID blockedId,
+    UUID blockerProfileId,
+    UUID blockedProfileId,
     LocalDateTime createdAt
 ) {
 }

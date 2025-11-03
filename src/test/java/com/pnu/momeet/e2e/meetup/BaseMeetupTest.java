@@ -81,9 +81,9 @@ public abstract class BaseMeetupTest extends BaseE2ETest {
         return base.plusMinutes(30L * k).format(REQUEST_FORMAT);
     }
 
-    protected void blockIfNeeded(UUID blockerId, UUID blockedId) {
+    protected void blockIfNeeded(UUID blockerMemberId, UUID blockedProfileId) {
         try {
-            blockService.createUserBlock(blockerId, blockedId);
+            blockService.createUserBlock(blockerMemberId, blockedProfileId);
         } catch (IllegalStateException e) {
             // 서비스에서 "이미 차단한 사용자입니다."로 던지는 경우 허용
             if (!e.getMessage().contains("이미 차단한 사용자")) throw e;

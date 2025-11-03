@@ -18,15 +18,15 @@ public class ParticipantDslRepositoryImpl implements ParticipantDslRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
 
-    public List<Participant> findAllVisibleByMeetupId(UUID meetupId, UUID viewerMemberId) {
+    public List<Participant> findAllVisibleByMeetupId(UUID meetupId, UUID viewerProfileId) {
         QParticipant p = QParticipant.participant;
         QProfile prof = QProfile.profile;
         QUserBlock ub = QUserBlock.userBlock;
 
         BooleanExpression viewerBlocksTarget =
-            ub.blockerId.eq(viewerMemberId).and(ub.blockedId.eq(prof.memberId));
+            ub.blockerProfileId.eq(viewerProfileId).and(ub.blockedProfileId.eq(prof.id));
         BooleanExpression targetBlocksViewer =
-            ub.blockerId.eq(prof.memberId).and(ub.blockedId.eq(viewerMemberId));
+            ub.blockerProfileId.eq(prof.id).and(ub.blockedProfileId.eq(viewerProfileId));
         BooleanExpression blockedEither = viewerBlocksTarget.or(targetBlocksViewer);
 
         // 상호 차단이 없는 경우만 조회

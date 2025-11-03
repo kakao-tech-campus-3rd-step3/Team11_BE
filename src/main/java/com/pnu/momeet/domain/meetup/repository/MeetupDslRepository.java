@@ -19,7 +19,7 @@ public interface MeetupDslRepository {
             double radius,
             @Nullable MainCategory category,
             @Nullable String keyword,
-            UUID viewerMemberId
+            UUID viewerProfileId
     );
 
     List<Meetup> findAllByOwnerIdAndStatusIn(UUID profileId, List<MeetupStatus> statuses);
@@ -39,5 +39,5 @@ public interface MeetupDslRepository {
             Pageable pageable
     );
 
-    boolean existsBlockedInMeetup(UUID meetupId, UUID viewerMemberId);
+    boolean existsBlockedInMeetup(UUID meetupId, UUID viewerProfileId);
 }

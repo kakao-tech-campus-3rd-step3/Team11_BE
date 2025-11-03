@@ -40,23 +40,23 @@ public class BlockController {
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @PostMapping({"/{targetId}"})
+    @PostMapping({"/{targetProfileId}"})
     public ResponseEntity<BlockResponse> blockUser(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @PathVariable UUID targetId
+        @PathVariable UUID targetProfileId
     ) {
         return ResponseEntity
             .status(HttpStatus.CREATED)
-            .body(blockService.createUserBlock(userDetails.getMemberId(), targetId));
+            .body(blockService.createUserBlock(userDetails.getMemberId(), targetProfileId));
     }
 
     @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @DeleteMapping({"/{targetId}"})
+    @DeleteMapping({"/{targetProfileId}"})
     public ResponseEntity<Void> delete(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @PathVariable UUID targetId
+        @PathVariable UUID targetProfileId
     ) {
-        blockService.deleteBlock(userDetails.getMemberId(), targetId);
+        blockService.deleteBlock(userDetails.getMemberId(), targetProfileId);
         return ResponseEntity.noContent().build();
     }
 }

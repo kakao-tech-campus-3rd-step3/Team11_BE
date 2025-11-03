@@ -6,5 +6,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ParticipantDslRepository {
-    List<Participant> findAllVisibleByMeetupId(UUID meetupId, UUID viewerMemberId);
+    List<Participant> findAllVisibleByMeetupId(UUID meetupId, UUID viewerProfileId);
 }
