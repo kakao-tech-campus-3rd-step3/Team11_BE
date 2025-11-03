@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BlockRepository extends JpaRepository<UserBlock, UUID> {
 
-    boolean existsByBlockerProfileIdAndBlockedProfileId(UUID blockerId, UUID blockedId);
-    long deleteByBlockerProfileIdAndBlockedProfileId(UUID blockerId, UUID blockedId);
+    boolean existsByBlockerProfileIdAndBlockedProfileId(UUID blockerProfileId, UUID blockedProfileId);
+    long deleteByBlockerProfileIdAndBlockedProfileId(UUID blockerProfileId, UUID blockedProfileId);
 }

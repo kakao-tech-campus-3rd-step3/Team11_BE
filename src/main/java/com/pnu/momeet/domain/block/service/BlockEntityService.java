@@ -16,8 +16,8 @@ public class BlockEntityService {
     private final BlockRepository blockRepository;
 
     @Transactional(readOnly = true)
-    public boolean exists(UUID blockerId, UUID blockedId) {
-        return blockRepository.existsByBlockerProfileIdAndBlockedProfileId(blockerId, blockedId);
+    public boolean exists(UUID blockerProfileId, UUID blockedProfileId) {
+        return blockRepository.existsByBlockerProfileIdAndBlockedProfileId(blockerProfileId, blockedProfileId);
     }
 
     @Transactional

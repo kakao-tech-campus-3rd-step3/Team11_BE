@@ -326,7 +326,7 @@ public class ParticipantKickTest extends BaseParticipantTest {
     }
 
     @Test
-    @DisplayName("강퇴된 참가자 재참가 불가능 - 200 OK")
+    @DisplayName("강퇴된 참가자 재참가 불가능 - 403 Forbidden")
     void kickParticipant_rejoinAfterKick_fail() {
         // Given: 밋업 생성, 사용자 참가 및 강퇴
         MeetupDetail meetup = createTestMeetup(0);
