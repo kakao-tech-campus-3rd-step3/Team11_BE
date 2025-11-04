@@ -9,6 +9,8 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDateTime;
@@ -24,7 +26,8 @@ import java.util.Objects;
 public class Meetup extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JoinColumn(name = "owner_id")
     private Profile owner;
 
     @Column(name = "name", nullable = false, length = 60)

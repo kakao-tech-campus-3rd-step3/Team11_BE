@@ -18,6 +18,8 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(
@@ -31,6 +33,7 @@ import lombok.NoArgsConstructor;
 public class Profile extends BaseEntity {
 
     @Column(name = "member_id", nullable = false, columnDefinition = "UUID")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private UUID memberId;
 
     @Column(name = "nickname", length = 20, nullable = false)
