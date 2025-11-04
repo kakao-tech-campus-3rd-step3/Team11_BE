@@ -13,9 +13,11 @@ import com.pnu.momeet.domain.meetup.event.MeetupStartEvent;
 import com.pnu.momeet.domain.member.enums.Role;
 import com.pnu.momeet.domain.participant.entity.Participant;
 import com.pnu.momeet.domain.participant.enums.MeetupRole;
+import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
 import com.pnu.momeet.domain.sigungu.service.mapper.SigunguEntityMapper;
 import java.util.List;
+import java.util.UUID;
 
 public class
 MeetupEntityMapper {
@@ -35,10 +37,11 @@ MeetupEntityMapper {
         List<String> hashTags = meetup.getHashTags().stream()
                 .map(MeetupHashTag::getName)
                 .toList();
+        UUID ownerId = meetup.getOwner() != null ? meetup.getOwner().getId() : null;
 
         return new MeetupResponse(
                 meetup.getId(),
-                meetup.getOwner().getId(),
+                ownerId,
                 meetup.getSigungu().getId(),
                 meetup.getName(),
                 meetup.getCategory().name(),
@@ -66,6 +69,10 @@ MeetupEntityMapper {
                 .map(MeetupHashTag::getName)
                 .toList();
 
+        ProfileResponse ownerDto = (meetup.getOwner() != null)
+                ? ProfileEntityMapper.toResponseDto(meetup.getOwner())
+                : null;
+
         return new MeetupDetail(
                 meetup.getId(),
                 meetup.getName(),
@@ -74,7 +81,7 @@ MeetupEntityMapper {
                 meetup.getParticipantCount(),
                 meetup.getCapacity(),
                 meetup.getScoreLimit(),
-                ProfileEntityMapper.toResponseDto(meetup.getOwner()),
+                ownerDto,
                 SigunguEntityMapper.toDto(meetup.getSigungu()),
                 location,
                 hashTags,
