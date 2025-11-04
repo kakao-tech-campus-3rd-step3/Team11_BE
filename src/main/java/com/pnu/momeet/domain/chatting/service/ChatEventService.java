@@ -39,9 +39,10 @@ public class ChatEventService {
     public void disconnectFromMeetup(UUID meetupId, UUID memberId) {
         UUID profileId = profileService.mapToProfileId(memberId);
         Participant participant = participantService.getByProfileIDAndMeetupID(profileId, meetupId);
+
         if (participant.getIsActive()) {
             participantService.updateParticipant(participant, p -> p.setIsActive(false));
-            messagingTemplate.sendAction(meetupId, participant, ChatActionType.LEAVE);
+            messagingTemplate.sendAction(meetupId, participant.getId(), ChatActionType.LEAVE);
             log.info("사용자 채팅방 연결 종료 - meetupId: {}, memberId: {}", meetupId, memberId);
         }
     }
