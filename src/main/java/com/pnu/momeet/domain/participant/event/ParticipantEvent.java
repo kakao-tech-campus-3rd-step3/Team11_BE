@@ -11,7 +11,10 @@ import java.util.UUID;
 @Getter
 public abstract class ParticipantEvent extends DomainEvent {
     UUID meetupId;
-    Participant participant;
+    Long participantId;
+    UUID profileId;
+    String nickname;
+    String imageUrl;
 
     public ParticipantEvent(
         UUID meetupId,
@@ -19,14 +22,17 @@ public abstract class ParticipantEvent extends DomainEvent {
     ) {
         super();
         this.meetupId = meetupId;
-        this.participant = participant;
+        this.participantId = participant.getId();
+        this.profileId = participant.getProfile().getId();
+        this.nickname = participant.getProfile().getNickname();
+        this.imageUrl = participant.getProfile().getImageUrl();
     }
 
     @Override
     public Map<String, Object> logInfo() {
         LinkedHashMap<String, Object> m = new LinkedHashMap<>(super.logInfo());
         m.put("meetupId", meetupId);
-        m.put("participantId", participant.getId());
+        m.put("participantId", participantId);
         return m;
     }
 

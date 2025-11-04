@@ -5,7 +5,7 @@ import com.pnu.momeet.domain.chatting.dto.response.ActionResponse;
 import com.pnu.momeet.domain.chatting.dto.response.MessageResponse;
 import com.pnu.momeet.domain.chatting.enums.ChatActionType;
 import com.pnu.momeet.domain.chatting.service.mapper.ChatEntityMapper;
-import com.pnu.momeet.domain.participant.entity.Participant;
+import com.pnu.momeet.domain.participant.event.ParticipantEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -28,11 +28,11 @@ public class ChatMessagingTemplate {
         }
     }
 
-    public void sendAction(UUID meetupId, Participant participant, ChatActionType action) {
-        ActionResponse actionResponse = ChatEntityMapper.toAction(participant, action);
+    public void sendAction(ParticipantEvent event, ChatActionType action) {
+        ActionResponse actionResponse = ChatEntityMapper.toAction(event, action);
         try {
             messagingTemplate.convertAndSend(
-                    TOPIC_PREFIX + meetupId + "/actions",
+                    TOPIC_PREFIX + event.getMeetupId() + "/actions",
                     actionResponse
             );
         } catch (Exception e) {
