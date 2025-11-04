@@ -24,7 +24,9 @@ public interface MeetupDslRepository {
 
     List<Meetup> findAllByOwnerIdAndStatusIn(UUID profileId, List<MeetupStatus> statuses);
 
-    Optional<Meetup> findParticipatedMeetupsByProfileId(UUID profileId);
+    List<Meetup> findAllParticipatedMeetupsByProfileId(UUID profileId);
+
+    Optional<Meetup> findParticipatedActiveMeetupsByProfileId(UUID profileId);
 
 
     boolean existsParticipatedMeetupByProfileId(UUID profileId);
