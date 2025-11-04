@@ -1,5 +1,7 @@
 package com.pnu.momeet.domain.member.service;
 
+import com.pnu.momeet.domain.meetup.entity.Meetup;
+import com.pnu.momeet.domain.meetup.service.MeetupEntityService;
 import com.pnu.momeet.domain.member.dto.request.ChangePasswordRequest;
 import com.pnu.momeet.domain.member.dto.request.MemberCreateRequest;
 import com.pnu.momeet.domain.member.dto.request.MemberEditRequest;
@@ -8,6 +10,8 @@ import com.pnu.momeet.domain.member.dto.response.MemberResponse;
 import com.pnu.momeet.domain.member.entity.Member;
 import com.pnu.momeet.domain.member.service.mapper.MemberDtoMapper;
 import com.pnu.momeet.domain.member.service.mapper.MemberEntityMapper;
+import com.pnu.momeet.domain.participant.service.ParticipantDomainService;
+import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -27,6 +32,9 @@ public class MemberDomainService {
 
     private final MemberEntityService entityService;
     private final PasswordEncoder passwordEncoder;
+    private final MeetupEntityService meetupEntityService;
+    private final ParticipantDomainService participantService;
+    private final ProfileEntityService profileEntityService;
 
     @Transactional
     public MemberResponse saveMember(MemberCreateRequest request) {
@@ -96,7 +104,20 @@ public class MemberDomainService {
 
     @Transactional
     public void deleteMemberById(UUID id) {
-        entityService.deleteById(id);
+        if (!profileEntityService.existsByMemberId(id)) {
+            entityService.deleteById(id);
+            log.info("사용자 삭제 완료: id={}", id);
+            return;
+        }
+            UUID profileId = profileEntityService.getByMemberId(id).getId();
+            List<Meetup> participatedMeetups = meetupEntityService.getAllParticipatedMeetupsByProfileId(profileId);
+            if (!participatedMeetups.isEmpty()) {
+                participatedMeetups.forEach(meetup -> participantService.leaveMeetupAdmin(meetup.getId(), id));
+                log.info("참여중인 모임에서 탈퇴 처리 완료: memberId={}, profileId={} affectedMeetups={}",
+                        id, profileId, participatedMeetups.size());
+            }
+
+            entityService.deleteById(id);
         log.info("사용자 삭제 완료: id={}", id);
     }
 }

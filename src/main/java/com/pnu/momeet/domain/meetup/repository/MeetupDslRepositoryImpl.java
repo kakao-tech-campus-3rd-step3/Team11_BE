@@ -110,7 +110,20 @@ public class MeetupDslRepositoryImpl implements MeetupDslRepository {
                 .fetch();
     }
 
-    public Optional<Meetup> findParticipatedMeetupsByProfileId(UUID profileId) {
+    public List<Meetup> findAllParticipatedMeetupsByProfileId(UUID profileId) {
+        QMeetup meetup = QMeetup.meetup;
+        QParticipant participant = QParticipant.participant;
+        return jpaQueryFactory
+                .select(meetup)
+                .from(meetup)
+                .join(meetup.participants, participant)
+                .where(
+                    participant.profile.id.eq(profileId)
+                )
+                .fetch();
+    }
+
+    public Optional<Meetup> findParticipatedActiveMeetupsByProfileId(UUID profileId) {
         QMeetup meetup = QMeetup.meetup;
         QParticipant participant = QParticipant.participant;
 

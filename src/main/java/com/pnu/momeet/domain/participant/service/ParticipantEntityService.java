@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -80,15 +81,15 @@ public class ParticipantEntityService {
 
 
     @Transactional
-    public Pair<Participant, Participant> getTopTwoByTemperatureDesc(UUID meetupId) {
+    public Optional<Pair<Participant, Participant>> getTopTwoByTemperatureDesc(UUID meetupId) {
         log.debug("모임 ID로 상위 2명의 참가자 조회 시도. meetupId={}", meetupId);
         var participants = participantRepository.findTopTwoByOrderByTemperatureDesc(meetupId);
         if (participants.size() < 2) {
-            log.info("상위 2명의 참가자가 존재하지 않음. meetupId={}", meetupId);
-            throw new NoSuchElementException("상위 2명의 참가자가 존재하지 않습니다.");
+            log.debug("상위 2명의 참가자가 존재하지 않음. meetupId={}", meetupId);
+            return Optional.empty();
         }
         log.debug("모임 ID로 상위 2명의 참가자 조회 성공. meetupId={}", meetupId);
-        return Pair.of(participants.get(0), participants.get(1));
+        return Optional.of(Pair.of(participants.get(0), participants.get(1)));
     }
 
     @Transactional

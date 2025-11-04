@@ -87,7 +87,7 @@ CREATE INDEX IF NOT EXISTS idx_profile_base_location_id ON profile(base_location
 
 CREATE TABLE meetup (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_id        UUID        NOT NULL REFERENCES profile(id),
+    owner_id        UUID        REFERENCES profile(id) ON DELETE SET NULL,
     name            VARCHAR(60) NOT NULL,
     category        VARCHAR(30) NOT NULL,
     description     TEXT        NOT NULL,
@@ -148,7 +148,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_message_sender ON chat_message (sender_id);
 
 CREATE TABLE evaluation (
     id UUID PRIMARY KEY,
-    meetup_id UUID  NOT NULL,
+    meetup_id UUID REFERENCES meetup(id) ON DELETE CASCADE,
     evaluator_profile_id UUID  NOT NULL,
     target_profile_id UUID  NOT NULL,
     rating VARCHAR(10) NOT NULL,

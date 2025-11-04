@@ -76,7 +76,7 @@ CREATE INDEX IF NOT EXISTS idx_profile_base_location_id ON public_test.profile(b
 
 CREATE TABLE public_test.meetup (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_id        UUID        NOT NULL REFERENCES public_test.profile(id),
+    owner_id        UUID        REFERENCES public_test.profile(id) ON DELETE SET NULL,
     name            VARCHAR(60) NOT NULL,
     category        VARCHAR(30) NOT NULL,
     description     TEXT        NOT NULL,

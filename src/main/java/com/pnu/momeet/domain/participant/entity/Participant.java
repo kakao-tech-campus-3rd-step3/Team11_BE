@@ -30,6 +30,7 @@ public class Participant extends SimpleCreationEntity {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "meetup_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Meetup meetup;
 
     @NotNull

@@ -135,7 +135,7 @@ public class MeetupDomainService {
     @Transactional(readOnly = true)
     public MeetupDetail getOwnedActiveMeetupByMemberID(UUID memberId) {
         UUID profileId = profileService.mapToProfileId(memberId);
-        Meetup activeMeetups = entityService.getParticipatedMeetupByProfileId(profileId);
+        Meetup activeMeetups = entityService.getParticipatedActiveMeetupByProfileId(profileId);
         return MeetupEntityMapper.toDetail(activeMeetups);
     }
 
