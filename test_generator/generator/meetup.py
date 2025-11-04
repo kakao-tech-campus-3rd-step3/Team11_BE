@@ -30,9 +30,7 @@ class MeetupGenerator:
             meetup_request_copy.pop("endAtTime")
             tomorrow = datetime.datetime.now() + datetime.timedelta(days=1)
             meetup_request_copy["startAt"] = f"{tomorrow.date()}T{meetup_request['startAtTime']}"
-            print(f" startAt: {meetup_request_copy['startAt']}")
             meetup_request_copy["endAt"] = f"{tomorrow.date()}T{meetup_request['endAtTime']}"
-            print(f" endAt: {meetup_request_copy['endAt']}")
             owner_auth_token = owner_auth_tokens[i] # 소유자 10명 중 한 명의 액세스 토큰 읽기
             
             self.client.set_auth_by_access_token(owner_auth_token["accessToken"]) # 액세스 토큰 설정
