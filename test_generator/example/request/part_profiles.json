@@ -1,0 +1,184 @@
+{
+    "requests": [
+        {
+            "nickname": "지훈이",
+            "gender": "MALE",
+            "age": 25,
+            "image": "male05.jpg",
+            "description": "여행 다니는 걸 좋아합니다. 국내 여행지 추천 받고 싶어요",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "동현킹",
+            "gender": "MALE",
+            "age": 25,
+            "image": "male08.jpg",
+            "description": "독서 좋아하고 작은 카페 찾아다니는 게 취미입니다. 좋은 책 추천 받고 싶어요",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "건우입니다",
+            "gender": "MALE",
+            "age": 25,
+            "image": "male09.jpg",
+            "description": "축구 보는 거 좋아해요. 주말에 친구들이랑 풋살 하는 걸 즐깁니다",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "민재야",
+            "gender": "MALE",
+            "age": 25,
+            "image": "male10.jpg",
+            "description": "요리하는 거 좋아해요. 집에서 간단하게 만든 요리 사진 찍는 게 취미입니다",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "승현1234",
+            "gender": "MALE",
+            "age": 25,
+            "image": "male11.jpg",
+            "description": "영화보는 거 정말 좋아해요. 최근에 본 영화 이야기 나눌 사람 찾습니다",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "우진킹",
+            "gender": "MALE",
+            "age": 25,
+            "image": "male13.jpg",
+            "description": "드라마 보는 거 취미예요. 넷플릭스 추천 받고 싶습니다",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "혁진님",
+            "gender": "MALE",
+            "age": 25,
+            "image": "male14.jpg",
+            "description": "자전거 타는 거 좋아해요. 주말에 낙동강 자전거길 달리는 걸 즐깁니다",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "민지야",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female01.jpg",
+            "description": "카페 가는 거 좋아해요! 예쁜 곳 찾아다니는 게 취미예요. 사진 찍는 것도 좋아합니다",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "수진이",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female02.jpg",
+            "description": "요리하는 거 좋아해요. 집에서 베이킹하는 걸 즐기고 있어요. 맛있는 디저트 만들기 좋아합니다",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "지은123",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female03.jpg",
+            "description": "영화보고 드라마 보는 거 정말 좋아해요. 넷플릭스로 시간 보내는 걸 즐깁니다",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "혜진짱",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female04.jpg",
+            "description": "독서 좋아하고 작은 서점 찾아다니는 게 취미예요. 감성적인 소설 읽는 걸 즐겨요",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "서연입니다",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female05.jpg",
+            "description": "여행 다니는 거 좋아해요. 국내 여행지 사진 찍으러 다니는 걸 즐깁니다",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "예진이",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female06.jpg",
+            "description": "음악 듣는 거 정말 좋아해요. 인디음악과 팝송 듣는 걸 즐기고 있어요",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "지우야",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female09.jpg",
+            "description": "사진 찍는 거 취미예요. 일상 사진이나 풍경 사진 찍는 걸 좋아해요",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "유나입니다",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female10.jpg",
+            "description": "보드게임 카페 가는 거 좋아해요. 친구들이랑 게임하면서 시간 보내는 걸 즐깁니다",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "소영이",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female11.jpg",
+            "description": "뮤지컬 보는 거 좋아해요. 연극이나 공연 보러 다니는 걸 즐기고 있어요",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "하은1234",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female12.jpg",
+            "description": "그림 그리는 거 좋아해요. 취미로 수채화나 일러스트 그리는 걸 즐겨요",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "윤서짱",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female13.jpg",
+            "description": "등산 좋아해요. 주말에 가벼운 산행 다니는 걸 즐기고 있어요. 자연 속에서 힐링하는 게 좋아요",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "은지님",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female14.jpg",
+            "description": "코스메틱 좋아해요. 메이크업 제품 리뷰 보는 걸 즐기고 있어요. 뷰티 관심 많아요",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        },
+        {
+            "nickname": "아름이",
+            "gender": "FEMALE",
+            "age": 25,
+            "image": "female15.jpg",
+            "description": "러닝하는 거 좋아해요. 새벽에 해운대 해변가 조깅하는 걸 즐기고 있어요",
+            "baseLocation.sidoName": "부산광역시",
+            "baseLocation.sigunguName": "금정구"
+        }
+    ]
+}
