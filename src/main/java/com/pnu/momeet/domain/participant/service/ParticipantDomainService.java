@@ -16,7 +16,6 @@ import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -111,28 +110,50 @@ public class ParticipantDomainService {
 
     @Transactional
     public void leaveMeetup(UUID meetupId, UUID memberId) {
-        Profile profile = profileService.getByMemberId(memberId);
         Meetup meetup = meetupService.getById(meetupId);
-        Participant participant = entityService.getByProfileIDAndMeetupID(profile.getId(), meetupId);
-        
+
         if (meetup.getStatus() != MeetupStatus.OPEN) {
-            log.info("모임에서 나갈 수 없는 상태에서 나감 시도. meetupId={}, profileId={}, status={}",
-                    meetupId, profile.getId(), meetup.getStatus());
+            log.info("모임에서 나갈 수 없는 상태에서 나감 시도. meetupId={}, status={}",
+                    meetupId, meetup.getStatus());
             throw new IllegalArgumentException("모임에서 나갈 수 없는 상태입니다. 현재 상태: "
                     + meetup.getStatus().getDescription());
         }
-        Pair<Participant, Participant> topTwoParticipants;
+        UUID profileId = profileService.mapToProfileId(memberId);
+        Participant participant = entityService.getByProfileIDAndMeetupID(profileId, meetupId);
+        leaveMeetupInternal(meetup, participant);
+    }
+
+    @Transactional
+    public void leaveMeetupAdmin(UUID meetupId, UUID memberId) {
+        Meetup meetup = meetupService.getById(meetupId);
+        UUID profileId = profileService.mapToProfileId(memberId);
+        Participant participant = entityService.getByProfileIDAndMeetupID(profileId, meetupId);
         try {
-             topTwoParticipants = entityService.getTopTwoByTemperatureDesc(meetupId);
-        } catch (NoSuchElementException e) {
+            leaveMeetupInternal(meetup, participant);
+        } catch (IllegalArgumentException e) {
+            meetupService.updateMeetup(meetup, m -> {
+                m.removeParticipant(participant);
+                m.setStatus(MeetupStatus.CANCELED);
+            });
+            meetupService.saveMeetup(meetup);
+            log.info("모임 참가자가 2명 미만으로 호스트가 나감으로 인해 모임 취소 처리. meetupId={}", meetupId);
+        }
+    }
+
+    private void leaveMeetupInternal(Meetup meetup, Participant participant) {
+        UUID meetupId = meetup.getId();
+        UUID profileId = participant.getProfile().getId();
+        var topTwoParticipantsOpt = entityService.getTopTwoByTemperatureDesc(meetupId);
+        if (topTwoParticipantsOpt.isEmpty()) {
             throw new IllegalArgumentException("참가자가 2명 미만인 모임에서는 호스트가 나갈 수 없습니다.");
         }
+        var topTwoParticipants = topTwoParticipantsOpt.get();
+        // 호스트가 나갈 경우 새로운 호스트 지정
         if (participant.getRole() == MeetupRole.HOST) {
-            log.info("호스트가 모임에서 나감 시도. meetupId={}, profileId={}", meetupId, profile.getId());
+            log.info("호스트가 모임에서 나감 시도. meetupId={}, profileId={}", meetupId, profileId);
             Participant replacementHost = topTwoParticipants.getFirst().getId().equals(participant.getId())
                     ? topTwoParticipants.getSecond() // 호스트가 1등일 경우 2등이 호스트 됨
                     : topTwoParticipants.getFirst(); // 아닐 경우 온도가 가장 높은 참가자가 호스트 됨
-
             entityService.updateParticipant(replacementHost, p -> p.setRole(MeetupRole.HOST));
             meetupService.updateMeetup(meetup, m -> m.setOwner(replacementHost.getProfile()));
         }
@@ -140,8 +161,7 @@ public class ParticipantDomainService {
         eventPublisher.publish(new ParticipantExitEvent(meetupId, participant));
         // 참가자 제거 및 참가자 수 감소
         meetupService.updateMeetup(meetup, m -> m.removeParticipant(participant));
-
-        log.info("모임 탈퇴 성공. meetupId={}, profileId={}", meetupId, profile.getId());
+        log.info("모임 탈퇴 성공. meetupId={}, profileId={}", meetupId, profileId);
     }
 
     @Transactional
