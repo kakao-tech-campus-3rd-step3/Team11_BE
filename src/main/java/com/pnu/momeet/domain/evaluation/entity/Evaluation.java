@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Evaluation extends BaseCreatedEntity {
 
-    @Column(name = "meetup_id", nullable = false)
+    @Column(name = "meetup_id")
     private UUID meetupId;
 
     @Column(name = "evaluator_profile_id")
