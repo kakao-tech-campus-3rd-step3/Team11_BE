@@ -25,7 +25,7 @@ public class Evaluation extends BaseCreatedEntity {
     @Column(name = "meetup_id", nullable = false)
     private UUID meetupId;
 
-    @Column(name = "evaluator_profile_id", nullable = false)
+    @Column(name = "evaluator_profile_id")
     private UUID evaluatorProfileId;
 
     @Column(name = "target_profile_id", nullable = false)

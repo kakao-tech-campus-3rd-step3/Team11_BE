@@ -10,6 +10,11 @@ import com.pnu.momeet.domain.member.service.MemberDomainService;
 import com.pnu.momeet.domain.profile.service.ProfileDomainService;
 import com.pnu.momeet.e2e.BaseE2ETest;
 import io.restassured.RestAssured;
+import io.restassured.builder.MultiPartSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.specification.MultiPartSpecification;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +23,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -26,6 +32,7 @@ public class BaseProfileEvaluationTest extends BaseE2ETest {
     protected Map<Role, TokenResponse> testTokens;
     protected List<UUID> evaluationsToBeDeleted;
     protected UUID test_user_profile_uuid;
+    protected UUID test_admin_profile_uuid;
     protected UUID test_meetup_id;
 
     @Autowired
@@ -55,6 +62,9 @@ public class BaseProfileEvaluationTest extends BaseE2ETest {
         // 테스트용 프로필 ID 설정
         var testMember = memberService.getMemberByEmail(TEST_USER_EMAIL);
         test_user_profile_uuid = profileService.getMyProfile(testMember.id()).id();
+
+        var testAdminMember = memberService.getMemberByEmail(TEST_ADMIN_EMAIL);
+        test_admin_profile_uuid = profileService.getMyProfile(testAdminMember.id()).id();
 
         Page<Meetup> meetups = meetupService.findEndedMeetupsByProfileId(
             test_user_profile_uuid, PageRequest.of(0, 1)
