@@ -1,8 +1,11 @@
 package com.pnu.momeet.domain.profile.service;
 
+import com.pnu.momeet.common.event.CoreEventPublisher;
 import com.pnu.momeet.common.service.S3StorageService;
 import com.pnu.momeet.common.tx.AfterCommitExecutor;
 import com.pnu.momeet.common.util.ImageHashUtil;
+import com.pnu.momeet.domain.evaluation.entity.Evaluation;
+import com.pnu.momeet.domain.evaluation.service.EvaluationDomainService;
 import com.pnu.momeet.domain.profile.command.ProfileChanges;
 import com.pnu.momeet.domain.profile.dto.request.LocationInput;
 import com.pnu.momeet.domain.profile.dto.request.ProfileCreateRequest;
@@ -10,10 +13,12 @@ import com.pnu.momeet.domain.profile.dto.request.ProfileUpdateRequest;
 import com.pnu.momeet.domain.profile.dto.response.ProfileResponse;
 import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.enums.Gender;
+import com.pnu.momeet.domain.profile.event.ProfileDeletedEvent;
 import com.pnu.momeet.domain.profile.service.mapper.ProfileDtoMapper;
 import com.pnu.momeet.domain.profile.service.mapper.ProfileEntityMapper;
 import com.pnu.momeet.domain.sigungu.entity.Sigungu;
 import com.pnu.momeet.domain.sigungu.service.SigunguEntityService;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +41,8 @@ public class ProfileDomainService {
     private final GeometryFactory geometryFactory;
     private final ImageHashUtil imageHashUtil;
     private final AfterCommitExecutor afterCommitExecutor;
+    private final EvaluationDomainService evaluationDomainService;
+    private final CoreEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile(UUID memberId) {
@@ -190,5 +197,17 @@ public class ProfileDomainService {
             inSigungu, baseChanged,
             hasImagePart, incomingHash, imageChanged
         );
+    }
+
+    @Transactional
+    public void deleteMyProfile(UUID memberId) {
+        Profile profile = entityService.getByMemberId(memberId);
+        String imageKey = profile.getImageUrl();
+
+        // 2) 프로필 삭제 (라이브 평가들은 FK CASCADE로 자동 삭제)
+        entityService.deleteById(profile.getId());
+
+        // 3) 커밋 후 S3 이미지 정리
+        eventPublisher.publish(new ProfileDeletedEvent(profile.getId(), imageKey));
     }
 }

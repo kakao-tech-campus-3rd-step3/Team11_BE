@@ -147,19 +147,22 @@ CREATE INDEX IF NOT EXISTS idx_chat_message_meetup ON chat_message (meetup_id);
 CREATE INDEX IF NOT EXISTS idx_chat_message_sender ON chat_message (sender_id);
 
 CREATE TABLE evaluation (
-    id UUID PRIMARY KEY,
-    meetup_id UUID REFERENCES meetup(id) ON DELETE CASCADE,
-    evaluator_profile_id UUID  NOT NULL,
-    target_profile_id UUID  NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    meetup_id UUID REFERENCES meetup(id) ON DELETE SET NULL,
+    evaluator_profile_id UUID REFERENCES profile(id) ON DELETE SET NULL,
+    target_profile_id UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
     rating VARCHAR(10) NOT NULL,
     ip_hash VARCHAR(128) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT uq_evaluation UNIQUE (meetup_id, evaluator_profile_id, target_profile_id, ip_hash),
-    CONSTRAINT fk_evaluation_meetup FOREIGN KEY (meetup_id) REFERENCES meetup(id),
-    CONSTRAINT fk_evaluation_evaluator_profile FOREIGN KEY (evaluator_profile_id) REFERENCES profile(id),
-    CONSTRAINT fk_evaluation_target_profile FOREIGN KEY (target_profile_id) REFERENCES profile(id)
+    CONSTRAINT chk_evaluation_rating CHECK (rating IN ('LIKE','DISLIKE'))
 );
+
+CREATE UNIQUE INDEX uq_evaluation_active
+    ON evaluation(meetup_id, evaluator_profile_id, target_profile_id, ip_hash)
+    WHERE meetup_id IS NOT NULL
+    AND evaluator_profile_id IS NOT NULL
+    AND target_profile_id IS NOT NULL;
 
 
 CREATE TABLE IF NOT EXISTS badge (

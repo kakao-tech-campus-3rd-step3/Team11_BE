@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -61,5 +62,14 @@ public class ProfileController {
     ) {
         ProfileResponse response = profileService.updateMyProfile(userDetails.getMemberId(), request);
         return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMyProfile(
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        profileService.deleteMyProfile(userDetails.getMemberId());
+        return ResponseEntity.noContent().build();
     }
 }
