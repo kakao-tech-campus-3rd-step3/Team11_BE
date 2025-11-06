@@ -41,7 +41,7 @@ public class ProfileBadgeDomainService {
     @Transactional(readOnly = true)
     public Page<ProfileBadgeResponse> getUserBadges(UUID profileId, ProfileBadgePageRequest request) {
         PageRequest pageRequest = request.toPageRequest();
-        if (profileService.existsById(profileId)) {
+        if (!profileService.existsById(profileId)) {
             log.debug("존재하지 않는 프로필로 배지 조회 시도. profileId={}", profileId);
             throw new NoSuchElementException("존재하지 않는 프로필입니다.");
         }
@@ -62,7 +62,7 @@ public class ProfileBadgeDomainService {
     @Transactional(readOnly = true)
     public Optional<ProfileBadgeResponse> getUserRepresentativeBadge(UUID profileId) {
         log.debug("특정 사용자 대표 배지 조회 시도. profileId={}", profileId);
-        if (profileService.existsById(profileId)) {
+        if (!profileService.existsById(profileId)) {
             log.debug("존재하지 않는 프로필로 배지 조회 시도. profileId={}", profileId);
             throw new NoSuchElementException("존재하지 않는 프로필입니다.");
         }
