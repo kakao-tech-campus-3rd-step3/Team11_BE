@@ -1,17 +1,11 @@
 import httpx
 import os
-from util.fs import FileSystem
-from typing import Optional
 
 class ApplicationClient:
     
-    def __init__(self):
-        BASE_URL = os.getenv("API_SERVER_URL")
-        if not BASE_URL:
-            raise ValueError("API_SERVER_URL가 설정되지 않았습니다!")
-
-        self.base_url = BASE_URL
-        self.client = httpx.Client(base_url=BASE_URL)
+    def __init__(self, base_url: str):
+        self.base_url = base_url
+        self.client = httpx.Client(base_url=self.base_url)
         self.is_authenticated = False
 
     def _validate_authentication(self):

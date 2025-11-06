@@ -2,22 +2,25 @@ import os
 from util.client import ApplicationClient
 from util.fs import FileSystem
 from util.logger import get_logger
+import random
 
 
 class MemberGenerator:
-    def __init__(self):
-        ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
-        ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
-        if not ADMIN_EMAIL:
-            raise ValueError("ADMIN_EMAIL가 설정되지 않았습니다!")
-        if not ADMIN_PASSWORD:
-            raise ValueError("ADMIN_PASSWORD가 설정되지 않았습니다!")
+    def __init__(self, base_url: str, admin_email: str, admin_password: str, test_password: str):
+        if not base_url:
+            raise ValueError("base_url이 설정되지 않았습니다!")
+        if not admin_email:
+            raise ValueError("admin_email이 설정되지 않았습니다!")
+        if not admin_password:
+            raise ValueError("admin_password이 설정되지 않았습니다!")
+        if not test_password:
+            raise ValueError("test_password이 설정되지 않았습니다!")
         
-        self.admin_email = ADMIN_EMAIL
-        self.admin_password = ADMIN_PASSWORD
-        self.client = ApplicationClient()
+        self.admin_email = admin_email
+        self.admin_password = admin_password
+        self.test_password = test_password
+        self.client = ApplicationClient(base_url)
         self.client.set_auth_by_email(self.admin_email, self.admin_password)
-        self.test_testpass = "testpass1212!"
         self.fs = FileSystem()
         self.logger = get_logger("MemberGenerator")
         
@@ -28,7 +31,7 @@ class MemberGenerator:
         for i in range(1, count + 1):
             res = self.client.post("api/members", {
                 "email": f"{domain_name}{i:02d}@test.com",
-                "password": self.test_testpass,
+                "password": self.test_password,
                 "roles": ["ROLE_USER"]
             })
             if res.status_code != 201:
@@ -44,7 +47,7 @@ class MemberGenerator:
         reses = []
         for res in self.fs.read_responses(f"{domain_name}_members.json"):
             email = res["email"]
-            password = self.test_testpass
+            password = self.test_password
             res_auth = self.client.post("api/auth/login", {
                 "email": email,
                 "password": password
@@ -104,4 +107,33 @@ class MemberGenerator:
                     raise ValueError(f"프로필 생성 실패: {res.json()}")
                 responses.append(res.json())
         self.fs.save_responses(f"{domain_name}_profiles.json", responses)
-        self.logger.info(f"{domain_name} 프로필 생성 완료: {len(responses)}개")
+
+
+    def generate_default_profile(self, prefix: str, count: int, base: int = 0):
+        self.logger.info(f"{prefix} 기본 프로필 생성 시작")
+        self.generate_members(prefix, count)
+        self.generate_auth_tokens(prefix)
+        
+        responses = []
+        for (i, auth_token) in enumerate(self.fs.read_responses(f"{prefix}_auth_tokens.json")):
+            valid_nickname = f"GUEST{i + base + 1:03d}"
+            token = auth_token["accessToken"]
+            self.client.set_auth_by_access_token(token)
+            raw_client = self.client.get_raw_client()
+            raw_client.headers.update({"Authorization": f"Bearer {token}"})
+            data = {
+                "nickname": valid_nickname,
+                "gender": random.choice(["MALE", "FEMALE"]),
+                "age": 25,
+                "description": f"{prefix} 테스트 용 프로필 계정입니다.",
+                "baseLocation.sidoName": "부산광역시",
+                "baseLocation.sigunguName": "금정구"
+            }
+            res = raw_client.post("api/profiles", data=data)
+            if res.status_code != 201:
+                print(res.json())
+                print(data)
+                self.logger.error(f"기본 프로필 생성 실패: {res.json()}")
+                raise ValueError(f"기본 프로필 생성 실패: {res.json()}")
+            responses.append(res.json())
+        self.fs.save_responses(f"{prefix}_profiles.json", responses)

@@ -5,11 +5,21 @@ from util.logger import get_logger
 from generator.member import MemberGenerator
 
 class MeetupGenerator:
-    def __init__(self):
-        self.client = ApplicationClient()
+    def __init__(self, base_url: str, admin_email: str, admin_password: str, test_password: str):
+        if not base_url:
+            raise ValueError("base_url이 설정되지 않았습니다!")
+        if not admin_email:
+            raise ValueError("admin_email이 설정되지 않았습니다!")
+        if not admin_password:
+            raise ValueError("admin_password이 설정되지 않았습니다!")
+        if not test_password:
+            raise ValueError("test_password이 설정되지 않았습니다!")
+        
+        self.client = ApplicationClient(base_url)
+        self.client.set_auth_by_email(admin_email, admin_password)
         self.fs = FileSystem()
         self.logger = get_logger("MeetupGenerator")
-        self.member_generator = MemberGenerator()
+        self.member_generator = MemberGenerator(base_url, admin_email, admin_password, test_password)
 
     def generate_meetups(self):
         self.logger.info("사전 데이터 생성 시작")
@@ -54,8 +64,12 @@ class MeetupGenerator:
         self.logger.info("참여자 생성 완료")
     
     
-    def clear_all(self):
-        self.member_generator.clear_members("owner") # member를 삭제하면 연관되어 있는 객체들도 삭제됨
-        self.member_generator.clear_members("part") # member를 삭제하면 연관되어 있는 객체들도 삭제됨
-        self.fs.delete_responses("meetup_responses.json") # 모임 생성 결과 삭제
-        self.logger.info("모든 데이터 삭제 완료")
+    def clear_owner(self):
+        self.member_generator.clear_members("owner")
+        self.fs.delete_responses("meetup_responses.json")
+        self.logger.info("소유자 데이터 삭제 완료")
+    
+    def clear_participants(self):
+        self.member_generator.clear_members("part")
+        self.fs.delete_responses("participant_responses.json")
+        self.logger.info("참여자 데이터 삭제 완료")
