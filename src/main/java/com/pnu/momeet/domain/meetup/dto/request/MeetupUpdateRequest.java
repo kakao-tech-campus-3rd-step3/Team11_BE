@@ -1,5 +1,6 @@
 package com.pnu.momeet.domain.meetup.dto.request;
 
+import com.pnu.momeet.common.validation.annotation.MeetupTimeUnit;
 import com.pnu.momeet.common.validation.annotation.ValidMainCategory;
 import jakarta.validation.constraints.*;
 
@@ -11,6 +12,12 @@ public record MeetupUpdateRequest(
 
     @ValidMainCategory
     String category,
+
+    @MeetupTimeUnit
+    String startAt,
+
+    @MeetupTimeUnit
+    String endAt,
 
     String description,
 
@@ -30,6 +37,8 @@ public record MeetupUpdateRequest(
     public MeetupUpdateRequest(
         String name,
         String category,
+        String startAt,
+        String endAt,
         String description,
         List<String> hashTags,
         Integer capacity,
@@ -38,6 +47,8 @@ public record MeetupUpdateRequest(
     ) {
         this.name = name;
         this.category = category != null ? category.toUpperCase() : null;
+        this.startAt = startAt;
+        this.endAt = endAt;
         this.description = description;
         this.hashTags = hashTags;
         this.capacity = capacity;
