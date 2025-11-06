@@ -4,9 +4,9 @@ from generator.member import MemberGenerator
 from generator.meetup import MeetupGenerator
 
 def create_default_profiles(member_generator: MemberGenerator):
-    member_generator.generate_default_profile("professor", 10)
-    member_generator.generate_default_profile("team1", 10, 10)
-    member_generator.generate_default_profile("team2", 10, 20)
+    member_generator.generate_default_profile("professor", 20)
+    member_generator.generate_default_profile("team1", 10, 20)
+    member_generator.generate_default_profile("team2", 10, 30)
     member_generator.generate_default_profile("team3", 10, 40)
     member_generator.generate_default_profile("team4", 10, 50)
     member_generator.generate_default_profile("team5", 10, 60)

@@ -23,7 +23,7 @@ class MemberGenerator:
         self.client.set_auth_by_email(self.admin_email, self.admin_password)
         self.fs = FileSystem()
         self.logger = get_logger("MemberGenerator")
-        
+
     def generate_members(self, domain_name: str, count: int):
         self.logger.info(f"{domain_name} 회원 생성 시작")
         reses = []
@@ -39,13 +39,13 @@ class MemberGenerator:
                 raise ValueError(f"회원 생성 실패: {res.json()}")
             
             reses.append(res.json())
-        self.fs.save_responses(f"{domain_name}_members.json", reses)
+        self.fs.save_responses(domain_name, "members.json", reses)
         self.logger.info(f"회원 생성 완료: {len(reses)}개")
-        
+
     def generate_auth_tokens(self, domain_name: str):
         self.logger.info("액세스 토큰 생성 시작")
         reses = []
-        for res in self.fs.read_responses(f"{domain_name}_members.json"):
+        for res in self.fs.read_responses(domain_name, "members.json"):
             email = res["email"]
             password = self.test_password
             res_auth = self.client.post("api/auth/login", {
@@ -61,23 +61,23 @@ class MemberGenerator:
                 "accessToken": body["accessToken"],
                 "refreshToken": body["refreshToken"]
             })
-        self.fs.save_responses(f"{domain_name}_auth_tokens.json", reses)
+        self.fs.save_responses(domain_name, "auth_tokens.json", reses)
         self.logger.info(f"액세스 토큰 생성 완료: {len(reses)}개")
-    
+
     def clear_members(self, domain_name: str):
-        members = self.fs.read_responses(f"{domain_name}_members.json")
+        members = self.fs.read_responses(domain_name, "members.json")
         for member in members:
             self.client.delete(f"api/members/{member['id']}")
         
-        self.fs.delete_responses(f"{domain_name}_members.json")
+        self.fs.delete_responses(domain_name, "members.json")
         # db에서 연관되어 있는 객체들도 삭제됨
-        self.fs.delete_responses(f"{domain_name}_auth_tokens.json") 
-        self.fs.delete_responses(f"{domain_name}_profiles.json")
+        self.fs.delete_responses(domain_name, "auth_tokens.json") 
+        self.fs.delete_responses(domain_name, "profiles.json")
 
     def generate_profiles(self, domain_name: str):
         self.logger.info(f"{domain_name} 회원 프로필 생성 시작")
-        auth_tokens = self.fs.read_responses(f"{domain_name}_auth_tokens.json")
-        requests = self.fs.read_request(f"{domain_name}_profiles.json")
+        auth_tokens = self.fs.read_responses(domain_name, "auth_tokens.json")
+        requests = self.fs.read_request(domain_name, "profiles.json")
         
         responses = []
         for i, request in enumerate(requests):
@@ -106,8 +106,7 @@ class MemberGenerator:
                     self.logger.error(f"프로필 생성 실패: {res.json()}")
                     raise ValueError(f"프로필 생성 실패: {res.json()}")
                 responses.append(res.json())
-        self.fs.save_responses(f"{domain_name}_profiles.json", responses)
-
+        self.fs.save_responses(domain_name, "profiles.json", responses)
 
     def generate_default_profile(self, prefix: str, count: int, base: int = 0):
         self.logger.info(f"{prefix} 기본 프로필 생성 시작")
@@ -115,7 +114,7 @@ class MemberGenerator:
         self.generate_auth_tokens(prefix)
         
         responses = []
-        for (i, auth_token) in enumerate(self.fs.read_responses(f"{prefix}_auth_tokens.json")):
+        for (i, auth_token) in enumerate(self.fs.read_responses(prefix, "auth_tokens.json")):
             valid_nickname = f"GUEST{i + base + 1:03d}"
             token = auth_token["accessToken"]
             self.client.set_auth_by_access_token(token)
@@ -136,4 +135,4 @@ class MemberGenerator:
                 self.logger.error(f"기본 프로필 생성 실패: {res.json()}")
                 raise ValueError(f"기본 프로필 생성 실패: {res.json()}")
             responses.append(res.json())
-        self.fs.save_responses(f"{prefix}_profiles.json", responses)
+        self.fs.save_responses(prefix, "profiles.json", responses)
