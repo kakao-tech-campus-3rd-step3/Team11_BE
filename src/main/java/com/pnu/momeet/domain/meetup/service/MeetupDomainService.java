@@ -49,37 +49,41 @@ public class MeetupDomainService {
     private final SigunguEntityService sigunguService;
     private final CoreEventPublisher eventPublisher;
 
-    private void validateTimeUnits(String startAt, String endAt) {
-
+    private LocalDateTime parseTimeUnit(String timeUnit) {
         try {
-            LocalDateTime startTime = LocalDateTime.parse(startAt);
-            LocalDateTime endTime = LocalDateTime.parse(endAt);
-
-            if (endTime.isBefore(startTime) || endTime.isEqual(startTime)) {
-                throw new CustomValidationException(Map.of(
-                    "timeUnit", List.of("종료 시간은 시작 시간 이후여야 합니다.")
-                ));
-            }
-
-            long durationMin = Duration.between(startTime, endTime).toMinutes();
-            if (durationMin % 10 != 0) {
-                throw new CustomValidationException(Map.of(
-                    "timeUnit", List.of("모임 지속 시간은 10분 단위여야 합니다.")
-                ));
-            }
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime minStart = now.plusMinutes(MIN_LEAD_MINUTES);
-            if (startTime.isBefore(minStart)) {
-                throw new CustomValidationException(Map.of(
-                    "timeUnit", List.of("시작 시간은 현재로부터 최소 " + MIN_LEAD_MINUTES + "분 이후여야 합니다.")
-                ));
-            }
+            return LocalDateTime.parse(timeUnit);
         } catch (DateTimeParseException e) {
             throw new CustomValidationException(Map.of(
                 "timeUnit", List.of("시간 형식이 올바르지 않습니다. yyyy-MM-ddTHH:mm 형식을 사용해주세요.")
             ));
         }
+    }
 
+    private LocalDateTime validateStartAt(String startAt) {
+        LocalDateTime startTime = parseTimeUnit(startAt);
+        LocalDateTime minStart = LocalDateTime.now().plusMinutes(MIN_LEAD_MINUTES);
+        if (startTime.isBefore(minStart)) {
+            throw new CustomValidationException(Map.of(
+                "startAt", List.of("시작 시간은 현재로부터 최소 " + MIN_LEAD_MINUTES + "분 이후여야 합니다.")
+            ));
+        }
+        return startTime;
+    }
+
+    private LocalDateTime validateEndAt(String endAt, LocalDateTime startTime) {
+        LocalDateTime endTime = parseTimeUnit(endAt);
+        if (endTime.isBefore(startTime) || endTime.isEqual(startTime)) {
+            throw new CustomValidationException(Map.of(
+                "endAt", List.of("종료 시간은 시작 시간 이후여야 합니다.")
+            ));
+        }
+        long durationMin = Duration.between(startTime, endTime).toMinutes();
+        if (durationMin % 10 != 0) {
+            throw new CustomValidationException(Map.of(
+                "endAt", List.of("모임 지속 시간은 10분 단위여야 합니다.")
+            ));
+        }
+        return endTime;
     }
 
     @Transactional(readOnly = true)
@@ -146,7 +150,8 @@ public class MeetupDomainService {
 
     @Transactional
     public MeetupDetail createMeetup(MeetupCreateRequest request, UUID memberId) {
-        validateTimeUnits(request.startAt(), request.endAt());
+        LocalDateTime startAt = validateStartAt(request.startAt());
+        validateEndAt(request.endAt(), startAt);
 
         UUID profileId = profileService.mapToProfileId(memberId);
         if (entityService.existsParticipatedMeetupByProfileId(profileId)) {
@@ -187,6 +192,26 @@ public class MeetupDomainService {
             throw new NoSuchElementException("수정 가능한 모임이 없습니다.");
         }
         Meetup meetup = meetups.getFirst();
+        MeetupStatus status = meetup.getStatus();
+        LocalDateTime meetupStartAt = meetup.getStartAt();
+
+        if (request.startAt() != null) {
+            if (status != MeetupStatus.OPEN) {
+                throw new CustomValidationException(Map.of(
+                        "startAt", List.of("모집 중인 모임만 시작 시간을 변경할 수 있습니다.")
+                ));
+            }
+            meetupStartAt = validateStartAt(request.startAt());
+        }
+
+        if (request.endAt() != null) {
+            if (status != MeetupStatus.OPEN) {
+                throw new CustomValidationException(Map.of(
+                        "endAt", List.of("모집 중인 모임만 종료 시간을 변경할 수 있습니다.")
+                ));
+            }
+            validateEndAt(request.endAt(), meetupStartAt);
+        }
 
         Meetup updatedMeetup = entityService.updateMeetup(
                 meetup, MeetupDtoMapper.toConsumer(request)

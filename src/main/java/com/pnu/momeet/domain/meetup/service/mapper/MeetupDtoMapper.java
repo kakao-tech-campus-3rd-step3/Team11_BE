@@ -51,6 +51,12 @@ public class MeetupDtoMapper {
             if (request.category() != null) {
                 meetup.setCategory(MainCategory.valueOf(request.category()));
             }
+            if (request.startAt() != null) {
+                meetup.setStartAt(LocalDateTime.parse(request.startAt()));
+            }
+            if (request.endAt() != null) {
+                meetup.setEndAt(LocalDateTime.parse(request.endAt()));
+            }
             if (request.description() != null) {
                 meetup.setDescription(request.description());
             }
