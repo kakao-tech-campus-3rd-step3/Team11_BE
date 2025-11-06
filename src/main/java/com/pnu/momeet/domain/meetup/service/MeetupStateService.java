@@ -53,6 +53,9 @@ public class MeetupStateService {
     }
 
     private void startMeetupInternal(Meetup meetup) {
+        if (meetup.getParticipantCount() < 2) {
+            throw new IllegalStateException("참여자가 2명 미만인 모임은 시작할 수 없습니다.");
+        }
         entityService.updateMeetup(meetup, m -> m.setStatus(MeetupStatus.IN_PROGRESS));
         coreEventPublisher.publish(MeetupEntityMapper.toMeetupStartEvent(meetup));
         log.info("모임 시작 완료. id={}, ownerId={}", meetup.getId(), meetup.getOwner().getId());
