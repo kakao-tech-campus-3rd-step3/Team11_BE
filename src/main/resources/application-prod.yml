@@ -1,6 +1,9 @@
 spring:
   jpa:
     show-sql: false
+  sql:
+    init:
+      mode: never  # 프로덕션에서는 SQL 초기화 스크립트 실행 비활성화
 app:
   security:
     https:

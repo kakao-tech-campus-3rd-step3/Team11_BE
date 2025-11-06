@@ -28,8 +28,8 @@ class MeetupGenerator:
         self.member_generator.generate_profiles("owner") # 소유자 10명 프로필 생성
         self.logger.info("사전 데이터 생성 완료")
 
-        meetup_requests = self.member_generator.fs.read_request("meetup.json")
-        owner_auth_tokens = self.member_generator.fs.read_responses("owner_auth_tokens.json") # 소유자 10명 액세스 토큰 읽기
+        meetup_requests = self.member_generator.fs.read_request("owner", "meetup.json")
+        owner_auth_tokens = self.member_generator.fs.read_responses("owner", "auth_tokens.json") # 소유자 10명 액세스 토큰 읽기
         
         reponses = []
         
@@ -53,7 +53,7 @@ class MeetupGenerator:
             reponses.append(res.json())
         
         self.logger.info("모임 생성 완료")
-        self.fs.save_responses("meetup_responses.json", reponses)
+        self.fs.save_responses("owner", "meetups.json", reponses)
         self.logger.info("모임 생성 결과 저장 완료")
     
     def generate_participants(self):
@@ -63,13 +63,12 @@ class MeetupGenerator:
         self.member_generator.generate_profiles("part") # 참여자 10명 프로필 생성
         self.logger.info("참여자 생성 완료")
     
-    
     def clear_owner(self):
         self.member_generator.clear_members("owner")
-        self.fs.delete_responses("meetup_responses.json")
+        self.fs.delete_responses("owner", "meetups.json")
         self.logger.info("소유자 데이터 삭제 완료")
     
     def clear_participants(self):
         self.member_generator.clear_members("part")
-        self.fs.delete_responses("participant_responses.json")
+        self.fs.delete_responses("part", "meetups.json")
         self.logger.info("참여자 데이터 삭제 완료")

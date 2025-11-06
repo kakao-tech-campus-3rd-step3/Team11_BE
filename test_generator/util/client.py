@@ -40,3 +40,6 @@ class ApplicationClient:
     
     def get_raw_client(self):
         return self.client
+    
+    def get_domain_name(self):
+        return self.base_url.split("//")[1].split(".")[0]
