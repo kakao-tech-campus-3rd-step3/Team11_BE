@@ -209,9 +209,9 @@ class MeetupReadTest extends BaseMeetupTest {
     @Test
     @DisplayName("[차단] viewer가 모임 소유자를 차단하면 상세는 404")
     void get_meetup_by_id_blocked_by_viewer_404() {
-        // given: BOB이 모임을 만들고, ALICE가 BOB을 차단
+        // given: BOB이 모임을 만들고, ALICE가 CHRIS을 차단
         UUID meetupId = createTestMeetupByEmail(CHRIS_EMAIL);
-        blockIfNeeded(users.get(ALICE_EMAIL).id(), users.get(CHRIS_EMAIL).id()); // ALICE → BOB
+        blockIfNeeded(users.get(ALICE_EMAIL).id(), userProfiles.get(CHRIS_EMAIL).getId()); // ALICE → CHRIS
 
         // when & then: ALICE로 상세 조회 시 404
         RestAssured.given()
@@ -227,7 +227,7 @@ class MeetupReadTest extends BaseMeetupTest {
     @DisplayName("[차단] 모임 소유자가 viewer를 차단해도 상세는 404")
     void get_meetup_by_id_blocked_by_owner_404() {
         UUID meetupId = createTestMeetupByEmail(CHRIS_EMAIL);
-        blockIfNeeded(users.get(CHRIS_EMAIL).id(), users.get(ALICE_EMAIL).id()); // BOB → ALICE
+        blockIfNeeded(users.get(CHRIS_EMAIL).id(), userProfiles.get(ALICE_EMAIL).getId()); // CHRIS → ALICE
 
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
@@ -242,7 +242,7 @@ class MeetupReadTest extends BaseMeetupTest {
     @DisplayName("[차단] 페이지 조회 시 차단 모임은 목록에서 제외된다")
     void get_meetup_page_excludes_blocked_meetup() {
         UUID meetupId = createTestMeetupByEmail(CHRIS_EMAIL);
-        blockIfNeeded(users.get(ALICE_EMAIL).id(), users.get(CHRIS_EMAIL).id()); // ALICE → BOB
+        blockIfNeeded(users.get(ALICE_EMAIL).id(), userProfiles.get(CHRIS_EMAIL).getId()); // ALICE → CHRIS
 
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + userTokens.get(ALICE_EMAIL).accessToken())
@@ -264,8 +264,8 @@ class MeetupReadTest extends BaseMeetupTest {
         // given: 모임은 BOB이 만듦(= owner=BOB)
         UUID meetupId = createTestMeetupByEmail(CHRIS_EMAIL);
 
-        // ALICE -> BOB 차단
-        blockIfNeeded(users.get(ALICE_EMAIL).id(), users.get(CHRIS_EMAIL).id());
+        // ALICE -> CHRIS 차단
+        blockIfNeeded(users.get(ALICE_EMAIL).id(), userProfiles.get(CHRIS_EMAIL).getId());
 
         // when & then: ALICE로 조회 시 해당 모임이 결과에 없어야 함
         RestAssured.given()
@@ -297,8 +297,8 @@ class MeetupReadTest extends BaseMeetupTest {
             .then()
             .statusCode(200);
 
-        // ALICE -> BOB 차단
-        blockIfNeeded(users.get(ALICE_EMAIL).id(), users.get(CHRIS_EMAIL).id());
+        // ALICE -> CHRIS 차단
+        blockIfNeeded(users.get(ALICE_EMAIL).id(), userProfiles.get(CHRIS_EMAIL).getId());
 
         // when & then: ALICE로 조회 시 해당 모임이 결과에 없어야 함
         RestAssured.given()

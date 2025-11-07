@@ -58,8 +58,8 @@ public class ProfileEntityService {
     }
 
     @Transactional(readOnly = true)
-    public Page<BlockedProfileResponse> getBlockedProfiles(UUID blockerId, Pageable pageable) {
-        return profileRepository.findBlockedProfiles(blockerId, pageable);
+    public Page<BlockedProfileResponse> getBlockedProfiles(UUID blockerProfileId, Pageable pageable) {
+        return profileRepository.findBlockedProfiles(blockerProfileId, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -85,6 +85,11 @@ public class ProfileEntityService {
     @Transactional(readOnly = true)
     public boolean existsByNicknameIgnoreCase(String nickname) {
         return profileRepository.existsByNicknameIgnoreCase(nickname);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByNicknameIgnoreCaseAndIdNot(String nickname, UUID profileId) {
+        return profileRepository.existsByNicknameIgnoreCaseAndIdNot(nickname, profileId);
     }
 
     @Transactional

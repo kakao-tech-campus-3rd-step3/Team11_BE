@@ -61,6 +61,8 @@ class MeetupUpdateTest extends BaseMeetupTest {
         MeetupUpdateRequest request = new MeetupUpdateRequest(
                 "수정된 모임 이름",
                 "SPORTS",
+                null,
+                null,
                 "수정된 모임 설명입니다.",
                 List.of("축구", "운동", "친목"),
                 8,
@@ -99,6 +101,8 @@ class MeetupUpdateTest extends BaseMeetupTest {
         MeetupUpdateRequest request = new MeetupUpdateRequest(
                 "부분 수정된 이름",
                 null, // category 수정 안함
+                null,
+                null,
                 "부분 수정된 설명만 변경",
                 null, // hashTags 수정 안함
                 null, // capacity 수정 안함
@@ -215,6 +219,8 @@ class MeetupUpdateTest extends BaseMeetupTest {
         MeetupUpdateRequest request = new MeetupUpdateRequest(
                 "수정할 모임",
                 "GAME",
+                null,
+                null,
                 "설명",
                 List.of(),
                 5,
@@ -243,6 +249,8 @@ class MeetupUpdateTest extends BaseMeetupTest {
                 "다른 사용자가 수정 시도",
                 "GAME",
                 "설명",
+                null,
+                null,
                 List.of(),
                 5,
                 35.0,
@@ -273,6 +281,8 @@ class MeetupUpdateTest extends BaseMeetupTest {
                 "수정할 모임",
                 "GAME",
                 "설명",
+                null,
+                null,
                 List.of(),
                 5,
                 35.0,

@@ -41,7 +41,10 @@ public class ProfileBadgeDomainService {
     @Transactional(readOnly = true)
     public Page<ProfileBadgeResponse> getUserBadges(UUID profileId, ProfileBadgePageRequest request) {
         PageRequest pageRequest = request.toPageRequest();
-        profileService.getProfileById(profileId); // 존재 검증
+        if (!profileService.existsById(profileId)) {
+            log.debug("존재하지 않는 프로필로 배지 조회 시도. profileId={}", profileId);
+            throw new NoSuchElementException("존재하지 않는 프로필입니다.");
+        }
         log.debug("특정 사용자 배지 조회. profileId={}", profileId);
         return entityService.findBadgesByProfileId(profileId, pageRequest);
     }
@@ -59,7 +62,10 @@ public class ProfileBadgeDomainService {
     @Transactional(readOnly = true)
     public Optional<ProfileBadgeResponse> getUserRepresentativeBadge(UUID profileId) {
         log.debug("특정 사용자 대표 배지 조회 시도. profileId={}", profileId);
-        profileService.getProfileById(profileId); // 존재 검증
+        if (!profileService.existsById(profileId)) {
+            log.debug("존재하지 않는 프로필로 배지 조회 시도. profileId={}", profileId);
+            throw new NoSuchElementException("존재하지 않는 프로필입니다.");
+        }
         Optional<ProfileBadgeResponse> representative = entityService
             .getRepresentativeByProfileId(profileId);
         log.debug("특정 사용자 대표 배지 조회 완료. profileId={}, representative={}", profileId, representative);

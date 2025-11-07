@@ -29,6 +29,10 @@ public class S3StorageService {
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
 
+    // CloudFront(or 도메인) 베이스 URL
+    @Value("${frontend.url}")
+    private String cdnBaseUrl;
+
     public String uploadImage(MultipartFile multipartFile, String prefix) {
         return uploadImageToS3(multipartFile, prefix);
     }
@@ -69,7 +73,10 @@ public class S3StorageService {
             throw new StorageException("파일 저장 중 오류가 발생했습니다.");
         }
 
-        return s3Client.utilities().getUrl(url -> url.bucket(bucket).key(key)).toString();
+        // CloudFront URL 반환
+        return cdnBaseUrl.endsWith("/")
+            ? cdnBaseUrl + key
+            : cdnBaseUrl + "/" + key;
     }
 
     private String getKeyFromImageUrl(String url) {

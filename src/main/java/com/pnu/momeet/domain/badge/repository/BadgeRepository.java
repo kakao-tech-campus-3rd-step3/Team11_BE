@@ -13,5 +13,7 @@ public interface BadgeRepository extends JpaRepository<Badge, UUID> {
 
     boolean existsByCodeIgnoreCase(String code);
 
+    boolean existsByNameIgnoreCaseAndIdNot(String name, UUID id);
+
     Optional<Badge> findByCodeIgnoreCase(String code);
 }

@@ -17,13 +17,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserBlock extends BaseCreatedEntity {
 
-    @Column(name = "blocker_id", nullable = false)
-    private UUID blockerId;
+    @Column(name = "blocker_profile_id", nullable = false)
+    private UUID blockerProfileId;
 
-    @Column(name = "blocked_id", nullable = false)
-    private UUID blockedId;
+    @Column(name = "blocked_profile_id", nullable = false)
+    private UUID blockedProfileId;
 
-    public static UserBlock create(UUID blockerId, UUID blockedId) {
-        return new UserBlock(blockerId, blockedId);
+    public static UserBlock create(UUID blockerProfileId, UUID blockedProfileId) {
+        return new UserBlock(blockerProfileId, blockedProfileId);
     }
 }

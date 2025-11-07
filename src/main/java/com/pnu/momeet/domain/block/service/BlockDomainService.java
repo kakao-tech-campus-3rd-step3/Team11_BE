@@ -7,18 +7,16 @@ import com.pnu.momeet.domain.block.mapper.BlockEntityMapper;
 import com.pnu.momeet.domain.block.service.mapper.BlockDtoMapper;
 import com.pnu.momeet.domain.member.service.MemberEntityService;
 import com.pnu.momeet.domain.profile.dto.response.BlockedProfileResponse;
+import com.pnu.momeet.domain.profile.entity.Profile;
 import com.pnu.momeet.domain.profile.service.ProfileEntityService;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @Service
@@ -26,7 +24,6 @@ import org.springframework.web.server.ResponseStatusException;
 public class BlockDomainService {
 
     private final BlockEntityService entityService;
-    private final MemberEntityService memberService;
     private final ProfileEntityService profileService;
 
     @Transactional(readOnly = true)
@@ -34,39 +31,42 @@ public class BlockDomainService {
         UUID me,
         BlockPageRequest pageRequest
     ) {
-        log.debug("차단 목록 조회 시도. blockerId={}", me);
+        Profile myProfile = profileService.getByMemberId(me);
+        log.debug("차단 목록 조회 시도. blockerProfileId={}", myProfile.getId());
         PageRequest page = BlockDtoMapper.toPageRequest(pageRequest);
-        Page<BlockedProfileResponse> blockedProfiles = profileService.getBlockedProfiles(me, page);
-        log.debug("차단 목록 조회 성공. blockerId={}", me);
+        Page<BlockedProfileResponse> blockedProfiles = profileService.getBlockedProfiles(myProfile.getId(), page);
+        log.debug("차단 목록 조회 성공. blockerProfileId={}", myProfile.getId());
         return blockedProfiles;
     }
 
     @Transactional
-    public BlockResponse createUserBlock(UUID me, UUID targetId) {
+    public BlockResponse createUserBlock(UUID me, UUID targetProfileId) {
+        Profile myProfile = profileService.getByMemberId(me);
         // 1. 자기 자신 차단 금지
-        if (me.equals(targetId)) {
-            log.info("자기 자신 차단 시도. blockerId={}, blockedId={}", me, targetId);
+        if (myProfile.getId().equals(targetProfileId)) {
+            log.info("자기 자신 차단 시도. blockerProfileId={}, blockedProfileId={}", myProfile.getId(), targetProfileId);
             throw new IllegalArgumentException("자기 자신은 차단할 수 없습니다.");
         }
-        // 2. 대상 회원 존재 검증
-        if (!memberService.existsById(targetId)) {
-            log.info("차단 대상 사용자 조회 실패. blockerId={}, blockedId={}", me, targetId);
-            throw new NoSuchElementException("대상 사용자를 찾을 수 없습니다.");
+        // 2. 대상 회원 프로필 존재 검증
+        if (!profileService.existsById(targetProfileId)) {
+            log.info("차단 대상 사용자 프로필 조회 실패. blockerProfileId={}, blockedProfileId={}", myProfile.getId(), targetProfileId);
+            throw new NoSuchElementException("대상 사용자 프로필을 찾을 수 없습니다.");
         }
         // 3. 이미 차단한 사용자면 금지
-        if (entityService.exists(me, targetId)) {
-            log.info("이미 차단한 사용자 차단 시도. blockerId={}, blockedId={}", me, targetId);
-            throw new IllegalStateException("이미 차단한 사용자입니다.");
+        if (entityService.exists(myProfile.getId(), targetProfileId)) {
+            log.info("이미 차단한 사용자 프로필 차단 시도. blockerProfileId={}, blockedProfileId={}", myProfile.getId(), targetProfileId);
+            throw new IllegalStateException("이미 차단한 사용자 프로필입니다.");
         }
 
-        UserBlock block = entityService.save(me, targetId);
-        log.info("차단 완료. blockerId={}, blockedId={}", me, targetId);
+        UserBlock block = entityService.save(myProfile.getId(), targetProfileId);
+        log.info("차단 완료. blockerProfileId={}, blockedProfileId={}", myProfile.getId(), targetProfileId);
         return BlockEntityMapper.toBlockResponse(block);
     }
 
     @Transactional
-    public void deleteBlock(UUID me, UUID targetId) {
-        entityService.delete(me, targetId);
-        log.info("차단 해제 완료. blockerId={}, blockedId={}", me, targetId);
+    public void deleteBlock(UUID me, UUID targetProfileId) {
+        Profile myProfile = profileService.getByMemberId(me);
+        entityService.delete(myProfile.getId(), targetProfileId);
+        log.info("차단 해제 완료. blockerProfileId={}, blockedProfileId={}", myProfile.getId(), targetProfileId);
     }
 }

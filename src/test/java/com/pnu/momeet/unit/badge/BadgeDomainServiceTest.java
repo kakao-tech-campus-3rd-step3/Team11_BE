@@ -12,6 +12,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.pnu.momeet.common.service.S3StorageService;
+import com.pnu.momeet.common.tx.AfterCommitExecutor;
+import com.pnu.momeet.common.util.ImageHashUtil;
 import com.pnu.momeet.domain.badge.dto.request.BadgeCreateRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgePageRequest;
 import com.pnu.momeet.domain.badge.dto.request.BadgeUpdateRequest;
@@ -31,6 +33,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -43,6 +46,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @Tag("unit")
@@ -55,8 +59,25 @@ class BadgeDomainServiceTest {
     @Mock
     private S3StorageService s3StorageService;
 
+    @Mock
+    private ImageHashUtil imageHashUtil;
+
+    @Mock
+    private AfterCommitExecutor afterCommitExecutor;
+
     @InjectMocks
     private BadgeDomainService badgeService;
+
+    // updateBadge(badge, consumer)가 실제로 badge에 consumer를 적용하고 badge를 반환하도록 모킹
+    private void stubUpdateBadgeApplyAndReturn() {
+        willAnswer(inv -> {
+            Badge b = inv.getArgument(0);
+            @SuppressWarnings("unchecked")
+            Consumer<Badge> applier = inv.getArgument(1);
+            applier.accept(b);
+            return b;
+        }).given(entityService).updateBadge(any(Badge.class), any());
+    }
 
     @Test
     @DisplayName("배지 생성 성공 - 코드 TRIM+UPPERCASE 정규화 후 저장")
@@ -148,55 +169,65 @@ class BadgeDomainServiceTest {
     @DisplayName("배지 수정 성공 - 이름/설명 변경 + 아이콘 교체")
     void update_success_withIconChange() {
         UUID id = UUID.randomUUID();
-        Badge badge = Badge.create(
-            "기존이름",
-            "기존설명",
-            "https://cdn.example.com/badges/old.png",
-            "OLD_CODE"
-        );
+        Badge badge = Badge.create("기존이름","기존설명","https://cdn.example.com/badges/old.png","OLD_CODE");
         ReflectionTestUtils.setField(badge, "id", id);
 
         given(entityService.getById(id)).willReturn(badge);
-        given(entityService.existsByNameIgnoreCase("새이름")).willReturn(false);
+        given(entityService.existsByNameIgnoreCaseAndIdNot("새이름", id)).willReturn(false);
+        stubUpdateBadgeApplyAndReturn(); // updateBadge 모킹
 
-        var newIcon = new org.springframework.mock.web.MockMultipartFile(
-            "iconImage","t.png","image/png", new byte[]{1}
-        );
+        var newIcon = new MockMultipartFile("iconImage","t.png","image/png", new byte[]{1,2,3});
+        given(imageHashUtil.sha256Hex(newIcon)).willReturn("HASH_NEW");
         given(s3StorageService.uploadImage(eq(newIcon), anyString()))
             .willReturn("https://cdn.example.com/badges/new.png");
-        willDoNothing().given(s3StorageService)
-            .deleteImage("https://cdn.example.com/badges/old.png");
 
-        var req = new BadgeUpdateRequest("새이름", "새설명", newIcon);
+        var req = new BadgeUpdateRequest("새이름","새설명", newIcon);
 
-        BadgeUpdateResponse resp = badgeService.updateBadge(id, req);
+        var resp = badgeService.updateBadge(id, req);
 
         assertThat(resp.badgeId()).isEqualTo(id);
         assertThat(resp.iconUrl()).isEqualTo("https://cdn.example.com/badges/new.png");
-        verify(entityService).getById(id);
         verify(s3StorageService).uploadImage(eq(newIcon), anyString());
-        verify(s3StorageService).deleteImage("https://cdn.example.com/badges/old.png");
-        verify(entityService, never()).save(any()); // 도메인은 dirty-checking 가정
+        // deleteImage는 afterCommit 에서 호출되므로, 단위 테스트에서는 호출 유무 검증을 생략하거나 별도 훅으로 검증
     }
+
+    @Test
+    @DisplayName("배지 수정 - 동일 아이콘 업로드 시 업로드/삭제 미호출(NO-OP)")
+    void update_skip_sameIcon() {
+        UUID id = UUID.randomUUID();
+        Badge badge = Badge.create("기존이름","기존설명","https://cdn.example.com/badges/old.png","CODE");
+        ReflectionTestUtils.setField(badge, "id", id);
+        ReflectionTestUtils.setField(badge, "iconHash", "HASH_SAME");
+        given(entityService.getById(id)).willReturn(badge);
+
+        // 불필요한 이름중복 스텁 제거 (호출되지 않음)
+        var sameIcon = new MockMultipartFile("iconImage","x.png","image/png", new byte[]{9,9,9});
+        given(imageHashUtil.sha256Hex(sameIcon)).willReturn("HASH_SAME");
+
+        var req = new BadgeUpdateRequest("기존이름","기존설명", sameIcon);
+
+        var resp = badgeService.updateBadge(id, req);
+
+        assertThat(resp.iconUrl()).isEqualTo("https://cdn.example.com/badges/old.png");
+        verify(s3StorageService, never()).uploadImage(any(), anyString());
+        verify(s3StorageService, never()).deleteImage(anyString());
+    }
+
 
     @Test
     @DisplayName("배지 수정 성공 - 아이콘 미변경 (텍스트만)")
     void update_success_withoutIcon() {
         UUID id = UUID.randomUUID();
-        Badge badge = Badge.create(
-            "기존이름",
-            "기존설명",
-            "https://cdn.example.com/badges/exist.png",
-            "OLD_CODE"
-        );
+        Badge badge = Badge.create("기존이름","기존설명","https://cdn.example.com/badges/exist.png","OLD_CODE");
         ReflectionTestUtils.setField(badge, "id", id);
 
         given(entityService.getById(id)).willReturn(badge);
-        given(entityService.existsByNameIgnoreCase("문자수정")).willReturn(false);
+        given(entityService.existsByNameIgnoreCaseAndIdNot("문자수정", id)).willReturn(false);
+        stubUpdateBadgeApplyAndReturn();
 
         var req = new BadgeUpdateRequest("문자수정", "설명수정", null);
 
-        BadgeUpdateResponse resp = badgeService.updateBadge(id, req);
+        var resp = badgeService.updateBadge(id, req);
 
         assertThat(resp.name()).isEqualTo("문자수정");
         assertThat(resp.iconUrl()).isEqualTo("https://cdn.example.com/badges/exist.png");
@@ -221,14 +252,11 @@ class BadgeDomainServiceTest {
     @DisplayName("배지 수정 실패 - 이름 중복")
     void update_fail_duplicateName() {
         UUID id = UUID.randomUUID();
-        Badge badge = Badge.create(
-            "원래이름",
-            "기존설명",
-            "https://cdn.example.com/badges/old.png",
-            "OLD_CODE"
-        );
+        Badge badge = Badge.create("원래이름","기존설명","https://cdn.example.com/badges/old.png","OLD_CODE");
+        ReflectionTestUtils.setField(badge, "id", id); // id 세팅
+
         given(entityService.getById(id)).willReturn(badge);
-        given(entityService.existsByNameIgnoreCase("중복이름")).willReturn(true);
+        given(entityService.existsByNameIgnoreCaseAndIdNot("중복이름", id)).willReturn(true); // 자기자신 제외
 
         var req = new BadgeUpdateRequest("중복이름", null, null);
 

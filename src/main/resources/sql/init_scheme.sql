@@ -68,6 +68,7 @@ CREATE TABLE profile (
     likes                    INTEGER      NOT NULL DEFAULT 0,
     dislikes                 INTEGER      NOT NULL DEFAULT 0,
     completed_join_meetups   INTEGER      NOT NULL DEFAULT 0,
+    image_hash               VARCHAR(128),
     created_at               TIMESTAMP  NOT NULL DEFAULT NOW(),
     updated_at               TIMESTAMP  NOT NULL DEFAULT NOW(),
     CONSTRAINT ck_profile_nickname_len        CHECK (char_length(btrim(nickname)) BETWEEN 2 AND 20),
@@ -86,7 +87,7 @@ CREATE INDEX IF NOT EXISTS idx_profile_base_location_id ON profile(base_location
 
 CREATE TABLE meetup (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_id        UUID        NOT NULL REFERENCES profile(id),
+    owner_id        UUID        REFERENCES profile(id) ON DELETE SET NULL,
     name            VARCHAR(60) NOT NULL,
     category        VARCHAR(30) NOT NULL,
     description     TEXT        NOT NULL,
@@ -146,19 +147,22 @@ CREATE INDEX IF NOT EXISTS idx_chat_message_meetup ON chat_message (meetup_id);
 CREATE INDEX IF NOT EXISTS idx_chat_message_sender ON chat_message (sender_id);
 
 CREATE TABLE evaluation (
-    id UUID PRIMARY KEY,
-    meetup_id UUID  NOT NULL,
-    evaluator_profile_id UUID  NOT NULL,
-    target_profile_id UUID  NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    meetup_id UUID REFERENCES meetup(id) ON DELETE SET NULL,
+    evaluator_profile_id UUID REFERENCES profile(id) ON DELETE SET NULL,
+    target_profile_id UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
     rating VARCHAR(10) NOT NULL,
     ip_hash VARCHAR(128) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT uq_evaluation UNIQUE (meetup_id, evaluator_profile_id, target_profile_id, ip_hash),
-    CONSTRAINT fk_evaluation_meetup FOREIGN KEY (meetup_id) REFERENCES meetup(id),
-    CONSTRAINT fk_evaluation_evaluator_profile FOREIGN KEY (evaluator_profile_id) REFERENCES profile(id),
-    CONSTRAINT fk_evaluation_target_profile FOREIGN KEY (target_profile_id) REFERENCES profile(id)
+    CONSTRAINT chk_evaluation_rating CHECK (rating IN ('LIKE','DISLIKE'))
 );
+
+CREATE UNIQUE INDEX uq_evaluation_active
+    ON evaluation(meetup_id, evaluator_profile_id, target_profile_id, ip_hash)
+    WHERE meetup_id IS NOT NULL
+    AND evaluator_profile_id IS NOT NULL
+    AND target_profile_id IS NOT NULL;
 
 
 CREATE TABLE IF NOT EXISTS badge (
@@ -167,6 +171,7 @@ CREATE TABLE IF NOT EXISTS badge (
     description VARCHAR(255),
     icon_url VARCHAR(255) NOT NULL,
     code VARCHAR(50)  NOT NULL,
+    icon_hash VARCHAR(128),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
@@ -198,11 +203,11 @@ CREATE INDEX IF NOT EXISTS idx_profile_rep_only
 
 CREATE TABLE IF NOT EXISTS user_block (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    blocker_id UUID NOT NULL REFERENCES member(id) ON DELETE CASCADE,
-    blocked_id UUID NOT NULL REFERENCES member(id) ON DELETE CASCADE,
+    blocker_profile_id UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
+    blocked_profile_id UUID NOT NULL REFERENCES profile(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_user_block UNIQUE (blocker_id, blocked_id),
-    CONSTRAINT ck_user_block_self CHECK (blocker_id <> blocked_id)
+    CONSTRAINT uq_user_block UNIQUE (blocker_profile_id, blocked_profile_id),
+    CONSTRAINT ck_user_block_self CHECK (blocker_profile_id <> blocked_profile_id)
 );
 
 CREATE TABLE user_report (

@@ -29,12 +29,12 @@ class BlockEntityServiceTest {
     @DisplayName("exists: 레포지토리 위임")
     void exists_delegatesToRepository() {
         UUID a = UUID.randomUUID(), b = UUID.randomUUID();
-        given(blockRepository.existsByBlockerIdAndBlockedId(a, b)).willReturn(true);
+        given(blockRepository.existsByBlockerProfileIdAndBlockedProfileId(a, b)).willReturn(true);
 
         boolean exists = entityService.exists(a, b);
 
         assertThat(exists).isTrue();
-        verify(blockRepository).existsByBlockerIdAndBlockedId(a, b);
+        verify(blockRepository).existsByBlockerProfileIdAndBlockedProfileId(a, b);
     }
 
     @Test
@@ -48,8 +48,8 @@ class BlockEntityServiceTest {
 
         UserBlock saved = entityService.save(a, b);
 
-        assertThat(saved.getBlockerId()).isEqualTo(a);
-        assertThat(saved.getBlockedId()).isEqualTo(b);
+        assertThat(saved.getBlockerProfileId()).isEqualTo(a);
+        assertThat(saved.getBlockedProfileId()).isEqualTo(b);
         verify(blockRepository).save(any(UserBlock.class));
     }
 
@@ -57,11 +57,11 @@ class BlockEntityServiceTest {
     @DisplayName("delete: (blockerId, blockedId) 조건 삭제 위임")
     void delete_delegatesToRepository() {
         UUID a = UUID.randomUUID(), b = UUID.randomUUID();
-        given(blockRepository.deleteByBlockerIdAndBlockedId(a, b)).willReturn(1L);
+        given(blockRepository.deleteByBlockerProfileIdAndBlockedProfileId(a, b)).willReturn(1L);
 
         long deleted = entityService.delete(a, b);
 
         assertThat(deleted).isEqualTo(1L);
-        verify(blockRepository).deleteByBlockerIdAndBlockedId(a, b);
+        verify(blockRepository).deleteByBlockerProfileIdAndBlockedProfileId(a, b);
     }
 }

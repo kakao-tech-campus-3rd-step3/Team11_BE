@@ -21,7 +21,7 @@ public class ProfileDslRepositoryImpl implements ProfileDslRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Transactional(readOnly = true)
-    public Page<BlockedProfileResponse> findBlockedProfiles(UUID blockerId, Pageable pageable) {
+    public Page<BlockedProfileResponse> findBlockedProfiles(UUID blockerProfileId, Pageable pageable) {
         QUserBlock b = QUserBlock.userBlock;
         QProfile p = QProfile.profile;
 
@@ -36,8 +36,8 @@ public class ProfileDslRepositoryImpl implements ProfileDslRepository {
                 b.createdAt     // blockedAt
             ))
             .from(b)
-            .join(p).on(p.memberId.eq(b.blockedId))
-            .where(b.blockerId.eq(blockerId))
+            .join(p).on(p.id.eq(b.blockedProfileId))
+            .where(b.blockerProfileId.eq(blockerProfileId))
             .orderBy(b.createdAt.desc())
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
@@ -47,7 +47,7 @@ public class ProfileDslRepositoryImpl implements ProfileDslRepository {
         Long total = jpaQueryFactory
             .select(b.count())
             .from(b)
-            .where(b.blockerId.eq(blockerId))
+            .where(b.blockerProfileId.eq(blockerProfileId))
             .fetchOne();
 
         long totalElements = total == null ? 0L : total;

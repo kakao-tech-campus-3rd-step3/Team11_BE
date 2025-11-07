@@ -19,7 +19,7 @@ public class BlockCreateTest extends BaseBlockTest{
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
             .when()
-            .delete("/{targetId}", testAdminMemberId)
+            .delete("/{targetProfileId}", testAdminProfileId)
             .then()
             .statusCode(anyOf(is(204), is(401))); // 미로그인 베이스면 204만 체크해도 OK
     }
@@ -31,12 +31,12 @@ public class BlockCreateTest extends BaseBlockTest{
             .given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
             .when()
-            .post("/{targetId}", testAdminMemberId) // USER가 ADMIN을 차단
+            .post("/{targetProfileId}", testAdminProfileId) // USER가 ADMIN을 차단
             .then()
             .log().all()
             .statusCode(201)
-            .body("blockedId", equalTo(testAdminMemberId.toString()))
-            .body("blockerId", equalTo(testUserMemberId.toString()))
+            .body("blockedProfileId", equalTo(testAdminProfileId.toString()))
+            .body("blockerProfileId", equalTo(testUserProfileId.toString()))
             .body("createdAt", notNullValue());
     }
 
@@ -47,7 +47,7 @@ public class BlockCreateTest extends BaseBlockTest{
             .given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
             .when()
-            .post("/{targetId}", testUserMemberId)
+            .post("/{targetProfileId}", testUserProfileId)
             .then()
             .log().all()
             .statusCode(400);
@@ -59,13 +59,13 @@ public class BlockCreateTest extends BaseBlockTest{
         // 선차단
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
-            .post("/{targetId}", testAdminMemberId)
+            .post("/{targetProfileId}", testAdminProfileId)
             .then().statusCode(201);
 
         // 동일 대상 재요청
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
-            .post("/{targetId}", testAdminMemberId)
+            .post("/{targetProfileId}", testAdminProfileId)
             .then()
             .log().all()
             .statusCode(409);

@@ -29,12 +29,28 @@ public class Badge extends BaseEntity {
     @Column(name = "code", length = 50, nullable = false)
     private String code;
 
+    @Column(name = "icon_hash")
+    private String iconHash;
+
+    private Badge(
+        String name,
+        String description,
+        String iconUrl,
+        String code
+    ) {
+        this.name = name;
+        this.description = description;
+        this.iconUrl = iconUrl;
+        this.code = normalizeCode(code);
+    }
+
     public static Badge create(String name, String description, String iconUrl, String code) {
         return new Badge(name, description, iconUrl, normalizeCode(code));
     }
 
-    public void updateIconUrl(String newImageUrl) {
+    public void updateIcon(String newImageUrl, String newIconHash) {
         this.iconUrl = newImageUrl;
+        this.iconHash = newIconHash;
     }
 
     public void updateBadge(String name, String description) {

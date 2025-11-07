@@ -21,43 +21,31 @@ public class ParticipantActionHandlingListener {
     @Async
     @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
     public void handleParticipantJoinEvent(ParticipantJoinEvent event) {
-        messagingTemplate.sendAction(
-                event.getMeetupId(),
-                event.getParticipant(),
-                ChatActionType.JOIN
-        );
+        messagingTemplate.sendAction(event, ChatActionType.JOIN);
         log.debug("참여자 참가 알림 전송 완료 - meetupId: {}, participantId: {}",
                 event.getMeetupId(),
-                event.getParticipant().getId()
+                event.getParticipantId()
         );
     }
 
     @Async
     @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
     public void handleParticipantKickEvent(ParticipantKickEvent event) {
-        messagingTemplate.sendAction(
-                event.getMeetupId(),
-                event.getParticipant(),
-                ChatActionType.KICKED
-        );
+        messagingTemplate.sendAction(event, ChatActionType.KICKED);
 
         log.debug("참여자 강제 퇴장 알림 전송 완료 - meetupId: {}, participantId: {}",
                 event.getMeetupId(),
-                event.getParticipant().getId()
+                event.getParticipantId()
         );
     }
 
     @Async
     @TransactionalEventListener(phase= TransactionPhase.AFTER_COMMIT)
     public void handleParticipantLeaveEvent(ParticipantExitEvent event) {
-        messagingTemplate.sendAction(
-                event.getMeetupId(),
-                event.getParticipant(),
-                ChatActionType.EXIT
-        );
+        messagingTemplate.sendAction(event, ChatActionType.EXIT);
         log.debug("참여자 퇴장 알림 전송 완료 - meetupId: {}, participantId: {}",
                 event.getMeetupId(),
-                event.getParticipant().getId()
+                event.getParticipantId()
         );
     }
 }

@@ -14,7 +14,7 @@ public class BlockDeleteTest extends BaseBlockTest {
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
             .when()
-            .post("/{targetId}", testAdminMemberId)
+            .post("/{targetProfileId}", testAdminProfileId)
             .then()
             .statusCode(201);
 
@@ -22,7 +22,7 @@ public class BlockDeleteTest extends BaseBlockTest {
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
             .when()
-            .delete("/{targetId}", testAdminMemberId)
+            .delete("/{targetProfileId}", testAdminProfileId)
             .then()
             .statusCode(204);
     }
@@ -34,7 +34,7 @@ public class BlockDeleteTest extends BaseBlockTest {
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
             .when()
-            .delete("/{targetId}", testAdminMemberId)
+            .delete("/{targetProfileId}", testAdminProfileId)
             .then()
             .statusCode(204);
 
@@ -42,7 +42,7 @@ public class BlockDeleteTest extends BaseBlockTest {
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
             .when()
-            .delete("/{targetId}", testAdminMemberId)
+            .delete("/{targetProfileId}", testAdminProfileId)
             .then()
             .statusCode(204);
     }
@@ -52,7 +52,7 @@ public class BlockDeleteTest extends BaseBlockTest {
     void delete_unauthorized_returns401() {
         RestAssured.given()
             .when()
-            .delete("/{targetId}", testAdminMemberId)
+            .delete("/{targetProfileId}", testAdminProfileId)
             .then()
             .statusCode(401);
     }
@@ -64,7 +64,7 @@ public class BlockDeleteTest extends BaseBlockTest {
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_ADMIN).accessToken())
             .when()
-            .post("/{targetId}", testUserMemberId)
+            .post("/{targetProfileId}", testUserProfileId)
             .then()
             .statusCode(201);
 
@@ -72,7 +72,7 @@ public class BlockDeleteTest extends BaseBlockTest {
         RestAssured.given()
             .header(AUTH_HEADER, BEAR_PREFIX + getToken(Role.ROLE_USER).accessToken())
             .when()
-            .delete("/{targetId}", testAdminMemberId)
+            .delete("/{targetProfileId}", testAdminProfileId)
             .then()
             .statusCode(204);
     }

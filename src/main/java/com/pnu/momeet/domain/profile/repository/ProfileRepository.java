@@ -18,6 +18,8 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID>, Profile
 
     boolean existsByNicknameIgnoreCase(String nickname);
 
+    boolean existsByNicknameIgnoreCaseAndIdNot(String nickname, UUID profileId);
+
     @Query("""
         SELECT p.id FROM Profile p WHERE p.memberId = :memberId
     """)

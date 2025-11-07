@@ -2,8 +2,10 @@ package com.pnu.momeet.domain.badge.service;
 
 import com.pnu.momeet.domain.badge.entity.Badge;
 import com.pnu.momeet.domain.badge.repository.BadgeRepository;
+import com.pnu.momeet.domain.profile.entity.Profile;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -44,6 +46,11 @@ public class BadgeEntityService {
     }
 
     @Transactional(readOnly = true)
+    public boolean existsByNameIgnoreCaseAndIdNot(String name, UUID excludeId) {
+        return badgeRepository.existsByNameIgnoreCaseAndIdNot(name, excludeId);
+    }
+
+    @Transactional(readOnly = true)
     public boolean existsByCodeIgnoreCase(String code) {
         return badgeRepository.existsByCodeIgnoreCase(code);
     }
@@ -54,6 +61,14 @@ public class BadgeEntityService {
         Badge saved = badgeRepository.save(badge);
         log.debug("배지 저장 성공. id={}, name={}", saved.getId(), saved.getName());
         return saved;
+    }
+
+    @Transactional
+    public Badge updateBadge(Badge badge, Consumer<Badge> updater) {
+        log.debug("배지 수정 시도. id={}", badge.getId());
+        updater.accept(badge);
+        log.debug("프로필 수정 성공. id={}", badge.getId());
+        return badge;
     }
 
     @Transactional

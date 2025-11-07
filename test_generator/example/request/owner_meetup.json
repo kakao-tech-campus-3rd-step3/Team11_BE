@@ -1,0 +1,154 @@
+{
+    "requests": [
+        {
+            "name": "부산대 근처에서 같이 밥 먹어요!",
+            "category": "FOOD",
+            "description": "부산대 근처에서 점심 같이 먹을 사람 구해요! 혼밥 싫은 분 환영합니다.",
+            "hashTags": ["밥", "식사", "친목"],
+            "capacity": 5,
+            "scoreLimit": 0,
+            "startAtTime": "12:00",
+            "endAtTime": "13:30",
+            "location": {
+                "latitude": 35.23203443995263,
+                "longitude": 129.08262659183725,
+                "address": "부산광역시 금정구 부산대학로 63번길 2"
+            }
+        },
+        {
+            "name": "카페에서 책 읽으며 커피 마실 사람 구해요",
+            "category": "CULTURE_ART",
+            "description": "조용한 카페에서 책 읽으며 커피 마시면서 대화 나눌 사람 찾아요. 인문학 이야기 나누면 더 좋아요!",
+            "hashTags": ["카페", "독서", "커피", "인문학"],
+            "capacity": 4,
+            "scoreLimit": 0,
+            "startAtTime": "14:00",
+            "endAtTime": "16:00",
+            "location": {
+                "latitude": 35.23003443995263,
+                "longitude": 129.08062659183725,
+                "address": "부산광역시 금정구 부산대학로 49번길 15"
+            }
+        },
+        {
+            "name": "부산대 근처 산책로에서 가벼운 등산 같이 가요!",
+            "category": "SPORTS",
+            "description": "부산대 근처 산책로에서 가벼운 산행 함께할 분 구해요. 자연 속에서 힐링하며 친목 도모해요!",
+            "hashTags": ["등산", "산책", "힐링", "운동"],
+            "capacity": 6,
+            "scoreLimit": 0,
+            "startAtTime": "09:00",
+            "endAtTime": "13:00",
+            "location": {
+                "latitude": 35.23503443995263,
+                "longitude": 129.08362659183725,
+                "address": "부산광역시 금정구 부산대학로 63번길 20"
+            }
+        },
+        {
+            "name": "영화관에서 영화 같이 볼 사람",
+            "category": "CULTURE_ART",
+            "description": "최신 영화 보고 나서 이야기 나눌 사람 구해요. 영화 좋아하는 분들 환영합니다!",
+            "hashTags": ["영화", "영화관", "친목"],
+            "capacity": 4,
+            "scoreLimit": 0,
+            "startAtTime": "19:00",
+            "endAtTime": "22:00",
+            "location": {
+                "latitude": 35.23303443995263,
+                "longitude": 129.08462659183725,
+                "address": "부산광역시 금정구 부산대학로 63번길 25"
+            }
+        },
+        {
+            "name": "부산대 근처 공원에서 조깅 같이 할 사람",
+            "category": "SPORTS",
+            "description": "새벽 부산대 근처 공원에서 조깅하며 힐링할 사람 구해요. 건강한 라이프스타일 함께해요!",
+            "hashTags": ["조깅", "러닝", "부산대", "운동"],
+            "capacity": 5,
+            "scoreLimit": 0,
+            "startAtTime": "06:00",
+            "endAtTime": "07:30",
+            "location": {
+                "latitude": 35.23403443995263,
+                "longitude": 129.08162659183725,
+                "address": "부산광역시 금정구 부산대학로 63번길 18"
+            }
+        },
+        {
+            "name": "보드게임 카페에서 게임 하실 분",
+            "category": "GAME",
+            "description": "보드게임 카페에서 게임하면서 즐겁게 시간 보낼 사람 구해요. 친구들과 함께 와도 좋아요!",
+            "hashTags": ["보드게임", "게임", "친목"],
+            "capacity": 6,
+            "scoreLimit": 0,
+            "startAtTime": "18:00",
+            "endAtTime": "21:00",
+            "location": {
+                "latitude": 35.23103443995263,
+                "longitude": 129.08362659183725,
+                "address": "부산광역시 금정구 부산대학로 63번길 8"
+            }
+        },
+        {
+            "name": "인디밴드 라이브 공연 같이 보러 가요",
+            "category": "CULTURE_ART",
+            "description": "인디밴드 라이브 공연 함께 보러 가실 분 구해요. 음악 좋아하는 분들 환영합니다!",
+            "hashTags": ["인디밴드", "라이브", "음악", "공연"],
+            "capacity": 4,
+            "scoreLimit": 0,
+            "startAtTime": "19:00",
+            "endAtTime": "22:00",
+            "location": {
+                "latitude": 35.23203443995263,
+                "longitude": 129.08362659183725,
+                "address": "부산광역시 금정구 부산대학로 63번길 22"
+            }
+        },
+        {
+            "name": "부산 맛집 탐방 같이 가실 분",
+            "category": "FOOD",
+            "description": "부산 맛집 탐방하며 맛있는 음식 먹고 이야기 나눌 사람 구해요. 인스타 감성 식당도 좋아요!",
+            "hashTags": ["맛집", "식사", "탐방", "친목"],
+            "capacity": 5,
+            "scoreLimit": 0,
+            "startAtTime": "18:30",
+            "endAtTime": "20:30",
+            "location": {
+                "latitude": 35.22903443995263,
+                "longitude": 129.08162659183725,
+                "address": "부산광역시 금정구 부산대학로 63번길 12"
+            }
+        },
+        {
+            "name": "풍경 사진 찍으러 다니는 사진 동호회",
+            "category": "CULTURE_ART",
+            "description": "부산대 근처 예쁜 곳 사진 찍으러 다니며 카메라 이야기 나눌 사람 구해요. 풍경 사진 좋아하는 분들 환영!",
+            "hashTags": ["사진", "풍경", "카메라", "인스타"],
+            "capacity": 5,
+            "scoreLimit": 0,
+            "startAtTime": "15:00",
+            "endAtTime": "18:00",
+            "location": {
+                "latitude": 35.23103443995263,
+                "longitude": 129.08162659183725,
+                "address": "부산광역시 금정구 부산대학로 63번길 16"
+            }
+        },
+        {
+            "name": "요가/필라테스 같이 하실 분",
+            "category": "SPORTS",
+            "description": "요가나 필라테스 같이 하며 건강한 라이프스타일 추구할 사람 구해요. 건강한 분들 환영합니다!",
+            "hashTags": ["요가", "필라테스", "운동", "건강"],
+            "capacity": 6,
+            "scoreLimit": 0,
+            "startAtTime": "10:00",
+            "endAtTime": "11:30",
+            "location": {
+                "latitude": 35.22703443995263,
+                "longitude": 129.08262659183725,
+                "address": "부산광역시 금정구 부산대학로 63번길 5"
+            }
+        }
+    ]
+}

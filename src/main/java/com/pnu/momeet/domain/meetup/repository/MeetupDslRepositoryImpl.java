@@ -50,7 +50,7 @@ public class MeetupDslRepositoryImpl implements MeetupDslRepository {
             double radius,
             @Nullable MainCategory category,
             @Nullable String keyword,
-            UUID viewerMemberId
+            UUID viewerProfileId
     ) {
         QMeetup meetup = QMeetup.meetup;
         QParticipant participant = QParticipant.participant;
@@ -73,15 +73,15 @@ public class MeetupDslRepositoryImpl implements MeetupDslRepository {
         // 차단 제외 조건
         BooleanExpression blockedWithOwner = JPAExpressions.selectOne().from(userBlock)
             .where(
-                userBlock.blockerId.eq(viewerMemberId).and(userBlock.blockedId.eq(meetup.owner.memberId))
-                    .or(userBlock.blockerId.eq(meetup.owner.memberId).and(userBlock.blockedId.eq(viewerMemberId)))
+                userBlock.blockerProfileId.eq(viewerProfileId).and(userBlock.blockedProfileId.eq(meetup.owner.id))
+                    .or(userBlock.blockerProfileId.eq(meetup.owner.id).and(userBlock.blockedProfileId.eq(viewerProfileId)))
             ).exists();
 
         BooleanExpression blockedWithAnyParticipant = JPAExpressions.selectOne()
             .from(participant)
             .join(userBlock).on(
-                userBlock.blockerId.eq(viewerMemberId).and(userBlock.blockedId.eq(participant.profile.memberId))
-                    .or(userBlock.blockerId.eq(participant.profile.memberId).and(userBlock.blockedId.eq(viewerMemberId)))
+                userBlock.blockerProfileId.eq(viewerProfileId).and(userBlock.blockedProfileId.eq(participant.profile.id))
+                    .or(userBlock.blockerProfileId.eq(participant.profile.id).and(userBlock.blockedProfileId.eq(viewerProfileId)))
             )
             .where(participant.meetup.id.eq(meetup.id))
             .exists();
@@ -110,7 +110,20 @@ public class MeetupDslRepositoryImpl implements MeetupDslRepository {
                 .fetch();
     }
 
-    public Optional<Meetup> findParticipatedMeetupsByProfileId(UUID profileId) {
+    public List<Meetup> findAllParticipatedMeetupsByProfileId(UUID profileId) {
+        QMeetup meetup = QMeetup.meetup;
+        QParticipant participant = QParticipant.participant;
+        return jpaQueryFactory
+                .select(meetup)
+                .from(meetup)
+                .join(meetup.participants, participant)
+                .where(
+                    participant.profile.id.eq(profileId)
+                )
+                .fetch();
+    }
+
+    public Optional<Meetup> findParticipatedActiveMeetupsByProfileId(UUID profileId) {
         QMeetup meetup = QMeetup.meetup;
         QParticipant participant = QParticipant.participant;
 
@@ -214,7 +227,7 @@ public class MeetupDslRepositoryImpl implements MeetupDslRepository {
         return new PageImpl<>(content, pageable, (total == null) ? 0 : total);
     }
 
-    public boolean existsBlockedInMeetup(UUID meetupId, UUID viewerMemberId) {
+    public boolean existsBlockedInMeetup(UUID meetupId, UUID viewerProfileId) {
         QMeetup m = QMeetup.meetup;
         QParticipant p = QParticipant.participant;
         QUserBlock ub = QUserBlock.userBlock;
@@ -222,8 +235,8 @@ public class MeetupDslRepositoryImpl implements MeetupDslRepository {
         // owner 차단
         BooleanExpression ownerBlocked = JPAExpressions.selectOne().from(m).join(ub)
             .on(
-                ub.blockerId.eq(viewerMemberId).and(ub.blockedId.eq(m.owner.memberId))
-                    .or(ub.blockerId.eq(m.owner.memberId).and(ub.blockedId.eq(viewerMemberId)))
+                ub.blockerProfileId.eq(viewerProfileId).and(ub.blockedProfileId.eq(m.owner.id))
+                    .or(ub.blockerProfileId.eq(m.owner.id).and(ub.blockedProfileId.eq(viewerProfileId)))
             )
             .where(m.id.eq(meetupId))
             .exists();
@@ -231,8 +244,8 @@ public class MeetupDslRepositoryImpl implements MeetupDslRepository {
         // 참가자 중 1명이라도 차단
         BooleanExpression anyParticipantBlocked = JPAExpressions.selectOne().from(p).join(ub)
             .on(
-                ub.blockerId.eq(viewerMemberId).and(ub.blockedId.eq(p.profile.memberId))
-                    .or(ub.blockerId.eq(p.profile.memberId).and(ub.blockedId.eq(viewerMemberId)))
+                ub.blockerProfileId.eq(viewerProfileId).and(ub.blockedProfileId.eq(p.profile.id))
+                    .or(ub.blockerProfileId.eq(p.profile.id).and(ub.blockedProfileId.eq(viewerProfileId)))
             )
             .where(p.meetup.id.eq(meetupId))
             .exists();

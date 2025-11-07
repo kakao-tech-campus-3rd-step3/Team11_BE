@@ -6,10 +6,16 @@ import jakarta.validation.ConstraintValidatorContext;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 
 public class MeetupTimeUnitValidator implements ConstraintValidator<MeetupTimeUnit, String> {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+    private static final DateTimeFormatter FORMATTER = new DateTimeFormatterBuilder()
+            .appendPattern("yyyy-MM-dd'T'HH:mm")
+            .optionalStart()
+            .appendPattern(":ss")
+            .optionalEnd()
+            .toFormatter();
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
@@ -19,7 +25,8 @@ public class MeetupTimeUnitValidator implements ConstraintValidator<MeetupTimeUn
         try {
             LocalDateTime dt = LocalDateTime.parse(value, FORMATTER);
             int minute = dt.getMinute();
-            return minute % 10 == 0; // 10분 단위가 아니면 false 반환
+            int second = dt.getSecond();
+            return second == 0 && minute % 10 == 0; // 10분 단위인지 확인
         } catch (DateTimeParseException e) {
             return false;
         }

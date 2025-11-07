@@ -326,8 +326,8 @@ public class ParticipantKickTest extends BaseParticipantTest {
     }
 
     @Test
-    @DisplayName("강퇴된 참가자 재참가 가능 - 200 OK")
-    void kickParticipant_rejoinAfterKick_success() {
+    @DisplayName("강퇴된 참가자 재참가 불가능 - 403 Forbidden")
+    void kickParticipant_rejoinAfterKick_fail() {
         // Given: 밋업 생성, 사용자 참가 및 강퇴
         MeetupDetail meetup = createTestMeetup(0);
         
@@ -362,9 +362,9 @@ public class ParticipantKickTest extends BaseParticipantTest {
                 .post("/{meetupId}/participants")
         .then()
                 .log().all()
-                .statusCode(200)
-                .body("profile.nickname", equalTo(profiles.get(1).getNickname()))
-                .body("role", equalTo("MEMBER"));
+                .statusCode(403)
+                .body("profile.nickname", nullValue())
+                .body("role", nullValue());
     }
 
     @Test

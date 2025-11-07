@@ -7,8 +7,8 @@ public class BlockEntityMapper {
 
     public static BlockResponse toBlockResponse(UserBlock block) {
         return new BlockResponse(
-            block.getBlockerId(),
-            block.getBlockedId(),
+            block.getBlockerProfileId(),
+            block.getBlockedProfileId(),
             block.getCreatedAt()
         );
     }

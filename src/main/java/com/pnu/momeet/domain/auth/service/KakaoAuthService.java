@@ -35,7 +35,6 @@ public class KakaoAuthService {
         return new KakaoUserInfo(userInfoResponse.kakaoId(), userInfoResponse.email());
     }
 
-    @Transactional
     public TokenResponse kakaoLogin(String code, String redirectUri) {
         KakaoUserInfo kakaoUserInfo = getKakaoUserInfo(code, redirectUri);
         UUID memberId = findOrCreateKakaoMember(kakaoUserInfo);

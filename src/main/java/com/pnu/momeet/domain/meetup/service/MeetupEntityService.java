@@ -69,11 +69,11 @@ public class MeetupEntityService {
             Double radius,
             MainCategory mainCategory,
             String search,
-            UUID viewerMemberId
+            UUID viewerProfileId
     ) {
         log.debug("특정 위치 기반 meetup 목록 조회 시도. location={}, radius={}", location, radius);
         var meetups = meetupRepository.findAllByDistanceAndPredicates(
-                location, radius, mainCategory, search, viewerMemberId
+                location, radius, mainCategory, search, viewerProfileId
         );
         log.debug("특정 위치 기반 meetup 목록 조회 성공. size={}", meetups.size());
         return meetups;
@@ -87,11 +87,18 @@ public class MeetupEntityService {
         return meetups;
     }
 
+    @Transactional(readOnly = true)
+    public List<Meetup> getAllParticipatedMeetupsByProfileId(UUID profileId) {
+        log.debug("특정 프로필 ID가 참여한 meetup 목록 조회 시도. profileId={}", profileId);
+        var meetups = meetupRepository.findAllParticipatedMeetupsByProfileId(profileId);
+        log.debug("특정 프로필 ID가 참여한 meetup 목록 조회 성공. profileId={}, size={}", profileId, meetups.size());
+        return meetups;
+    }
 
     @Transactional(readOnly = true)
-    public Meetup getParticipatedMeetupByProfileId(UUID profileId) {
+    public Meetup getParticipatedActiveMeetupByProfileId(UUID profileId) {
         log.debug("특정 프로필 ID가 참여한 meetup 조회 시도. profileId={}", profileId);
-        var meetup = meetupRepository.findParticipatedMeetupsByProfileId(profileId);
+        var meetup = meetupRepository.findParticipatedActiveMeetupsByProfileId(profileId);
         if (meetup.isEmpty()) {
             log.info("특정 프로필 ID가 참여한 meetup이 없음. profileId={}", profileId);
             throw new NoSuchElementException("참여한 모임이 없습니다.");
@@ -180,7 +187,7 @@ public class MeetupEntityService {
     }
 
     @Transactional(readOnly = true)
-    public boolean isBlockedInMeetup(UUID meetupId, UUID viewerMemberId) {
-        return meetupRepository.existsBlockedInMeetup(meetupId, viewerMemberId);
+    public boolean isBlockedInMeetup(UUID meetupId, UUID viewerProfileId) {
+        return meetupRepository.existsBlockedInMeetup(meetupId, viewerProfileId);
     }
 }

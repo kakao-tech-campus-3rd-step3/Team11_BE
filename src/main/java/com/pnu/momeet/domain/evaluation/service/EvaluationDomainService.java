@@ -288,13 +288,13 @@ public class EvaluationDomainService {
 
         // 평가자는 해당 모임의 참가자여야 함
         if (!participantService.existsByProfileIdAndMeetupId(evaluator.getId(), meetupId)) {
-            log.debug("해당 모임에 참여하지 않은 사용자. meetupId={}, evaluatorPid={}, now={}", meetupId, evaluator.getId(), now);
+            log.debug("해당 모임에 참여하지 않은 사용자. meetupId={}, evaluatorPid={}", meetupId, evaluator.getId());
             throw new IllegalArgumentException("모임에 참여하지 않은 사용자입니다.");
         }
 
         // 모임이 종료 상태가 아닐 경우 평가 불가
         if (meetup.getStatus() != MeetupStatus.ENDED) {
-            log.debug("평가 가능 상태가 아님. meetupId={}, endAt={}, now={}", meetupId, meetup.getEndAt(), now);
+            log.debug("평가 가능 상태가 아님. meetupId={}, endAt={}", meetupId, meetup.getEndAt());
             return List.of();
         }
 
